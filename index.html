@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plateforme Vidéo – Brainy</title>
+<style>
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:#eef2f7;color:#333;}
+  h1,h2,h3{margin:0 0 10px 0;font-weight:600;}
+  a{text-decoration:none;}
+  .container{max-width:1000px;margin:30px auto;background:#fff;padding:30px;border-radius:20px;box-shadow:0 8px 25px rgba(0,0,0,0.1);animation:fade 0.4s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+  /* --- FILTRE ET RECHERCHE --- */
+  .filter-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+  .filter-bar select, .filter-bar input{flex:1;padding:12px;border-radius:10px;border:1px solid #ccc;font-size:15px;}
+
+  /* --- GRILLE DE VIDEOS --- */
+  #videoList{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+  .video-card{background:#f8faff;border-radius:15px;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.08);transition:transform 0.2s;position:relative;}
+  .video-card:hover{transform:translateY(-5px);}
+  .video-card iframe,.video-card video{width:100%;display:block;}
+  .video-info{padding:10px;}
+  .video-info h3{font-size:16px;margin-bottom:6px;}
+  .video-controls{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .video-controls button{padding:5px 10px;border-radius:6px;font-size:13px;cursor:pointer;border:none;transition:0.2s;}
+  .video-controls button:hover{opacity:0.8;}
+  .like-btn{background:#ff3860;color:#fff;}
+  .comment-section{margin-top:6px;display:flex;gap:6px;}
+  .comment-section input{flex:1;padding:6px;border-radius:6px;border:1px solid #ccc;}
+  .comment-section button{background:#0b76ef;color:#fff;padding:6px 10px;border-radius:6px;border:none;cursor:pointer;}
+  .comments-list{margin-top:6px;font-size:13px;color:#555;}
+
+  /* --- ADMIN PANEL --- */
+  input,button,select{width:100%;padding:12px;margin-bottom:12px;border-radius:10px;border:1px solid #ccc;font-size:15px;box-sizing:border-box;}
+  button{border:none;background:#10b981;color:#fff;font-weight:600;cursor:pointer;transition:0.2s;}
+  button:hover{opacity:0.85;}
+  .remove{background:#e11d48;}
+  .panel{display:none;}
+  .feedback{margin-top:10px;padding:10px;background:#10b98133;border-radius:8px;display:none;}
+
+  /* --- LECTEUR FLOTTANT --- */
+  #floatingPlayer{display:none;position:fixed;bottom:0;left:0;width:100%;background:#fff;box-shadow:0 -4px 12px rgba(0,0,0,0.15);padding:10px;display:flex;align-items:center;gap:10px;z-index:999;}
+  #floatingVideoContainer{flex:1;}
+</style>
+</head>
+<body>
+
+<!-- ================= PUBLIC ================= -->
+<div class="container" id="publicPage">
+  <h1>🎓 Plateforme Vidéo – Brainy</h1>
+  <p style="color:#555;margin-bottom:25px;">2 nouvelles vidéos disponibles chaque semaine</p>
+
+  <div class="filter-bar">
+    <select id="categoryFilter" onchange="applyFilters()"><option value="">Toutes les catégories</option></select>
+    <input type="text" id="searchInput" placeholder="🔍 Rechercher une vidéo..." onkeyup="applyFilters()"/>
+  </div>
+
+  <div id="videoList"></div>
+
+  <a class="btn" onclick="openAdmin()">🔐 Espace administrateur</a>
+</div>
+
+<!-- ================= ADMIN ================= -->
+<div class="container panel" id="adminPage">
+  <h1>🔐 Administration</h1>
+  <input type="password" id="pass" placeholder="Mot de passe admin" />
+  <button onclick="login()">Connexion</button>
+
+  <div id="adminContent" style="display:none; margin-top:25px;">
+    <div class="feedback" id="feedback">Action effectuée ! ✅</div>
+
+    <h2>➕ Ajouter une nouvelle vidéo</h2>
+    <input id="title" placeholder="Titre" />
+    <input id="url" placeholder="Lien YouTube / Google Drive / MP4" />
+    <input id="category" placeholder="Catégorie (ex: Formation, Motivation)" />
+    <button onclick="addVideo()">Ajouter</button>
+
+    <h2 style="margin-top:25px;">📺 Vidéos enregistrées</h2>
+    <div id="adminVideoList"></div>
+
+    <a class="btn" style="background:#444;" onclick="closeAdmin()">⬅ Retour</a>
+  </div>
+</div>
+
+<!-- LECTEUR FLOTTANT -->
+<div id="floatingPlayer">
+  <div id="floatingVideoContainer"></div>
+  <button onclick="floatingPause()">⏸</button>
+  <button onclick="floatingPlay()">▶</button>
+  <button onclick="floatingMute()">🔇</button>
+  <button onclick="floatingUnmute()">🔊</button>
+  <button onclick="closeFloatingPlayer()">❌</button>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const ADMIN_PASSWORD="brainy123";
+let ytPlayers={};
+let allVideos=[];
+let floatingPlayerId = null;
+
+// RENDER VIDEO CARD
+function renderVideoCard(video){
+  const url = video.url;
+  const id = video.id;
+  const cat = video.category || "";
+  const yt = url.match(/(?:v=|be\/|embed\/)([A-Za-z0-9_-]{6,})/);
+  let videoHTML="";
+  if(yt){
+    videoHTML = `<iframe id="player${id}" src="https://www.youtube.com/embed/${yt[1]}?enablejsapi=1" allow="autoplay" style="height:220px;"></iframe>`;
+  } else if(url.includes("drive.google")){
+    const gid = url.split("/d/")[1]?.split("/")[0];
+    videoHTML = `<iframe src="https://drive.google.com/file/d/${gid}/preview" allowfullscreen style="height:220px;"></iframe>`;
+  } else {
+    videoHTML = `<video controls style="height:220px;width:100%;">
+      <source src="${url}" type="video/mp4">
+    </video>`;
+  }
+
+  const likes = video.likes||0;
+  const comments = video.comments||[];
+
+  return `<div class='video-card' data-category="${cat}" data-title="${video.title.toLowerCase()}">
+      ${videoHTML}
+      <div class="video-info">
+        <h3>${video.title}</h3>
+        <div class="video-controls">
+          <button class="like-btn" onclick="likeVideo(${id})">❤️ ${likes}</button>
+          <button onclick="activateFloatingPlayer({id:${id}, url:'${video.url}'})">📺 Lire</button>
+        </div>
+        <div class="comment-section">
+          <input type="text" id="commentInput${id}" placeholder="Ajouter un commentaire"/>
+          <button onclick="addComment(${id})">➤</button>
+        </div>
+        <div class="comments-list" id="commentsList${id}">
+          ${comments.map(c=>`<div>${c}</div>`).join("")}
+        </div>
+      </div>
+  </div>`;
+}
+
+/* ===== YouTube API ===== */
+function onYouTubeIframeAPIReady(){ loadVideos(); }
+function playVideo(id){ ytPlayers[`player${id}`]?.playVideo?.(); }
+function pauseVideo(id){ ytPlayers[`player${id}`]?.pauseVideo?.(); }
+function muteVideo(id){ ytPlayers[`player${id}`]?.mute?.(); }
+function unmuteVideo(id){ ytPlayers[`player${id}`]?.unMute?.(); }
+
+/* ===== LOAD VIDEOS ===== */
+function loadVideos(){
+  allVideos=JSON.parse(localStorage.getItem("videos_html"))||[];
+  const pub=document.getElementById("videoList");
+  const adm=document.getElementById("adminVideoList");
+  pub.innerHTML=""; adm.innerHTML=""; ytPlayers={};
+
+  allVideos.forEach(v=>pub.innerHTML+=renderVideoCard(v));
+  allVideos.forEach(v=>adm.innerHTML+=renderVideoCard(v)+`<button class='remove' onclick='removeVideo(${v.id})'>Supprimer</button>`);
+
+  allVideos.forEach(v=>{
+    const yt = v.url.match(/(?:v=|be\/|embed\/)([A-Za-z0-9_-]{6,})/);
+    if(yt) ytPlayers[`player${v.id}`] = new YT.Player(`player${v.id}`);
+  });
+
+  populateCategories();
+  applyFilters();
+}
+
+// ===== FILTER & SEARCH =====
+function populateCategories(){
+  const catFilter=document.getElementById("categoryFilter");
+  const cats=[...new Set(allVideos.map(v=>v.category).filter(c=>c))];
+  catFilter.innerHTML='<option value="">Toutes les catégories</option>';
+  cats.forEach(c=>catFilter.innerHTML+=`<option value="${c}">${c}</option>`);
+}
+function applyFilters(){
+  const cat=document.getElementById("categoryFilter").value;
+  const search=document.getElementById("searchInput").value.toLowerCase();
+  document.querySelectorAll("#videoList .video-card").forEach(card=>{
+    const matchCat = !cat || card.dataset.category===cat;
+    const matchSearch = card.dataset.title.includes(search);
+    card.style.display = matchCat && matchSearch ? "block":"none";
+  });
+}
+
+// ===== ADMIN SYSTEM =====
+function login(){
+  const p=document.getElementById("pass").value;
+  if(p!==ADMIN_PASSWORD) return alert("Mot de passe incorrect");
+  document.getElementById("adminContent").style.display="block";
+  document.getElementById("pass").value="";
+}
+function openAdmin(){
+  document.getElementById("publicPage").style.display="none";
+  document.getElementById("adminPage").style.display="block";
+}
+function closeAdmin(){
+  document.getElementById("adminPage").style.display="none";
+  document.getElementById("publicPage").style.display="block";
+}
+
+// ===== ADD / REMOVE VIDEO =====
+function addVideo(){
+  const t=document.getElementById("title").value.trim();
+  const u=document.getElementById("url").value.trim();
+  const c=document.getElementById("category").value.trim();
+  if(!t||!u)return alert("Veuillez remplir tous les champs.");
+
+  const list=JSON.parse(localStorage.getItem("videos_html"))||[];
+  list.push({id:Date.now(), title:t, url:u, category:c, likes:0, comments:[]});
+  localStorage.setItem("videos_html",JSON.stringify(list));
+  document.getElementById("title").value="";
+  document.getElementById("url").value="";
+  document.getElementById("category").value="";
+  showFeedback("Vidéo ajoutée ✅");
+  loadVideos();
+}
+function removeVideo(id){
+  if(!confirm("Supprimer cette vidéo ?")) return;
+  let list=JSON.parse(localStorage.getItem("videos_html"))||[];
+  list=list.filter(v=>v.id!==id);
+  localStorage.setItem("videos_html",JSON.stringify(list));
+  showFeedback("Vidéo supprimée ❌");
+  loadVideos();
+}
+
+// ===== LIKE & COMMENT =====
+function likeVideo(id){
+  const list=JSON.parse(localStorage.getItem("videos_html"))||[];
+  const video=list.find(v=>v.id===id);
+  if(video){ video.likes=(video.likes||0)+1; localStorage.setItem("videos_html",JSON.stringify(list)); loadVideos(); }
+}
+function addComment(id){
+  const input=document.getElementById(`commentInput${id}`);
+  const text=input.value.trim();
+  if(!text) return;
+  const list=JSON.parse(localStorage.getItem("videos_html"))||[];
+  const video=list.find(v=>v.id===id);
+  if(video){ video.comments=video.comments||[]; video.comments.push(text); localStorage.setItem("videos_html",JSON.stringify(list)); loadVideos(); }
+}
+
+// ===== LECTEUR FLOTTANT =====
+function activateFloatingPlayer(video){
+  const container = document.getElementById("floatingVideoContainer");
+  floatingPlayerId = video.id;
+  let html = "";
+  const url = video.url;
+  const yt = url.match(/(?:v=|be\/|embed\/)([A-Za-z0-9_-]{6,})/);
+  if(yt){
+    html = `<iframe id="floatingPlayerFrame" src="https://www.youtube.com/embed/${yt[1]}?enablejsapi=1" width="300" height="170"></iframe>`;
+    setTimeout(()=>{ytPlayers[`floatingPlayerFrame`] = new YT.Player('floatingPlayerFrame');},500);
+  } else if(url.includes("drive.google")){
+    const gid = url.split("/d/")[1]?.split("/")[0];
+    html = `<iframe src="https://drive.google.com/file/d/${gid}/preview" width="300" height="170" allowfullscreen></iframe>`;
+  } else {
+    html = `<video id="floatingVideoElement" width="300" height="170" controls autoplay>
+      <source src="${url}" type="video/mp4"></video>`;
+  }
+  container.innerHTML = html;
+  document.getElementById("floatingPlayer").style.display="flex";
+}
+function floatingPlay(){ const vid=document.getElementById("floatingVideoElement"); if(vid) vid.play(); else ytPlayers[`floatingPlayerFrame`]?.playVideo?.(); }
+function floatingPause(){ const vid=document.getElementById("floatingVideoElement"); if(vid) vid.pause(); else ytPlayers[`floatingPlayerFrame`]?.pauseVideo?.(); }
+function floatingMute(){ const vid=document.getElementById("floatingVideoElement"); if(vid) vid.muted=true; else ytPlayers[`floatingPlayerFrame`]?.mute?.(); }
+function floatingUnmute(){ const vid=document.getElementById("floatingVideoElement"); if(vid) vid.muted=false; else ytPlayers[`floatingPlayerFrame`]?.unMute?.(); }
+function closeFloatingPlayer(){ document.getElementById("floatingPlayer").style.display="none"; document.getElementById("floatingVideoContainer").innerHTML=""; }
+
+// ===== FEEDBACK =====
+function showFeedback(msg){
+  const f=document.getElementById("feedback");
+  f.textContent=msg; f.style.display="block";
+  setTimeout(()=>f.style.display="none",2000);
+}
+
+// INIT
+loadVideos();
+</script>
+</body>
+</html>
