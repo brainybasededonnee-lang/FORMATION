@@ -1,279 +1,481 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Plateforme Vidéo – Brainy</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Plateforme Vidéo — Avancé (Mobile & Social)</title>
+
+<meta name="theme-color" content="#0b76ef"/>
+
 <style>
-  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:#eef2f7;color:#333;}
-  h1,h2,h3{margin:0 0 10px 0;font-weight:600;}
-  a{text-decoration:none;}
-  .container{max-width:1000px;margin:30px auto;background:#fff;padding:30px;border-radius:20px;box-shadow:0 8px 25px rgba(0,0,0,0.1);animation:fade 0.4s ease;}
-  @keyframes fade{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  :root{
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --primary:#0b76ef;
+    --accent:#10b981;
+    --muted:#6b7280;
+    --danger:#ef4444;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Inter, "Segoe UI", Arial, sans-serif;
+    background:var(--bg); color:#111;
+    -webkit-font-smoothing:antialiased;
+  }
 
-  /* --- FILTRE ET RECHERCHE --- */
-  .filter-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
-  .filter-bar select, .filter-bar input{flex:1;padding:12px;border-radius:10px;border:1px solid #ccc;font-size:15px;}
+  /* header */
+  header{
+    background:linear-gradient(90deg,var(--primary),#0046a8);
+    color:white; padding:12px 14px; display:flex; gap:12px; align-items:center;
+    justify-content:space-between;
+  }
+  header h1{font-size:18px;margin:0}
+  .search{flex:1;max-width:520px;margin-left:12px;}
+  .search input{width:100%;padding:8px 12px;border-radius:999px;border:none;outline:none;}
 
-  /* --- GRILLE DE VIDEOS --- */
-  #videoList{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
-  .video-card{background:#f8faff;border-radius:15px;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.08);transition:transform 0.2s;position:relative;}
-  .video-card:hover{transform:translateY(-5px);}
-  .video-card iframe,.video-card video{width:100%;display:block;}
-  .video-info{padding:10px;}
-  .video-info h3{font-size:16px;margin-bottom:6px;}
-  .video-controls{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-  .video-controls button{padding:5px 10px;border-radius:6px;font-size:13px;cursor:pointer;border:none;transition:0.2s;}
-  .video-controls button:hover{opacity:0.8;}
-  .like-btn{background:#ff3860;color:#fff;}
-  .comment-section{margin-top:6px;display:flex;gap:6px;}
-  .comment-section input{flex:1;padding:6px;border-radius:6px;border:1px solid #ccc;}
-  .comment-section button{background:#0b76ef;color:#fff;padding:6px 10px;border-radius:6px;border:none;cursor:pointer;}
-  .comments-list{margin-top:6px;font-size:13px;color:#555;}
+  /* main layout */
+  .wrap{display:flex;gap:16px;padding:16px;max-width:1200px;margin:auto;}
+  nav{width:220px;min-width:160px;}
+  main{flex:1;}
 
-  /* --- ADMIN PANEL --- */
-  input,button,select{width:100%;padding:12px;margin-bottom:12px;border-radius:10px;border:1px solid #ccc;font-size:15px;box-sizing:border-box;}
-  button{border:none;background:#10b981;color:#fff;font-weight:600;cursor:pointer;transition:0.2s;}
-  button:hover{opacity:0.85;}
-  .remove{background:#e11d48;}
-  .panel{display:none;}
-  .feedback{margin-top:10px;padding:10px;background:#10b98133;border-radius:8px;display:none;}
+  /* sidebar */
+  .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(11,55,120,0.06);margin-bottom:16px}
+  .category{padding:10px;border-radius:8px;cursor:pointer;color:var(--primary);margin-bottom:6px}
+  .category.active{background:#e8f2ff}
 
-  /* --- LECTEUR FLOTTANT --- */
-  #floatingPlayer{display:none;position:fixed;bottom:0;left:0;width:100%;background:#fff;box-shadow:0 -4px 12px rgba(0,0,0,0.15);padding:10px;display:flex;align-items:center;gap:10px;z-index:999;}
-  #floatingVideoContainer{flex:1;}
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .video-card{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 6px 18px rgba(11,55,120,0.06);cursor:pointer;display:flex;flex-direction:column}
+  .thumb{height:140px;background-size:cover;background-position:center}
+  .meta{padding:10px;display:flex;flex-direction:column;gap:6px}
+  .meta h3{margin:0;font-size:15px}
+  .meta .sub{color:var(--muted);font-size:13px}
+
+  /* player page */
+  .player-page{display:none;padding:12px}
+  .player-top{display:flex;gap:12px;flex-direction:column}
+  .player-frame{width:100%;height:420px;border-radius:12px;overflow:hidden;background:#000}
+  .player-controls{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .btn{padding:8px 12px;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer}
+  .btn.ghost{background:transparent;border:1px solid #e6eefc;color:var(--primary)}
+
+  /* comments & likes */
+  .actions{display:flex;gap:8px;align-items:center}
+  .like{background:var(--danger);color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+  .comment-box{display:flex;gap:8px;margin-top:10px}
+  .comment-box input{flex:1;padding:10px;border-radius:8px;border:1px solid #e6e9ef}
+  .comment-box button{padding:10px 12px;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer}
+
+  .comments-list{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+  .comment{background:#fbfdff;padding:8px;border-radius:8px;border:1px solid #eef4ff}
+  .comment .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+
+  /* floating player */
+  #floatPlayer{position:fixed;right:12px;bottom:12px;width:320px;background:var(--card);border-radius:12px;padding:10px;box-shadow:0 8px 28px rgba(0,0,0,0.18);display:none;z-index:9999}
+  #floatFrame{width:100%;height:180px;border-radius:8px;border:none}
+
+  /* small screens */
+  @media (max-width:900px){
+    .wrap{flex-direction:column;padding:12px}
+    nav{width:100%}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+    .player-frame{height:240px}
+  }
+
+  /* tiny */
+  @media (max-width:480px){
+    header h1{font-size:16px}
+    #floatPlayer{left:12px;right:12px;width:auto}
+  }
 </style>
 </head>
 <body>
 
-<!-- ================= PUBLIC ================= -->
-<div class="container" id="publicPage">
-  <h1>🎓 Plateforme Vidéo – Brainy</h1>
-  <p style="color:#555;margin-bottom:25px;">2 nouvelles vidéos disponibles chaque semaine</p>
-
-  <div class="filter-bar">
-    <select id="categoryFilter" onchange="applyFilters()"><option value="">Toutes les catégories</option></select>
-    <input type="text" id="searchInput" placeholder="🔍 Rechercher une vidéo..." onkeyup="applyFilters()"/>
+<header>
+  <h1>Brainy • Plateforme</h1>
+  <div class="search">
+    <input id="globalSearch" placeholder="Rechercher une vidéo..." oninput="applySearch()" />
   </div>
 
-  <div id="videoList"></div>
-
-  <a class="btn" onclick="openAdmin()">🔐 Espace administrateur</a>
-</div>
-
-<!-- ================= ADMIN ================= -->
-<div class="container panel" id="adminPage">
-  <h1>🔐 Administration</h1>
-  <input type="password" id="pass" placeholder="Mot de passe admin" />
-  <button onclick="login()">Connexion</button>
-
-  <div id="adminContent" style="display:none; margin-top:25px;">
-    <div class="feedback" id="feedback">Action effectuée ! ✅</div>
-
-    <h2>➕ Ajouter une nouvelle vidéo</h2>
-    <input id="title" placeholder="Titre" />
-    <input id="url" placeholder="Lien YouTube / Google Drive / MP4" />
-    <input id="category" placeholder="Catégorie (ex: Formation, Motivation)" />
-    <button onclick="addVideo()">Ajouter</button>
-
-    <h2 style="margin-top:25px;">📺 Vidéos enregistrées</h2>
-    <div id="adminVideoList"></div>
-
-    <a class="btn" style="background:#444;" onclick="closeAdmin()">⬅ Retour</a>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn ghost" onclick="promptUsername()">Profil</button>
+    <button class="btn" onclick="showHome()">Accueil</button>
   </div>
-</div>
+</header>
 
-<!-- LECTEUR FLOTTANT -->
-<div id="floatingPlayer">
-  <div id="floatingVideoContainer"></div>
-  <button onclick="floatingPause()">⏸</button>
-  <button onclick="floatingPlay()">▶</button>
-  <button onclick="floatingMute()">🔇</button>
-  <button onclick="floatingUnmute()">🔊</button>
-  <button onclick="closeFloatingPlayer()">❌</button>
-</div>
+<div class="wrap">
+  <!-- sidebar categories -->
+  <nav>
+    <div class="card">
+      <h3>Catégories</h3>
+      <div id="catList"></div>
+    </div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
-<script>
-const ADMIN_PASSWORD="brainy123";
-let ytPlayers={};
-let allVideos=[];
-let floatingPlayerId = null;
+    <div class="card">
+      <h3>Tri</h3>
+      <select id="sortSelect" onchange="applyFilters()">
+        <option value="new">Les plus récents</option>
+        <option value="popular">Les plus likés</option>
+      </select>
+    </div>
 
-// RENDER VIDEO CARD
-function renderVideoCard(video){
-  const url = video.url;
-  const id = video.id;
-  const cat = video.category || "";
-  const yt = url.match(/(?:v=|be\/|embed\/)([A-Za-z0-9_-]{6,})/);
-  let videoHTML="";
-  if(yt){
-    videoHTML = `<iframe id="player${id}" src="https://www.youtube.com/embed/${yt[1]}?enablejsapi=1" allow="autoplay" style="height:220px;"></iframe>`;
-  } else if(url.includes("drive.google")){
-    const gid = url.split("/d/")[1]?.split("/")[0];
-    videoHTML = `<iframe src="https://drive.google.com/file/d/${gid}/preview" allowfullscreen style="height:220px;"></iframe>`;
-  } else {
-    videoHTML = `<video controls style="height:220px;width:100%;">
-      <source src="${url}" type="video/mp4">
-    </video>`;
-  }
+    <div class="card">
+      <h3>Utilisateur</h3>
+      <div id="userBox">Pas de pseudo — <button class="btn ghost" onclick="promptUsername()">Choisir</button></div>
+    </div>
+  </nav>
 
-  const likes = video.likes||0;
-  const comments = video.comments||[];
+  <!-- main content -->
+  <main>
+    <!-- home grid -->
+    <section id="homeSection">
+      <div class="grid" id="grid"></div>
+    </section>
 
-  return `<div class='video-card' data-category="${cat}" data-title="${video.title.toLowerCase()}">
-      ${videoHTML}
-      <div class="video-info">
-        <h3>${video.title}</h3>
-        <div class="video-controls">
-          <button class="like-btn" onclick="likeVideo(${id})">❤️ ${likes}</button>
-          <button onclick="activateFloatingPlayer({id:${id}, url:'${video.url}'})">📺 Lire</button>
+    <!-- player page -->
+    <section id="playerSection" class="player-page">
+      <div class="player-top">
+        <div class="player-frame" id="playerFrame"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <h2 id="playerTitle"></h2>
+            <div id="playerCategory" style="color:var(--muted)"></div>
+          </div>
+          <div class="player-actions">
+            <div class="actions">
+              <button id="likeBtn" class="like" onclick="toggleLike()">❤️ 0</button>
+              <button class="btn" onclick="openInNew()">Ouvrir</button>
+            </div>
+          </div>
         </div>
-        <div class="comment-section">
-          <input type="text" id="commentInput${id}" placeholder="Ajouter un commentaire"/>
-          <button onclick="addComment(${id})">➤</button>
-        </div>
-        <div class="comments-list" id="commentsList${id}">
-          ${comments.map(c=>`<div>${c}</div>`).join("")}
+
+        <div style="margin-top:8px">
+          <div class="comment-box">
+            <input id="commentInput" placeholder="Ajouter un commentaire..." />
+            <button onclick="postComment()">Publier</button>
+          </div>
+          <div class="comments-list" id="commentsList"></div>
         </div>
       </div>
-  </div>`;
+
+      <h3 style="margin-top:12px">Suggestions</h3>
+      <div id="suggestions" class="grid" style="margin-top:8px"></div>
+    </section>
+  </main>
+</div>
+
+<!-- floating player -->
+<div id="floatPlayer">
+  <div style="display:flex;justify-content:flex-end"><button class="btn ghost" onclick="closeFloat()">Fermer</button></div>
+  <iframe id="floatFrame"></iframe>
+</div>
+
+<script>
+/* ============================
+   CONFIG — AJOUTE TES VIDEOS ICI
+   - lien: youtube embed OR drive link OR direct mp4
+   - thumb: url image miniature
+===============================*/
+const VIDEOS = [
+  { id: 1, title: "Intro Informatique", category: "Informatique", link: "https://drive.google.com/file/d/153eKhhHoWjzHB8_JCWehjeKf4bvr1iq5/view?usp=sharing", thumb: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg", created: 1690000000000 },
+  { id: 2, title: "Motivation quotidienne", category: "Motivation", link: "https://drive.google.com/uc?export=preview&id=DRIVE_ID_HERE", thumb: "https://i.ytimg.com/vi/DLX62G4lc44/hqdefault.jpg", created: 1692000000000 },
+  { id: 3, title: "Lancer son business", category: "Business", link: "https://example.com/video.mp4", thumb: "https://i.ytimg.com/vi/lkIFF4maKMU/hqdefault.jpg", created: 1693000000000 }
+];
+
+/* stockages */
+const STORAGE_PREFIX = "brainy_v1_";
+function likesKey(){ return STORAGE_PREFIX + "likes"; }
+function commentsKey(){ return STORAGE_PREFIX + "comments"; }
+function userKey(){ return STORAGE_PREFIX + "user"; }
+
+/* ============================
+   UTILITAIRES
+===============================*/
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+function load(key, def){ return JSON.parse(localStorage.getItem(key) || JSON.stringify(def)); }
+
+/* init storage if absent */
+if(!localStorage.getItem(likesKey())) save(likesKey(), {}); // { videoId: [usernames...] }
+if(!localStorage.getItem(commentsKey())) save(commentsKey(), {}); // { videoId: [{id, user, text, ts}] }
+
+/* ============================
+   USER (pseudo)
+===============================*/
+function promptUsername(){
+  let current = localStorage.getItem(userKey());
+  let name = prompt("Entrez votre pseudo (sera stocké localement) :", current || "");
+  if(name){
+    localStorage.setItem(userKey(), name);
+    document.getElementById("userBox").innerHTML = `Connecté comme <strong>${escapeHtml(name)}</strong>`;
+  }
+}
+function getUser(){ return localStorage.getItem(userKey()) || null; }
+function ensureUserUI(){ let u = getUser(); if(u) document.getElementById("userBox").innerHTML = `Connecté comme <strong>${escapeHtml(u)}</strong>`; }
+
+/* ============================
+   RENDER GRID
+===============================*/
+function buildCategories(){
+  const cats = ["Toutes", ...Array.from(new Set(VIDEOS.map(v=>v.category)))];
+  const container = document.getElementById("catList");
+  container.innerHTML = "";
+  cats.forEach(c=>{
+    const el = document.createElement("div");
+    el.className = "category" + (c==="Toutes" ? " active" : "");
+    el.textContent = c;
+    el.onclick = ()=>{ document.querySelectorAll(".category").forEach(n=>n.classList.remove("active")); el.classList.add("active"); applyFilters(); };
+    container.appendChild(el);
+  });
 }
 
-/* ===== YouTube API ===== */
-function onYouTubeIframeAPIReady(){ loadVideos(); }
-function playVideo(id){ ytPlayers[`player${id}`]?.playVideo?.(); }
-function pauseVideo(id){ ytPlayers[`player${id}`]?.pauseVideo?.(); }
-function muteVideo(id){ ytPlayers[`player${id}`]?.mute?.(); }
-function unmuteVideo(id){ ytPlayers[`player${id}`]?.unMute?.(); }
-
-/* ===== LOAD VIDEOS ===== */
-function loadVideos(){
-  allVideos=JSON.parse(localStorage.getItem("videos_html"))||[];
-  const pub=document.getElementById("videoList");
-  const adm=document.getElementById("adminVideoList");
-  pub.innerHTML=""; adm.innerHTML=""; ytPlayers={};
-
-  allVideos.forEach(v=>pub.innerHTML+=renderVideoCard(v));
-  allVideos.forEach(v=>adm.innerHTML+=renderVideoCard(v)+`<button class='remove' onclick='removeVideo(${v.id})'>Supprimer</button>`);
-
-  allVideos.forEach(v=>{
-    const yt = v.url.match(/(?:v=|be\/|embed\/)([A-Za-z0-9_-]{6,})/);
-    if(yt) ytPlayers[`player${v.id}`] = new YT.Player(`player${v.id}`);
+function renderGrid(list){
+  const g = document.getElementById("grid");
+  g.innerHTML = "";
+  list.forEach(v=>{
+    const card = document.createElement("div"); card.className="video-card";
+    card.onclick = ()=> openPlayer(v.id);
+    const thumb = document.createElement("div"); thumb.className="thumb"; thumb.style.backgroundImage = `url('${v.thumb}')`;
+    const meta = document.createElement("div"); meta.className="meta";
+    meta.innerHTML = `<h3>${escapeHtml(v.title)}</h3><div class="sub">${escapeHtml(v.category)}</div>`;
+    card.appendChild(thumb); card.appendChild(meta);
+    g.appendChild(card);
   });
+}
 
-  populateCategories();
+/* ============================
+   FILTERS & SEARCH & SORT
+===============================*/
+function applyFilters(){
+  const activeCat = Array.from(document.querySelectorAll(".category")).find(c=>c.classList.contains("active"))?.textContent || "Toutes";
+  const q = (document.getElementById("globalSearch").value||"").toLowerCase();
+  const sort = document.getElementById("sortSelect").value;
+  let list = VIDEOS.filter(v=>{
+    const catMatch = (activeCat==="Toutes") || v.category===activeCat;
+    const searchMatch = v.title.toLowerCase().includes(q) || v.category.toLowerCase().includes(q);
+    return catMatch && searchMatch;
+  });
+  if(sort==="popular"){
+    const lk = load(likesKey(), {});
+    list.sort((a,b)=> (lk[b.id]?.length||0) - (lk[a.id]?.length||0));
+  } else {
+    list.sort((a,b)=> b.created - a.created);
+  }
+  renderGrid(list);
+}
+function applySearch(){ applyFilters(); }
+function showHome(){ document.getElementById("playerSection").style.display="none"; document.getElementById("homeSection").style.display="block"; document.getElementById("floatPlayer").style.display="none"; }
+
+/* ============================
+   PLAYER (page) + FLOAT
+===============================*/
+let currentVideo = null;
+function openPlayer(id){
+  const v = VIDEOS.find(x=>x.id===id); if(!v) return;
+  currentVideo = v;
+  document.getElementById("homeSection").style.display="none";
+  document.getElementById("playerSection").style.display="block";
+  document.getElementById("playerTitle").textContent = v.title;
+  document.getElementById("playerCategory").textContent = v.category;
+  // render player element (handle youtube embed, drive, mp4)
+  const frame = document.getElementById("playerFrame");
+  frame.innerHTML = renderPlayerHtml(v.link);
+  // load likes/comments UI
+  updateLikeButton();
+  renderComments();
+  // suggestions
+  renderSuggestions(id);
+  // open float
+  openFloat(v.link);
+}
+function renderPlayerHtml(link){
+  if(link.includes("youtube.com") || link.includes("youtube-nocookie.com") || link.includes("youtu.be") || link.includes("embed")){
+    // if not embed, try to transform watch?v= -> embed
+    let embed = link;
+    if(link.includes("watch?v=")) embed = link.replace("watch?v=", "embed/");
+    if(link.includes("youtu.be/")) embed = link.replace("youtu.be/","www.youtube.com/embed/");
+    return `<iframe src="${embed}" style="width:100%;height:100%;border:none;border-radius:8px"></iframe>`;
+  }
+  if(link.includes("drive.google.com") || link.includes("drive")){
+    // convert to uc?export=preview
+    const id = extractDriveId(link);
+    const url = id ? `https://drive.google.com/uc?export=preview&id=${id}` : link;
+    return `<iframe src="${url}" style="width:100%;height:100%;border:none;border-radius:8px"></iframe>`;
+  }
+  // assume mp4
+  return `<video controls style="width:100%;height:100%;border-radius:8px"><source src="${link}"></video>`;
+}
+
+function openFloat(link){
+  const fp = document.getElementById("floatPlayer");
+  document.getElementById("floatFrame").src = transformLinkForFloat(link);
+  fp.style.display = "block";
+}
+function closeFloat(){ document.getElementById("floatPlayer").style.display="none"; document.getElementById("floatFrame").src=""; }
+function openInNew(){
+  if(!currentVideo) return;
+  window.open(currentVideo.link, "_blank");
+}
+function transformLinkForFloat(link){
+  if(link.includes("watch?v=")) return link.replace("watch?v=","embed/");
+  if(link.includes("youtu.be/")) return link.replace("youtu.be/","www.youtube.com/embed/");
+  if(link.includes("drive.google.com")){ const id = extractDriveId(link); return id ? `https://drive.google.com/uc?export=preview&id=${id}` : link; }
+  return link;
+}
+
+/* ============================
+   LIKES (par utilisateur)
+===============================*/
+function updateLikeButton(){
+  const btn = document.getElementById("likeBtn");
+  if(!currentVideo) return;
+  const user = getUser();
+  const likes = load(likesKey(), {});
+  const list = likes[currentVideo.id] || [];
+  const count = list.length || 0;
+  btn.innerText = `❤️ ${count}`;
+  // highlight if user liked
+  if(user && list.includes(user)) btn.style.opacity = "0.7"; else btn.style.opacity = "1";
+}
+function toggleLike(){
+  const user = getUser();
+  if(!user){ alert("Créez d'abord un pseudo pour liker (Profil)."); return; }
+  if(!currentVideo) return;
+  const likes = load(likesKey(), {});
+  const arr = likes[currentVideo.id] || [];
+  const idx = arr.indexOf(user);
+  if(idx === -1) arr.push(user); else arr.splice(idx,1);
+  likes[currentVideo.id] = arr;
+  save(likesKey(), likes);
+  updateLikeButton();
+  applyFilters(); // refresh ordering if sorting by popular
+}
+
+/* ============================
+   COMMENTS (full)
+===============================*/
+function renderComments(){
+  if(!currentVideo) return;
+  const listEl = document.getElementById("commentsList");
+  listEl.innerHTML = "";
+  const all = load(commentsKey(), {});
+  const items = all[currentVideo.id] || [];
+  items.slice().reverse().forEach(c=>{
+    const div = document.createElement("div"); div.className = "comment";
+    const meta = document.createElement("div"); meta.className = "meta";
+    const left = document.createElement("div"); left.textContent = `${escapeHtml(c.user)} • ${new Date(c.ts).toLocaleString()}`;
+    const right = document.createElement("div");
+    if(getUser() === c.user){
+      const del = document.createElement("button"); del.textContent="Supprimer"; del.style.background="transparent"; del.style.color="var(--danger)"; del.style.border="none"; del.style.cursor="pointer";
+      del.onclick = (e)=>{ e.stopPropagation(); deleteComment(c.id); };
+      right.appendChild(del);
+    }
+    meta.appendChild(left); meta.appendChild(right);
+    const text = document.createElement("div"); text.style.marginTop="6px"; text.textContent = c.text;
+    div.appendChild(meta); div.appendChild(text);
+    listEl.appendChild(div);
+  });
+}
+function postComment(){
+  const user = getUser();
+  if(!user){ alert("Créez un pseudo pour commenter."); return; }
+  const txt = document.getElementById("commentInput").value.trim();
+  if(!txt) return;
+  const all = load(commentsKey(), {});
+  const arr = all[currentVideo.id] || [];
+  const commentObj = { id: Date.now() + Math.random(), user, text: txt, ts: Date.now() };
+  arr.push(commentObj);
+  all[currentVideo.id] = arr;
+  save(commentsKey(), all);
+  document.getElementById("commentInput").value = "";
+  renderComments();
+}
+function deleteComment(cid){
+  const all = load(commentsKey(), {});
+  const arr = (all[currentVideo.id] || []).filter(c=> c.id !== cid);
+  all[currentVideo.id] = arr;
+  save(commentsKey(), all);
+  renderComments();
+}
+
+/* ============================
+   SUGGESTIONS
+===============================*/
+function renderSuggestions(currentId){
+  const container = document.getElementById("suggestions");
+  container.innerHTML = "";
+  VIDEOS.filter(v=>v.id!==currentId).forEach(v=>{
+    const card = document.createElement("div"); card.className="video-card"; card.style.cursor="pointer";
+    card.onclick = ()=> openPlayer(v.id);
+    const thumb = document.createElement("div"); thumb.className="thumb"; thumb.style.backgroundImage=`url('${v.thumb}')`;
+    const meta = document.createElement("div"); meta.className="meta"; meta.innerHTML = `<h3>${escapeHtml(v.title)}</h3><div class="sub">${escapeHtml(v.category)}</div>`;
+    card.appendChild(thumb); card.appendChild(meta);
+    container.appendChild(card);
+  });
+}
+
+/* ============================
+   HELPERS
+===============================*/
+function extractDriveId(url){
+  if(!url) return null;
+  const m = url.match(/\/d\/([A-Za-z0-9_-]+)/);
+  if(m) return m[1];
+  const m2 = url.match(/[?&]id=([A-Za-z0-9_-]+)/);
+  if(m2) return m2[1];
+  return null;
+}
+function escapeHtml(s){ if(!s) return ""; return String(s).replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ============================
+   INIT
+===============================*/
+function init(){
+  ensureUserUI();
+  buildCategories();
   applyFilters();
 }
+init();
 
-// ===== FILTER & SEARCH =====
-function populateCategories(){
-  const catFilter=document.getElementById("categoryFilter");
-  const cats=[...new Set(allVideos.map(v=>v.category).filter(c=>c))];
-  catFilter.innerHTML='<option value="">Toutes les catégories</option>';
-  cats.forEach(c=>catFilter.innerHTML+=`<option value="${c}">${c}</option>`);
-}
-function applyFilters(){
-  const cat=document.getElementById("categoryFilter").value;
-  const search=document.getElementById("searchInput").value.toLowerCase();
-  document.querySelectorAll("#videoList .video-card").forEach(card=>{
-    const matchCat = !cat || card.dataset.category===cat;
-    const matchSearch = card.dataset.title.includes(search);
-    card.style.display = matchCat && matchSearch ? "block":"none";
-  });
-}
-
-// ===== ADMIN SYSTEM =====
-function login(){
-  const p=document.getElementById("pass").value;
-  if(p!==ADMIN_PASSWORD) return alert("Mot de passe incorrect");
-  document.getElementById("adminContent").style.display="block";
-  document.getElementById("pass").value="";
-}
-function openAdmin(){
-  document.getElementById("publicPage").style.display="none";
-  document.getElementById("adminPage").style.display="block";
-}
-function closeAdmin(){
-  document.getElementById("adminPage").style.display="none";
-  document.getElementById("publicPage").style.display="block";
-}
-
-// ===== ADD / REMOVE VIDEO =====
-function addVideo(){
-  const t=document.getElementById("title").value.trim();
-  const u=document.getElementById("url").value.trim();
-  const c=document.getElementById("category").value.trim();
-  if(!t||!u)return alert("Veuillez remplir tous les champs.");
-
-  const list=JSON.parse(localStorage.getItem("videos_html"))||[];
-  list.push({id:Date.now(), title:t, url:u, category:c, likes:0, comments:[]});
-  localStorage.setItem("videos_html",JSON.stringify(list));
-  document.getElementById("title").value="";
-  document.getElementById("url").value="";
-  document.getElementById("category").value="";
-  showFeedback("Vidéo ajoutée ✅");
-  loadVideos();
-}
-function removeVideo(id){
-  if(!confirm("Supprimer cette vidéo ?")) return;
-  let list=JSON.parse(localStorage.getItem("videos_html"))||[];
-  list=list.filter(v=>v.id!==id);
-  localStorage.setItem("videos_html",JSON.stringify(list));
-  showFeedback("Vidéo supprimée ❌");
-  loadVideos();
-}
-
-// ===== LIKE & COMMENT =====
-function likeVideo(id){
-  const list=JSON.parse(localStorage.getItem("videos_html"))||[];
-  const video=list.find(v=>v.id===id);
-  if(video){ video.likes=(video.likes||0)+1; localStorage.setItem("videos_html",JSON.stringify(list)); loadVideos(); }
-}
-function addComment(id){
-  const input=document.getElementById(`commentInput${id}`);
-  const text=input.value.trim();
-  if(!text) return;
-  const list=JSON.parse(localStorage.getItem("videos_html"))||[];
-  const video=list.find(v=>v.id===id);
-  if(video){ video.comments=video.comments||[]; video.comments.push(text); localStorage.setItem("videos_html",JSON.stringify(list)); loadVideos(); }
-}
-
-// ===== LECTEUR FLOTTANT =====
-function activateFloatingPlayer(video){
-  const container = document.getElementById("floatingVideoContainer");
-  floatingPlayerId = video.id;
-  let html = "";
-  const url = video.url;
-  const yt = url.match(/(?:v=|be\/|embed\/)([A-Za-z0-9_-]{6,})/);
-  if(yt){
-    html = `<iframe id="floatingPlayerFrame" src="https://www.youtube.com/embed/${yt[1]}?enablejsapi=1" width="300" height="170"></iframe>`;
-    setTimeout(()=>{ytPlayers[`floatingPlayerFrame`] = new YT.Player('floatingPlayerFrame');},500);
-  } else if(url.includes("drive.google")){
-    const gid = url.split("/d/")[1]?.split("/")[0];
-    html = `<iframe src="https://drive.google.com/file/d/${gid}/preview" width="300" height="170" allowfullscreen></iframe>`;
-  } else {
-    html = `<video id="floatingVideoElement" width="300" height="170" controls autoplay>
-      <source src="${url}" type="video/mp4"></video>`;
+/* ============================
+   PWA: manifest + service worker (tentative)
+   - Requires HTTPS to fully work.
+===============================*/
+(function tryRegisterSW(){
+  if('serviceWorker' in navigator){
+    // create simple service worker script as blob
+    const swCode = `
+      const CACHE = 'brainy-cache-v1';
+      self.addEventListener('install', e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/','/index.html'])).catch(()=>{})); self.skipWaiting(); });
+      self.addEventListener('activate', e=>{ e.waitUntil(self.clients.claim()); });
+      self.addEventListener('fetch', e=>{ e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))); });
+    `;
+    try{
+      const blob = new Blob([swCode], {type:'text/javascript'});
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).then(()=>{ console.log('Service worker enregistré (blob)'); }).catch(err=>{ console.warn('SW error', err); });
+    }catch(err){
+      console.warn('SW non supporté:', err);
+    }
   }
-  container.innerHTML = html;
-  document.getElementById("floatingPlayer").style.display="flex";
-}
-function floatingPlay(){ const vid=document.getElementById("floatingVideoElement"); if(vid) vid.play(); else ytPlayers[`floatingPlayerFrame`]?.playVideo?.(); }
-function floatingPause(){ const vid=document.getElementById("floatingVideoElement"); if(vid) vid.pause(); else ytPlayers[`floatingPlayerFrame`]?.pauseVideo?.(); }
-function floatingMute(){ const vid=document.getElementById("floatingVideoElement"); if(vid) vid.muted=true; else ytPlayers[`floatingPlayerFrame`]?.mute?.(); }
-function floatingUnmute(){ const vid=document.getElementById("floatingVideoElement"); if(vid) vid.muted=false; else ytPlayers[`floatingPlayerFrame`]?.unMute?.(); }
-function closeFloatingPlayer(){ document.getElementById("floatingPlayer").style.display="none"; document.getElementById("floatingVideoContainer").innerHTML=""; }
+})();
 
-// ===== FEEDBACK =====
-function showFeedback(msg){
-  const f=document.getElementById("feedback");
-  f.textContent=msg; f.style.display="block";
-  setTimeout(()=>f.style.display="none",2000);
-}
+/* create a simple manifest dynamically (works when hosted) */
+(function createManifest(){
+  const manifest = {
+    "name":"Brainy Vidéo",
+    "short_name":"Brainy",
+    "start_url":".",
+    "display":"standalone",
+    "background_color":"#0b76ef",
+    "theme_color":"#0b76ef",
+    "icons":[{ "src":"", "sizes":"192x192", "type":"image/png" }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('link'); link.rel='manifest'; link.href = url;
+  document.head.appendChild(link);
+})();
 
-// INIT
-loadVideos();
 </script>
 </body>
 </html>
