@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW - Gestion Brainy Wallet</title>
+<link rel="icon" type="image/jpeg" href="source/logo.jpg">
+<style>
+/* --- VARIABLES & RESET --- */
+:root {
+  --primary: #007bff;
+  --success: #28a745;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --info: #17a2b8;
+  --purple: #6f42c1;
+  --dark: #343a40;
+  --light: #f8f9fa;
+  --bg-color: #f0f6ff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: var(--bg-color); color: #333; padding-bottom: 50px; }
+.hidden { display: none !important; }
+
+/* --- CONTENEUR PRINCIPAL --- */
+.container {
+  width: 95%;
+  max-width: 1200px;
+  margin: 30px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+.header-title {
+  text-align: center;
+  color: var(--primary);
+  font-size: clamp(22px, 5vw, 32px);
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+/* --- DASHBOARD STATS --- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 35px;
+}
+.stat-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-5px); }
+.stat-card h4 { color: #6c757d; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card .value { font-size: 28px; font-weight: bold; color: var(--primary); }
+.stat-card.purple .value { color: var(--purple); }
+.stat-card.warning .value { color: #d39e00; }
+
+/* --- DÉPÔT EXPRESS --- */
+.deposit-section {
+  background: #e9f5ff;
+  border-left: 5px solid var(--primary);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 35px;
+}
+.deposit-section h3 { margin-bottom: 15px; color: var(--primary); font-size: 18px; }
+.deposit-form { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-start; }
+.deposit-form input {
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 15px;
+}
+.deposit-form button {
+  background: var(--success);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 15px;
+  transition: opacity 0.2s;
+  height: 44px;
+}
+.deposit-form button:hover { opacity: 0.9; }
+
+/* --- TABLEAU AVANCÉ (NOUVEAU) --- */
+.advanced-section {
+  margin-top: 40px;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  border-top: 4px solid var(--dark);
+}
+.adv-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;
+}
+.adv-header h3 { margin: 0; color: var(--dark); font-size: 20px; }
+.adv-header select {
+  padding: 10px; border-radius: 8px; border: 1px solid #ced4da; font-weight: bold; background: var(--light); color: var(--dark);
+}
+.adv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+.adv-card {
+  background: var(--light); padding: 18px; border-radius: 10px; text-align: center; border: 1px solid #e9ecef;
+}
+.adv-card h4 { font-size: 13px; color: #6c757d; margin-bottom: 10px; text-transform: uppercase; }
+.adv-card .value { font-size: 22px; font-weight: bold; color: var(--dark); }
+
+/* --- BOUTONS D'ACTION (POPUPS) --- */
+.action-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+.btn-panel {
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: transform 0.2s, opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.btn-panel:hover { transform: scale(1.02); opacity: 0.95; }
+.btn-actions-cours { background: linear-gradient(135deg, #17a2b8, #117a8b); }
+.btn-actions-attente { background: linear-gradient(135deg, #ffc107, #e0a800); color: #333; }
+.btn-retraits { background: linear-gradient(135deg, #dc3545, #c82333); }
+.btn-boutique { background: linear-gradient(135deg, #6f42c1, #5a32a3); }
+
+/* --- NOUVEAUTÉS ADMIN ACTIONS (AJOUTÉES SANS TOUCHER AU RESTE) --- */
+.btn-add-action { background: linear-gradient(135deg, #28a745, #218838); }
+.btn-manage-actions { background: linear-gradient(135deg, #fd7e14, #e8590c); }
+.btn-stats-actions { background: linear-gradient(135deg, #007bff, #0056b3); }
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--dark); font-size: 14px; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; }
+.btn-submit { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; }
+.btn-submit:hover { background: #0056b3; }
+.btn-edit { background: var(--warning); color: #333; }
+.btn-edit:hover { background: #e0a800; }
+.btn-delete { background: var(--danger); color: white; }
+.btn-delete:hover { background: #c82333; }
+
+/* --- POPUPS (MODALS) --- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex; justify-content: center; align-items: flex-start;
+  z-index: 2000; padding-top: 5vh; opacity: 0; visibility: hidden; transition: 0.3s ease;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+.modal-content {
+  background: white; width: 95%; max-width: 900px;
+  border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: translateY(-20px); transition: 0.3s ease;
+}
+.modal-overlay.active .modal-content { transform: translateY(0); }
+.modal-header {
+  padding: 15px 20px; color: white; display: flex; justify-content: space-between; align-items: center;
+  border-radius: 12px 12px 0 0;
+}
+.modal-header h3 { font-size: 18px; margin: 0; }
+.modal-header button { background: rgba(0,0,0,0.2); border: none; color: white; font-size: 18px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; background: #f8f9fa; }
+
+/* --- LIST ITEMS DANS LES MODALS --- */
+.list-item {
+  background: white; border: 1px solid #dee2e6; border-radius: 8px;
+  padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+.item-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding-bottom: 8px; }
+.item-header strong { font-size: 16px; color: var(--primary); }
+.item-badge { padding: 4px 8px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
+.item-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px; color: #555; }
+.item-details strong { color: #333; }
+.item-actions { display: flex; gap: 10px; margin-top: 10px; }
+.item-actions button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
+.btn-valider { background: var(--success); } .btn-valider:hover { background: #218838; }
+.btn-rejeter { background: var(--danger); } .btn-rejeter:hover { background: #c82333; }
+.timer-text { font-weight: bold; color: var(--danger); font-size: 13px; }
+
+@media (max-width: 600px) {
+  .deposit-form { flex-direction: column; align-items: stretch; }
+  .deposit-form > div { width: 100%; }
+  .deposit-form input, .deposit-form button { width: 100%; height: auto; padding: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1 class="header-title">⚙️ Gestion Brainy Wallet</h1>
+  
+  <div id="loader" style="text-align: center; padding: 20px; font-size: 18px; color: var(--primary);">Chargement des données en cours...</div>
+
+  <div id="main-content" class="hidden">
+    <div class="dashboard-grid">
+      <div class="stat-card">
+        <h4>Actions en cours</h4>
+        <div class="value" id="stat-actions-count">0</div>
+      </div>
+      <div class="stat-card purple">
+        <h4>Montant Investi (En cours)</h4>
+        <div class="value" id="stat-invested">0 FCFA</div>
+      </div>
+      <div class="stat-card warning">
+        <h4>Total à Payer (À l'échéance)</h4>
+        <div class="value" id="stat-to-pay">0 FCFA</div>
+      </div>
+    </div>
+
+    <!-- NOUVEAU : FORMULAIRE DE DÉPÔT AMÉLIORÉ -->
+    <div class="deposit-section">
+      <h3>💳 Dépôt sur un compte utilisateur</h3>
+      <div class="deposit-form">
+        <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column;">
+          <input type="email" id="dep-email" placeholder="Saisissez l'adresse e-mail de l'utilisateur" style="width: 100%;">
+          <span id="dep-user-name" style="font-size: 13px; font-weight: bold; margin-top: 8px; height: 16px; padding-left: 5px;"></span>
+        </div>
+        <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column;">
+          <input type="number" id="dep-amount" placeholder="Montant à créditer (FCFA)" style="width: 100%; height: 44px;">
+        </div>
+        <button onclick="processDeposit()">Créditer le compte</button>
+      </div>
+    </div>
+
+    <!-- AJOUT DES NOUVEAUX BOUTONS DANS LA GRILLE EXISTANTE -->
+    <div class="action-buttons-grid">
+      <button class="btn-panel btn-actions-cours" onclick="openModal('modal-actions-cours')">⚙️ Actions en cours</button>
+      <button class="btn-panel btn-actions-attente" onclick="openModal('modal-actions-attente')">📋 Actions en attente</button>
+      <button class="btn-panel btn-retraits" onclick="openModal('modal-retraits')">⏳ Retraits demandés</button>
+      <button class="btn-panel btn-boutique" onclick="openModal('modal-commandes')">🛍️ Commandes produits</button>
+      
+      <!-- Nouveaux boutons Admin Actions -->
+      <button class="btn-panel btn-add-action" onclick="openModal('modal-add-action')">➕ Ajouter une action</button>
+      <button class="btn-panel btn-manage-actions" onclick="openModal('modal-manage-actions')">📝 Actions ajoutées</button>
+      <button class="btn-panel btn-stats-actions" onclick="openModal('modal-stats-actions')">📊 Stats des actions</button>
+    </div>
+
+    <!-- NOUVEAU : TABLEAU DE BORD AVANCÉ -->
+    <div class="advanced-section">
+      <div class="adv-header">
+        <h3>📊 Tableau Récapitulatif Avancé</h3>
+        <select id="stat-period" onchange="updateAdvancedDashboard()">
+          <option value="all">Statistiques Globales (Depuis le début)</option>
+          <option value="month">Ce Mois-ci</option>
+          <option value="week">Cette Semaine</option>
+        </select>
+      </div>
+      <div class="adv-grid">
+        <div class="adv-card"><h4>Mise totale actions</h4><div class="value" id="adv-mise-totale" style="color: var(--primary);">0 FCFA</div></div>
+        <div class="adv-card"><h4>Remboursement total</h4><div class="value" id="adv-remboursement" style="color: var(--purple);">0 FCFA</div></div>
+        <div class="adv-card"><h4>Actions totales</h4><div class="value" id="adv-actions-total">0</div></div>
+        <div class="adv-card"><h4>Actions en cours</h4><div class="value" id="adv-actions-cours">0</div></div>
+        <div class="adv-card"><h4>Actions terminées</h4><div class="value" id="adv-actions-terminees">0</div></div>
+        <div class="adv-card"><h4>Actions en attente</h4><div class="value" id="adv-actions-attente">0</div></div>
+        <div class="adv-card"><h4>Retraits validés</h4><div class="value" id="adv-retraits-valides" style="color: var(--danger);">0 FCFA</div></div>
+        <div class="adv-card"><h4>Retraits attente</h4><div class="value" id="adv-retraits-attente" style="color: var(--warning);">0 FCFA</div></div>
+        <div class="adv-card"><h4>Dépôts effectués</h4><div class="value" id="adv-depots" style="color: var(--success);">0 FCFA</div></div>
+        <div class="adv-card" style="border: 2px solid var(--success);"><h4>Revenus Boutique</h4><div class="value" id="adv-benefice" style="color: var(--success);">0 FCFA</div></div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- POPUPS EXISTANTS -->
+<div class="modal-overlay" id="modal-actions-cours">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--info);">
+      <h3>⚙️ Actions en cours</h3>
+      <button onclick="closeModal('modal-actions-cours')">✖</button>
+    </div>
+    <div class="modal-body" id="list-actions-cours">Chargement...</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-actions-attente">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--warning); color: #333;">
+      <h3>📋 Actions en attente</h3>
+      <button onclick="closeModal('modal-actions-attente')" style="color:#333;">✖</button>
+    </div>
+    <div class="modal-body" id="list-actions-attente">Chargement...</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-retraits">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--danger);">
+      <h3>⏳ Retraits demandés</h3>
+      <button onclick="closeModal('modal-retraits')">✖</button>
+    </div>
+    <div class="modal-body" id="list-retraits">Chargement...</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-commandes">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--purple);">
+      <h3>🛍️ Commandes Boutique</h3>
+      <button onclick="closeModal('modal-commandes')">✖</button>
+    </div>
+    <div class="modal-body" id="list-commandes">Chargement...</div>
+  </div>
+</div>
+
+<!-- NOUVEAUX POPUPS ADMIN ACTIONS -->
+<!-- 1. Ajouter une action -->
+<div class="modal-overlay" id="modal-add-action">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--success);">
+      <h3>➕ Créer une nouvelle action</h3>
+      <button onclick="closeModal('modal-add-action')">✖</button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <label>Nom du plan d'action</label>
+            <input type="text" id="add-action-name" placeholder="ex: Plan Premium">
+        </div>
+        <div class="form-group">
+            <label>Description (Facultative)</label>
+            <textarea id="add-action-desc" rows="3" placeholder="Avantages de ce plan..."></textarea>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;">
+                <label>Mise minimum (FCFA)</label>
+                <input type="number" id="add-action-min" placeholder="ex: 1000">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label>Mise maximum (FCFA)</label>
+                <input type="number" id="add-action-max" placeholder="ex: 50000">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Durée (Texte exact)</label>
+            <input type="text" id="add-action-duration" placeholder="ex: 7 Jours, 1 Mois, 2 Mois...">
+        </div>
+        <div class="form-group">
+            <label>Bénéfice à terme (%)</label>
+            <input type="number" id="add-action-profit" placeholder="ex: 20">
+        </div>
+        <div class="form-group">
+            <label>Statut d'affichage</label>
+            <select id="add-action-status">
+                <option value="active">Active (Visible par les clients)</option>
+                <option value="désactivée">Désactivée (Cachée)</option>
+            </select>
+        </div>
+        <button class="btn-submit" onclick="submitAddAction()">Enregistrer et Publier l'action</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Actions ajoutées (Gestion) -->
+<div class="modal-overlay" id="modal-manage-actions">
+  <div class="modal-content">
+    <div class="modal-header" style="background: #fd7e14;">
+      <h3>📝 Gestion des actions créées</h3>
+      <button onclick="closeModal('modal-manage-actions')">✖</button>
+    </div>
+    <div class="modal-body" id="list-system-actions">Chargement...</div>
+  </div>
+</div>
+
+<!-- 3. Modification d'une action -->
+<div class="modal-overlay" id="modal-edit-action">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--warning); color: #333;">
+      <h3>✏️ Modifier l'action</h3>
+      <button onclick="closeModal('modal-edit-action')" style="color: #333;">✖</button>
+    </div>
+    <div class="modal-body">
+        <input type="hidden" id="edit-action-id">
+        <div class="form-group">
+            <label>Nom du plan d'action</label>
+            <input type="text" id="edit-action-name">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="edit-action-desc" rows="3"></textarea>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;">
+                <label>Mise minimum (FCFA)</label>
+                <input type="number" id="edit-action-min">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label>Mise maximum (FCFA)</label>
+                <input type="number" id="edit-action-max">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Durée</label>
+            <input type="text" id="edit-action-duration">
+        </div>
+        <div class="form-group">
+            <label>Bénéfice (%)</label>
+            <input type="number" id="edit-action-profit">
+        </div>
+        <div class="form-group">
+            <label>Statut d'affichage</label>
+            <select id="edit-action-status">
+                <option value="active">Active</option>
+                <option value="désactivée">Désactivée</option>
+            </select>
+        </div>
+        <button class="btn-submit" onclick="submitEditAction()">Mettre à jour l'action</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Statistiques des Actions -->
+<div class="modal-overlay" id="modal-stats-actions">
+  <div class="modal-content">
+    <div class="modal-header" style="background: var(--primary);">
+      <h3>📊 Statistiques par Action</h3>
+      <button onclick="closeModal('modal-stats-actions')">✖</button>
+    </div>
+    <div class="modal-body" id="list-stats-actions">Chargement...</div>
+  </div>
+</div>
+
+
+<script type="module">
+// AJOUT de addDoc et deleteDoc aux imports existants (sans casser l'existant)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, arrayUnion, query, where, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+// Configuration Firebase
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let allUsers = [];
+let allOrders = [];
+let allSystemActions = []; // NOUVELLE VARIABLE pour stocker les actions système
+let timers = [];
+
+// Vérification Admin
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists() && snap.data().isAdmin) {
+            await loadData();
+        } else {
+            alert("Accès refusé. Réservé aux administrateurs.");
+            window.location.href = "index.html";
+        }
+    } else {
+        window.location.href = "login.html";
+    }
+});
+
+// Calcul du profit en fonction de la durée (identique à action.html)
+function getProfitPercent(timeStr) {
+    if(timeStr === "7 Jours") return 5;
+    if(timeStr === "30 Jours") return 10;
+    if(timeStr === "2 Mois") return 20;
+    if(timeStr === "4 Mois") return 25;
+    if(timeStr === "6 Mois") return 35;
+    if(timeStr === "7 Mois") return 40;
+    if(timeStr === "9 Mois") return 45;
+    return 5;
+}
+
+// Calcul de la date de fin
+function getExpiryDate(timeStr) {
+    let expiry = new Date();
+    if(timeStr === "7 Jours") expiry.setDate(expiry.getDate() + 7);
+    else if(timeStr === "30 Jours") expiry.setDate(expiry.getDate() + 30);
+    else if(timeStr === "2 Mois") expiry.setMonth(expiry.getMonth() + 2);
+    else if(timeStr === "4 Mois") expiry.setMonth(expiry.getMonth() + 4);
+    else if(timeStr === "6 Mois") expiry.setMonth(expiry.getMonth() + 6);
+    else if(timeStr === "7 Mois") expiry.setMonth(expiry.getMonth() + 7);
+    else if(timeStr === "9 Mois") expiry.setMonth(expiry.getMonth() + 9);
+    else expiry.setDate(expiry.getDate() + 7);
+    return expiry.toISOString();
+}
+
+// Charger toutes les données (Mise à jour pour inclure system_actions)
+async function loadData() {
+    document.getElementById("loader").classList.remove("hidden");
+    document.getElementById("main-content").classList.add("hidden");
+    
+    // Récupérer les utilisateurs
+    const usersSnap = await getDocs(collection(db, "users"));
+    allUsers = [];
+    usersSnap.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+
+    // Récupérer les commandes
+    const ordersSnap = await getDocs(collection(db, "orders"));
+    allOrders = [];
+    ordersSnap.forEach(doc => allOrders.push({ id: doc.id, ...doc.data() }));
+
+    // NOUVEAU : Récupérer les actions créées par l'admin
+    const sysActionsSnap = await getDocs(collection(db, "system_actions"));
+    allSystemActions = [];
+    sysActionsSnap.forEach(doc => allSystemActions.push({ id: doc.id, ...doc.data() }));
+
+    updateDashboard();
+    renderActionsCours();
+    renderActionsAttente();
+    renderRetraits();
+    renderCommandes();
+    
+    // NOUVEAU : Rendu des modals admin actions
+    renderManageActions();
+    renderStatsActions();
+    
+    // Mise à jour initiale du tableau de bord avancé
+    window.updateAdvancedDashboard();
+
+    document.getElementById("loader").classList.add("hidden");
+    document.getElementById("main-content").classList.remove("hidden");
+}
+
+// Mettre à jour les statistiques globales (En-tête)
+function updateDashboard() {
+    let actionsCount = 0;
+    let totalInvested = 0;
+    let totalToPay = 0;
+
+    allUsers.forEach(user => {
+        if (user.actions) {
+            user.actions.forEach(act => {
+                if (act.status === "validé" && !act.isPaid) {
+                    actionsCount++;
+                    totalInvested += act.stake;
+                    // Léger ajout dynamique : si l'action a son propre profitPct, on l'utilise, sinon on utilise l'ancien système (rétrocompatibilité)
+                    let pct = act.profitPct !== undefined ? act.profitPct : getProfitPercent(act.time);
+                    let profit = (act.stake * pct) / 100;
+                    totalToPay += (act.stake + profit);
+                }
+            });
+        }
+    });
+
+    document.getElementById("stat-actions-count").textContent = actionsCount;
+    document.getElementById("stat-invested").textContent = totalInvested.toLocaleString('fr-FR') + " FCFA";
+    document.getElementById("stat-to-pay").textContent = totalToPay.toLocaleString('fr-FR') + " FCFA";
+}
+
+// Écouteur pour afficher le nom du bénéficiaire en temps réel (Dépôt)
+document.getElementById("dep-email").addEventListener("input", (e) => {
+    const email = e.target.value.trim().toLowerCase();
+    const nameEl = document.getElementById("dep-user-name");
+    
+    if (!email) {
+        nameEl.textContent = "";
+        return;
+    }
+    
+    const user = allUsers.find(u => u.email && u.email.toLowerCase() === email);
+    if (user) {
+        nameEl.textContent = "✅ Bénéficiaire trouvé : " + user.fullName;
+        nameEl.style.color = "var(--success)";
+    } else {
+        nameEl.textContent = "❌ Utilisateur introuvable";
+        nameEl.style.color = "var(--danger)";
+    }
+});
+
+// Fonction globale pour Dépôt par e-mail
+window.processDeposit = async () => {
+    const email = document.getElementById("dep-email").value.trim().toLowerCase();
+    const amount = parseInt(document.getElementById("dep-amount").value);
+
+    if (!email || isNaN(amount) || amount <= 0) {
+        alert("Veuillez renseigner un e-mail valide et un montant supérieur à 0.");
+        return;
+    }
+
+    try {
+        const q = query(collection(db, "users"), where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            alert("Aucun utilisateur trouvé avec cet e-mail.");
+            return;
+        }
+
+        const userDoc = querySnapshot.docs[0];
+        const userData = userDoc.data();
+        let newBalance = (userData.balance || 0) + amount;
+
+        const histEntry = { date: new Date().toISOString(), type: 'Dépôt', amount: amount, desc: 'Crédit manuel Admin' };
+        const notifEntry = { date: new Date().toISOString(), message: `Votre compte a été crédité de ${amount} FCFA par l'administration.`, type: 'success' };
+
+        await updateDoc(doc(db, "users", userDoc.id), {
+            balance: newBalance,
+            history: arrayUnion(histEntry),
+            notifications: arrayUnion(notifEntry)
+        });
+
+        alert(`Succès ! Le compte de ${userData.fullName} a été crédité de ${amount} FCFA.`);
+        document.getElementById("dep-email").value = "";
+        document.getElementById("dep-amount").value = "";
+        document.getElementById("dep-user-name").textContent = ""; // Réinitialiser le nom
+        await loadData();
+    } catch (error) {
+        console.error(error);
+        alert("Erreur lors du dépôt.");
+    }
+};
+
+// Logique de filtrage des dates pour les stats avancées
+function isWithinPeriod(dateStr, period) {
+    if (period === 'all') return true;
+    if (!dateStr) return false; 
+    
+    const date = new Date(dateStr);
+    if (isNaN(date)) return false;
+    
+    const now = new Date();
+    
+    if (period === 'month') {
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    }
+    if (period === 'week') {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay()); 
+        startOfWeek.setHours(0,0,0,0);
+        return date >= startOfWeek;
+    }
+    return true;
+}
+
+// Mise à jour du Tableau Récapitulatif Avancé
+window.updateAdvancedDashboard = () => {
+    let stats = {
+        totalActionStake: 0,
+        totalActionRefunds: 0,
+        countTotalActions: 0,
+        countOngoingActions: 0,
+        countCompletedActions: 0,
+        countPendingActions: 0,
+        totalWithdrawalsValidated: 0,
+        totalWithdrawalsPending: 0,
+        totalDeposits: 0,
+        platformRevenue: 0 
+    };
+
+    const period = document.getElementById("stat-period").value;
+
+    allUsers.forEach(user => {
+        if (user.actions) {
+            user.actions.forEach(act => {
+                let actDate = act.validationDate || act.date;
+                if (isWithinPeriod(actDate, period)) {
+                    if (act.status !== "rejeté") stats.countTotalActions++;
+                    
+                    if (act.status === "validé" && !act.isPaid) {
+                        stats.countOngoingActions++;
+                        stats.totalActionStake += (act.stake || 0);
+                    } else if (act.status === "validé" && act.isPaid) {
+                        stats.countCompletedActions++;
+                        stats.totalActionStake += (act.stake || 0);
+                        // Rétrocompatibilité profit dynamique
+                        let pct = act.profitPct !== undefined ? act.profitPct : getProfitPercent(act.time);
+                        let profit = ((act.stake || 0) * pct) / 100;
+                        stats.totalActionRefunds += ((act.stake || 0) + profit);
+                    } else if (act.status === "en attente") {
+                        stats.countPendingActions++;
+                    }
+                }
+            });
+        }
+
+        if (user.withdrawRequests) {
+            user.withdrawRequests.forEach(req => {
+                if (isWithinPeriod(req.date, period)) {
+                    if (req.status === "validé") stats.totalWithdrawalsValidated += (req.amount || 0);
+                    if (req.status === "en attente") stats.totalWithdrawalsPending += (req.amount || 0);
+                }
+            });
+        }
+
+        if (user.history) {
+            user.history.forEach(hist => {
+                if (hist.type === 'Dépôt' && isWithinPeriod(hist.date, period)) {
+                    stats.totalDeposits += (hist.amount || 0);
+                }
+            });
+        }
+    });
+
+    allOrders.forEach(order => {
+        let orderDate = order.date; 
+        let dateStr = null;
+        if (orderDate) {
+            dateStr = orderDate.toMillis ? new Date(orderDate.toMillis()).toISOString() : orderDate;
+        }
+        
+        if (order.status === "Livrée" && isWithinPeriod(dateStr, period)) {
+            stats.platformRevenue += (order.total || 0);
+        }
+    });
+
+    document.getElementById("adv-mise-totale").textContent = stats.totalActionStake.toLocaleString('fr-FR') + " FCFA";
+    document.getElementById("adv-remboursement").textContent = stats.totalActionRefunds.toLocaleString('fr-FR') + " FCFA";
+    document.getElementById("adv-actions-total").textContent = stats.countTotalActions;
+    document.getElementById("adv-actions-cours").textContent = stats.countOngoingActions;
+    document.getElementById("adv-actions-terminees").textContent = stats.countCompletedActions;
+    document.getElementById("adv-actions-attente").textContent = stats.countPendingActions;
+    document.getElementById("adv-retraits-valides").textContent = stats.totalWithdrawalsValidated.toLocaleString('fr-FR') + " FCFA";
+    document.getElementById("adv-retraits-attente").textContent = stats.totalWithdrawalsPending.toLocaleString('fr-FR') + " FCFA";
+    document.getElementById("adv-depots").textContent = stats.totalDeposits.toLocaleString('fr-FR') + " FCFA";
+    document.getElementById("adv-benefice").textContent = stats.platformRevenue.toLocaleString('fr-FR') + " FCFA";
+};
+
+// --- RENDU DES POPUPS ---
+
+// 1. Actions en cours
+function renderActionsCours() {
+    timers.forEach(clearInterval); timers = [];
+    const container = document.getElementById("list-actions-cours");
+    let html = "";
+    
+    allUsers.forEach(user => {
+        if (user.actions) {
+            user.actions.forEach((act, idx) => {
+                if (act.status === "validé" && !act.isPaid) {
+                    let start = act.validationDate ? new Date(act.validationDate).toLocaleDateString('fr-FR') : "N/A";
+                    let end = act.expiryDate ? new Date(act.expiryDate).toLocaleDateString('fr-FR') : "N/A";
+                    let timerId = `timer-${user.id}-${idx}`;
+                    // Rétrocompatibilité profit dynamique
+                    let pct = act.profitPct !== undefined ? act.profitPct : getProfitPercent(act.time);
+                    let profit = (act.stake * pct) / 100;
+                    
+                    html += `
+                        <div class="list-item">
+                            <div class="item-header">
+                                <strong>${user.fullName} (${user.email})</strong>
+                                <span class="item-badge" style="background:var(--info);">En cours</span>
+                            </div>
+                            <div class="item-details">
+                                <div><strong>Action:</strong> ${act.name}</div>
+                                <div><strong>Investi:</strong> ${act.stake.toLocaleString('fr-FR')} FCFA</div>
+                                <div><strong>Durée:</strong> ${act.time}</div>
+                                <div><strong>Gain prévu:</strong> +${profit.toLocaleString('fr-FR')} FCFA</div>
+                                <div><strong>Début:</strong> ${start}</div>
+                                <div><strong>Fin:</strong> ${end}</div>
+                            </div>
+                            <div class="timer-text" id="${timerId}">Calcul du temps...</div>
+                        </div>
+                    `;
+
+                    if(act.expiryDate) {
+                        setTimeout(() => startTimer(act.expiryDate, timerId), 100);
+                    }
+                }
+            });
+        }
+    });
+
+    container.innerHTML = html || "<p style='text-align:center;'>Aucune action en cours.</p>";
+}
+
+function startTimer(expiryDateStr, elementId) {
+    const target = new Date(expiryDateStr).getTime();
+    const f = setInterval(() => {
+        const el = document.getElementById(elementId);
+        if(!el) return clearInterval(f);
+        const diff = target - new Date().getTime();
+        if (diff <= 0) { 
+            el.textContent = "Action arrivée à terme. En attente de paiement automatique ou manuel."; 
+            el.style.color = "green"; 
+            clearInterval(f); 
+        } else { 
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            el.textContent = `⏳ Temps restant: ${days}j ${hours}h ${mins}m`; 
+        }
+    }, 1000); 
+    timers.push(f);
+}
+
+// 2. Actions en attente
+function renderActionsAttente() {
+    const container = document.getElementById("list-actions-attente");
+    let html = "";
+    
+    allUsers.forEach(user => {
+        if (user.actions) {
+            user.actions.forEach((act, idx) => {
+                if (act.status === "en attente") {
+                    let dateReq = act.date ? new Date(act.date).toLocaleDateString('fr-FR') : "Inconnue";
+                    
+                    html += `
+                        <div class="list-item">
+                            <div class="item-header">
+                                <strong>${user.fullName}</strong>
+                                <span class="item-badge" style="background:var(--warning); color:#333;">En attente</span>
+                            </div>
+                            <div class="item-details">
+                                <div><strong>Email:</strong> ${user.email}</div>
+                                <div><strong>Montant:</strong> ${act.stake.toLocaleString('fr-FR')} FCFA</div>
+                                <div><strong>Période:</strong> ${act.time}</div>
+                                <div><strong>Date Demande:</strong> ${dateReq}</div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-valider" onclick="validateAction('${user.id}', ${idx}, ${act.stake}, '${act.time}', '${act.name}')">Valider (Démarrer)</button>
+                                <button class="btn-rejeter" onclick="rejectAction('${user.id}', ${idx}, '${act.name}')">Rejeter</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+    });
+
+    container.innerHTML = html || "<p style='text-align:center;'>Aucune action en attente.</p>";
+}
+
+// 3. Retraits demandés
+function renderRetraits() {
+    const container = document.getElementById("list-retraits");
+    let html = "";
+    
+    allUsers.forEach(user => {
+        if (user.withdrawRequests) {
+            user.withdrawRequests.forEach((req, idx) => {
+                if (req.status === "en attente") {
+                    let dateReq = req.date ? new Date(req.date).toLocaleString('fr-FR') : "Inconnue";
+                    
+                    html += `
+                        <div class="list-item">
+                            <div class="item-header">
+                                <strong>${user.fullName}</strong>
+                                <span class="item-badge" style="background:var(--danger);">Retrait</span>
+                            </div>
+                            <div class="item-details">
+                                <div><strong>Solde Actuel:</strong> <span style="color:var(--success); font-weight:bold;">${(user.balance || 0).toLocaleString('fr-FR')} FCFA</span></div>
+                                <div><strong>Montant demandé:</strong> <span style="color:var(--danger); font-weight:bold;">${req.amount.toLocaleString('fr-FR')} FCFA</span></div>
+                                <div><strong>Méthode:</strong> ${req.method}</div>
+                                <div><strong>Numéro:</strong> ${req.phone || "N/A"}</div>
+                                <div><strong>Date:</strong> ${dateReq}</div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-valider" onclick="validateWithdraw('${user.id}', ${idx}, ${req.amount})">Valider (Déduire du compte)</button>
+                                <button class="btn-rejeter" onclick="rejectWithdraw('${user.id}', ${idx}, ${req.amount})">Rejeter</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+    });
+
+    container.innerHTML = html || "<p style='text-align:center;'>Aucune demande de retrait.</p>";
+}
+
+// 4. Commandes Produits
+function renderCommandes() {
+    const container = document.getElementById("list-commandes");
+    let html = "";
+    
+    allOrders.forEach(order => {
+        if (order.status === "En attente de livraison") {
+            let client = allUsers.find(u => u.id === order.uid) || { fullName: "Inconnu", email: order.email };
+            let dateStr = order.date ? new Date(order.date.toMillis ? order.date.toMillis() : order.date).toLocaleString('fr-FR') : "Inconnue";
+            let products = order.items.map(i => `${i.qty}x ${i.nom}`).join(", ");
+            
+            html += `
+                <div class="list-item">
+                    <div class="item-header">
+                        <strong>${client.fullName}</strong>
+                        <span class="item-badge" style="background:var(--purple);">Commande</span>
+                    </div>
+                    <div class="item-details">
+                        <div style="grid-column: 1/-1;"><strong>Produit(s):</strong> ${products}</div>
+                        <div><strong>Total:</strong> ${order.total.toLocaleString('fr-FR')} FCFA</div>
+                        <div><strong>Téléphone:</strong> ${order.phone || order.whatsapp || "N/A"}</div>
+                        <div style="grid-column: 1/-1;"><strong>Livraison/Contact:</strong> ${order.address || order.whatsapp || order.email}</div>
+                        <div><strong>Date:</strong> ${dateStr}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-valider" onclick="acceptOrder('${order.id}')">Accepter (Livrée)</button>
+                        <button class="btn-rejeter" onclick="rejectOrder('${order.id}')">Rejeter</button>
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    container.innerHTML = html || "<p style='text-align:center;'>Aucune commande en attente.</p>";
+}
+
+// --- FONCTIONS LOGIQUES DE BASE ---
+
+window.validateAction = async (uid, idx, stake, time, name) => {
+    if(!confirm(`Valider l'action de ${stake} FCFA ?`)) return;
+    const user = allUsers.find(u => u.id === uid);
+    if(user.balance < stake) return alert("Impossible : Le solde du client est insuffisant.");
+
+    user.balance -= stake;
+    let act = user.actions[idx];
+    act.status = "validé";
+    act.expiryDate = getExpiryDate(time);
+    act.validationDate = new Date().toISOString();
+    act.isPaid = false;
+
+    let hist = {date: new Date().toISOString(), type:'Action Validée', amount: -stake, desc: `Action ${name} active`};
+    let notif = {date: new Date().toISOString(), message: `Action ${name} validée ! Le décompte a commencé.`, type:'success'};
+
+    await updateDoc(doc(db, "users", uid), {
+        balance: user.balance,
+        actions: user.actions,
+        history: arrayUnion(hist),
+        notifications: arrayUnion(notif)
+    });
+    alert("Action validée et démarrée !");
+    await loadData();
+};
+
+window.rejectAction = async (uid, idx, name) => {
+    if(!confirm("Rejeter cette action ?")) return;
+    const user = allUsers.find(u => u.id === uid);
+    user.actions[idx].status = "rejeté";
+    let notif = {date: new Date().toISOString(), message: `Désolé, votre action "${name}" a été rejetée.`, type:'error'};
+
+    await updateDoc(doc(db, "users", uid), { actions: user.actions, notifications: arrayUnion(notif) });
+    alert("Action rejetée.");
+    await loadData();
+};
+
+window.validateWithdraw = async (uid, idx, amount) => {
+    if(!confirm(`Déduire définitivement ${amount} FCFA du compte de ce client et valider le retrait ?`)) return;
+    const user = allUsers.find(u => u.id === uid);
+    if(user.balance < amount) return alert("Solde insuffisant pour ce retrait.");
+
+    user.balance -= amount;
+    user.totalWithdrawn = (user.totalWithdrawn || 0) + amount;
+    user.withdrawRequests[idx].status = "validé";
+
+    let hist = {date: new Date().toISOString(), type:'Retrait Validé', amount: -amount, desc: `Demande approuvée par l'admin`};
+    let notif = {date: new Date().toISOString(), message: `Votre demande de retrait de ${amount} FCFA a été validée.`, type:'success'};
+
+    await updateDoc(doc(db, "users", uid), {
+        balance: user.balance,
+        totalWithdrawn: user.totalWithdrawn,
+        withdrawRequests: user.withdrawRequests,
+        history: arrayUnion(hist),
+        notifications: arrayUnion(notif)
+    });
+    alert("Retrait validé et déduit du solde !");
+    await loadData();
+};
+
+window.rejectWithdraw = async (uid, idx, amount) => {
+    if(!confirm("Rejeter ce retrait (aucune déduction) ?")) return;
+    const user = allUsers.find(u => u.id === uid);
+    user.withdrawRequests[idx].status = "rejeté";
+    let notif = {date: new Date().toISOString(), message: `Désolé, votre demande de retrait de ${amount} FCFA a été rejetée.`, type:'error'};
+
+    await updateDoc(doc(db, "users", uid), { withdrawRequests: user.withdrawRequests, notifications: arrayUnion(notif) });
+    alert("Retrait rejeté.");
+    await loadData();
+};
+
+window.acceptOrder = async (orderId) => {
+    if(!confirm("Marquer cette commande comme livrée ?")) return;
+    await updateDoc(doc(db, "orders", orderId), { status: "Livrée" });
+    alert("Commande acceptée !");
+    await loadData();
+};
+
+window.rejectOrder = async (orderId) => {
+    if(!confirm("Rejeter cette commande ?")) return;
+    await updateDoc(doc(db, "orders", orderId), { status: "Rejetée" });
+    alert("Commande rejetée !");
+    await loadData();
+};
+
+
+// =====================================================================
+// NOUVELLES FONCTIONS : GESTION DES ACTIONS DYNAMIQUES (SANS CASSER L'EXISTANT)
+// =====================================================================
+
+// 1. Ajouter une action
+window.submitAddAction = async () => {
+    const name = document.getElementById("add-action-name").value.trim();
+    const description = document.getElementById("add-action-desc").value.trim();
+    const minAmount = parseInt(document.getElementById("add-action-min").value);
+    const maxAmount = parseInt(document.getElementById("add-action-max").value);
+    const durationStr = document.getElementById("add-action-duration").value.trim();
+    const profitPct = parseFloat(document.getElementById("add-action-profit").value);
+    const status = document.getElementById("add-action-status").value;
+
+    if(!name || isNaN(minAmount) || isNaN(maxAmount) || !durationStr || isNaN(profitPct)) {
+        return alert("Veuillez remplir tous les champs obligatoires correctement.");
+    }
+
+    try {
+        await addDoc(collection(db, "system_actions"), {
+            name, description, minAmount, maxAmount, durationStr, profitPct, status
+        });
+        
+        alert("Action ajoutée et publiée avec succès !");
+        closeModal('modal-add-action');
+        
+        // Vider les champs
+        document.getElementById("add-action-name").value = "";
+        document.getElementById("add-action-desc").value = "";
+        document.getElementById("add-action-min").value = "";
+        document.getElementById("add-action-max").value = "";
+        document.getElementById("add-action-duration").value = "";
+        document.getElementById("add-action-profit").value = "";
+        
+        await loadData(); // Rafraîchir
+    } catch (error) {
+        alert("Erreur lors de la création de l'action: " + error.message);
+    }
+};
+
+// 2. Afficher la liste des actions créées pour gestion
+function renderManageActions() {
+    const container = document.getElementById("list-system-actions");
+    let html = "";
+    
+    allSystemActions.forEach(act => {
+        let badgeColor = act.status === 'active' ? 'var(--success)' : 'var(--danger)';
+        html += `
+            <div class="list-item">
+                <div class="item-header">
+                    <strong>${act.name}</strong>
+                    <span class="item-badge" style="background:${badgeColor};">${act.status.toUpperCase()}</span>
+                </div>
+                <div class="item-details">
+                    <div><strong>Durée:</strong> ${act.durationStr}</div>
+                    <div><strong>Bénéfice:</strong> +${act.profitPct}%</div>
+                    <div><strong>Mise autorisée:</strong> ${act.minAmount.toLocaleString('fr-FR')} - ${act.maxAmount.toLocaleString('fr-FR')} F</div>
+                    <div style="grid-column: 1/-1;"><strong>Description:</strong> ${act.description || "Aucune description"}</div>
+                </div>
+                <div class="item-actions">
+                    <button class="btn-edit" onclick="openEditAction('${act.id}')">Modifier</button>
+                    <button class="btn-delete" onclick="deleteSystemAction('${act.id}')">Supprimer</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html || "<p style='text-align:center;'>Aucune action n'a encore été ajoutée au système.</p>";
+}
+
+// 3. Ouvrir le modal de modification
+window.openEditAction = (id) => {
+    const act = allSystemActions.find(a => a.id === id);
+    if(!act) return;
+    
+    document.getElementById("edit-action-id").value = act.id;
+    document.getElementById("edit-action-name").value = act.name;
+    document.getElementById("edit-action-desc").value = act.description || "";
+    document.getElementById("edit-action-min").value = act.minAmount;
+    document.getElementById("edit-action-max").value = act.maxAmount;
+    document.getElementById("edit-action-duration").value = act.durationStr;
+    document.getElementById("edit-action-profit").value = act.profitPct;
+    document.getElementById("edit-action-status").value = act.status;
+    
+    openModal("modal-edit-action");
+};
+
+// 4. Enregistrer la modification
+window.submitEditAction = async () => {
+    const id = document.getElementById("edit-action-id").value;
+    const name = document.getElementById("edit-action-name").value.trim();
+    const description = document.getElementById("edit-action-desc").value.trim();
+    const minAmount = parseInt(document.getElementById("edit-action-min").value);
+    const maxAmount = parseInt(document.getElementById("edit-action-max").value);
+    const durationStr = document.getElementById("edit-action-duration").value.trim();
+    const profitPct = parseFloat(document.getElementById("edit-action-profit").value);
+    const status = document.getElementById("edit-action-status").value;
+
+    if(!name || isNaN(minAmount) || isNaN(maxAmount) || !durationStr || isNaN(profitPct)) {
+        return alert("Veuillez remplir tous les champs obligatoires correctement.");
+    }
+
+    try {
+        await updateDoc(doc(db, "system_actions", id), {
+            name, description, minAmount, maxAmount, durationStr, profitPct, status
+        });
+        
+        alert("Modifications enregistrées avec succès !");
+        closeModal('modal-edit-action');
+        await loadData();
+    } catch (error) {
+        alert("Erreur lors de la mise à jour: " + error.message);
+    }
+};
+
+// 5. Supprimer une action
+window.deleteSystemAction = async (id) => {
+    if(!confirm("Attention : Êtes-vous sûr de vouloir supprimer cette action définitivement de la page client ? (Les clients qui ont déjà acheté cette action ne seront pas affectés).")) return;
+    try {
+        await deleteDoc(doc(db, "system_actions", id));
+        alert("Action supprimée du système.");
+        await loadData();
+    } catch (error) {
+        alert("Erreur lors de la suppression: " + error.message);
+    }
+};
+
+// 6. Afficher les statistiques de chaque Action système
+function renderStatsActions() {
+    const container = document.getElementById("list-stats-actions");
+    let html = "";
+    
+    allSystemActions.forEach(sysAct => {
+        let countOngoing = 0;
+        let countCompleted = 0;
+        let totalStaked = 0;
+        let totalProfit = 0;
+
+        allUsers.forEach(user => {
+            if (user.actions) {
+                user.actions.forEach(userAct => {
+                    // Vérification croisée (Durée & Profit) pour faire le lien entre l'historique utilisateur et l'action système
+                    let actPct = userAct.profitPct !== undefined ? userAct.profitPct : getProfitPercent(userAct.time);
+                    
+                    if (userAct.time === sysAct.durationStr && actPct === sysAct.profitPct) {
+                        if (userAct.status === "validé" && !userAct.isPaid) {
+                            countOngoing++;
+                            totalStaked += userAct.stake;
+                        } else if (userAct.status === "terminé" || (userAct.status === "validé" && userAct.isPaid)) {
+                            countCompleted++;
+                            totalStaked += userAct.stake;
+                            totalProfit += (userAct.stake * actPct) / 100;
+                        }
+                    }
+                });
+            }
+        });
+
+        html += `
+            <div class="list-item">
+                <div class="item-header">
+                    <strong style="font-size:18px;">${sysAct.name}</strong>
+                    <span class="item-badge" style="background:var(--primary);">${sysAct.status.toUpperCase()}</span>
+                </div>
+                <div class="item-details" style="grid-template-columns: repeat(2, 1fr); margin-top:5px; padding: 10px; background:var(--bg-color); border-radius:8px;">
+                    <div><strong>Participations en cours:</strong> <span style="font-size:16px; font-weight:bold; color:var(--info);">${countOngoing}</span></div>
+                    <div><strong>Participations terminées:</strong> <span style="font-size:16px; font-weight:bold; color:var(--success);">${countCompleted}</span></div>
+                    <div><strong>Montant Total Misé:</strong> <br><span style="font-size:16px; font-weight:bold; color:var(--dark);">${totalStaked.toLocaleString('fr-FR')} FCFA</span></div>
+                    <div><strong>Bénéfices Distribués:</strong> <br><span style="font-size:16px; font-weight:bold; color:var(--purple);">${totalProfit.toLocaleString('fr-FR')} FCFA</span></div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html || "<p style='text-align:center;'>Aucune action n'a été trouvée pour générer des statistiques.</p>";
+}
+
+// --- GESTION DES MODALS (Existantes) ---
+window.openModal = (id) => { document.getElementById(id).classList.add('active'); }
+window.closeModal = (id) => { document.getElementById(id).classList.remove('active'); }
+
+</script>
+</body>
+</html>

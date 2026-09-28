@@ -1,0 +1,4262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>BRAINY BUSINESS Commande - Dashboard Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0f1e3c;
+      --navy-800: #162445;
+      --navy-700: #1e3560;
+      --blue: #2563eb;
+      --blue-light: #3b82f6;
+      --blue-pale: #eff6ff;
+      --emerald: #059669;
+      --red: #dc2626;
+      --amber: #d97706;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --border-dark: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --sidebar-width: 220px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    /* ===== LAYOUT ===== */
+    #appShell { display: flex; min-height: 100vh; }
+
+    /* ===== SIDEBAR ===== */
+    #sidebar {
+      width: var(--sidebar-width);
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      z-index: 40;
+      transition: transform 0.3s ease;
+    }
+
+    #sidebar .brand {
+      padding: 1.25rem 1rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    #sidebar .brand-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    #sidebar .brand-sub {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    #sidebar .brand-badge {
+      display: inline-block;
+      background: var(--blue);
+      color: #fff;
+      font-size: 0.55rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-top: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    #sidebarNav { flex: 1; overflow-y: auto; padding: 0.75rem 0.5rem; }
+    .nav-section-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.75rem 0.625rem 0.35rem;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      margin-bottom: 2px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+    .nav-item.active { background: var(--blue); color: #fff; font-weight: 600; }
+    .nav-item .nav-icon { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
+
+    #sidebar .sidebar-footer {
+      padding: 0.75rem 0.5rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    #sidebar .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.5rem;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.6);
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    #sidebar .back-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+    /* ===== TOPBAR ===== */
+    #topbar {
+      position: fixed;
+      top: 0;
+      left: var(--sidebar-width);
+      right: 0;
+      height: 56px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+      z-index: 30;
+    }
+    #topbar .topbar-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    #topbar .topbar-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    #mainContent {
+      margin-left: var(--sidebar-width);
+      padding-top: 56px;
+      flex: 1;
+      min-width: 0;
+    }
+    .page-body {
+      padding: 1.5rem;
+      max-width: 1400px;
+    }
+
+    /* ===== TAB PANELS ===== */
+    .tab-panel.hidden { display: none; }
+
+    /* ===== PAGE HEADERS ===== */
+    .page-header {
+      margin-bottom: 1.5rem;
+    }
+    .page-header h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      margin: 0 0 2px;
+    }
+    .page-header p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+    }
+    .card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .card-header h2 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-body { padding: 1.25rem; }
+
+    /* ===== STAT CARDS ===== */
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.125rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: box-shadow 0.2s ease;
+    }
+    .stat-card:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08); }
+    .stat-card .stat-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .stat-card .stat-value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .stat-card .stat-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .stat-card.accent-blue { border-left: 3px solid var(--blue); }
+    .stat-card.accent-emerald { border-left: 3px solid var(--emerald); }
+    .stat-card.accent-red { border-left: 3px solid var(--red); }
+    .stat-card.accent-amber { border-left: 3px solid var(--amber); }
+
+    /* ===== FORM ELEMENTS ===== */
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--blue-light);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-input[readonly] { background: var(--surface); color: var(--text-secondary); }
+    .form-input.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+    .form-input.value-blue { color: var(--blue); font-weight: 700; background: #eff6ff; border-color: #bfdbfe; }
+    .form-input.value-green { color: var(--emerald); font-weight: 700; }
+    .form-input.value-red { color: var(--red); font-weight: 700; background: #fef2f2; border-color: #fecaca; }
+    .form-input.value-amber { color: var(--amber); font-weight: 700; }
+    .form-group { margin-bottom: 0; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-success { background: var(--emerald); color: #fff; }
+    .btn-success:hover { background: #047857; }
+    .btn-danger { background: #fee2e2; color: var(--red); }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-ghost { background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: #f1f5f9; border-color: var(--border-dark); }
+    .btn-warning { background: #fef3c7; color: var(--amber); }
+    .btn-warning:hover { background: #fde68a; }
+    .btn-navy { background: var(--navy); color: #fff; }
+    .btn-navy:hover { background: var(--navy-700); }
+    .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.75rem; }
+    .btn-lg { padding: 0.65rem 1.25rem; font-size: 0.9rem; }
+    .btn-icon { padding: 0.4rem; width: 32px; height: 32px; justify-content: center; }
+
+    /* ===== TABLES ===== */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .data-table thead tr { background: #f8fafc; border-bottom: 1px solid var(--border); }
+    .data-table thead th {
+      padding: 0.7rem 1rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: left;
+    }
+    .data-table thead th.text-right { text-align: right; }
+    .data-table thead th.text-center { text-align: center; }
+    .data-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
+    .data-table tbody tr:hover { background: #f8fafc; }
+    .data-table tbody td { padding: 0.8rem 1rem; vertical-align: middle; }
+    .data-table tbody td.text-right { text-align: right; }
+    .data-table tbody td.text-center { text-align: center; }
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+
+    /* ===== BADGES & PILLS ===== */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-amber { background: #fef3c7; color: #92400e; }
+    .badge-slate { background: #f1f5f9; color: #475569; }
+    .badge-indigo { background: #e0e7ff; color: #3730a3; }
+
+    /* ===== CODE BADGE ===== */
+    .code-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--blue);
+      background: #eff6ff;
+      padding: 0.15rem 0.45rem;
+      border-radius: 5px;
+      border: 1px solid #bfdbfe;
+    }
+
+    /* ===== SECTION DIVIDERS ===== */
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.25rem 0;
+    }
+
+    /* ===== FILTER BAR ===== */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.625rem;
+      align-items: flex-end;
+    }
+    .filter-bar .filter-group { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+    .filter-bar .filter-group .form-label { margin-bottom: 0; }
+
+    /* ===== PRESET BUTTONS ===== */
+    .preset-btn {
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border-dark);
+      background: #fff;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+    .preset-btn:hover { background: #eff6ff; border-color: #bfdbfe; color: var(--blue); }
+
+    /* ===== PRODUCT GRID AREA ===== */
+    .product-add-row {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.875rem 1rem;
+    }
+
+    /* ===== MODALS ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-box {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 20px 60px rgba(15,23,42,0.2);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      max-height: 92vh;
+    }
+    .modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .modal-header h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      line-height: 1;
+      padding: 0.25rem;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .modal-close:hover { background: var(--surface); color: var(--text-primary); }
+    .modal-body { padding: 1.25rem; overflow-y: auto; flex: 1; }
+    .modal-footer {
+      padding: 0.875rem 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    /* ===== TOAST ===== */
+    #toastContainer {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 22rem;
+      pointer-events: none;
+    }
+    .toast-item {
+      pointer-events: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+      box-shadow: 0 4px 16px rgba(15,23,42,0.12);
+      animation: toastIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .toast-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .toast-title { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1px; }
+    .toast-msg { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; }
+    .toast-close { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.9rem; padding: 0; margin-left: auto; flex-shrink: 0; }
+    .toast-close:hover { color: var(--text-primary); }
+    .toast-item.toast-success { border-left: 3px solid var(--emerald); }
+    .toast-item.toast-error { border-left: 3px solid var(--red); }
+    .toast-item.toast-warning { border-left: 3px solid var(--amber); }
+    .toast-item.toast-info { border-left: 3px solid var(--blue); }
+
+    /* ===== PRICING SECTION ===== */
+    .pricing-section {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .pricing-section .form-label { color: #1e40af; }
+    .tax-section {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .tax-section .form-label { color: #92400e; }
+
+    /* ===== PAYMENT SUMMARY ===== */
+    .payment-summary {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    /* ===== STATUS PILLS ===== */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      max-width: 100%;
+    }
+    .status-prep { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+    .status-china { background: #fce7f3; color: #9d174d; border-color: #fbcfe8; }
+    .status-transit { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }
+    .status-port { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
+    .status-ready { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+    .status-transit2 { background: #f3e8ff; color: #6b21a8; border-color: #e9d5ff; }
+
+    /* ===== HAMBURGER SIDEBAR TOGGLE ===== */
+    #sidebarToggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.25rem;
+      color: var(--text-secondary);
+      font-size: 1.25rem;
+    }
+    #sidebarOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.5);
+      z-index: 35;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fadeUp 0.25s ease forwards; }
+
+    /* ===== SCROLLBARS ===== */
+    ::-webkit-scrollbar { height: 6px; width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* ===== HIGHLIGHT ROW ===== */
+    .debt-row { color: var(--red) !important; font-weight: 700 !important; }
+    .paid-row { color: var(--emerald) !important; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      :root { --sidebar-width: 0px; }
+      #sidebar { transform: translateX(-220px); width: 220px; }
+      #sidebar.open { transform: translateX(0); }
+      #sidebarOverlay.open { display: block; }
+      #topbar { left: 0; }
+      #mainContent { margin-left: 0; }
+      #sidebarToggle { display: flex; }
+      .page-body { padding: 1rem; }
+    }
+    @media (max-width: 640px) {
+      .filter-bar { gap: 0.5rem; }
+      .filter-bar .filter-group { width: 100%; }
+      .card-header { flex-direction: column; align-items: flex-start; }
+      .stat-card .stat-value { font-size: 1rem; }
+    }
+
+    /* ===== DIALOG ===== */
+    #customDialog {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.65);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      transition: opacity 0.25s;
+      opacity: 0;
+    }
+    #customDialog:not(.hidden) { opacity: 1; }
+    #customDialogBox {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 360px;
+      width: 100%;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(15,23,42,0.2);
+      transform: scale(0.95);
+      opacity: 0;
+      transition: all 0.25s;
+    }
+    #customDialogBox.scale-100 { transform: scale(1); opacity: 1; }
+    #customDialog.hidden { display: none; }
+
+    /* ===== CANVAS PREVIEW ===== */
+    #factureCanvas { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 12px rgba(15,23,42,0.08); }
+  </style>
+</head>
+
+<body>
+
+<!-- ==================== ÉCRAN DE CONNEXION (AJOUT) ==================== -->
+<div id="loginScreen" class="hidden" style="position:fixed;inset:0;z-index:999;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-700) 100%);display:flex;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.35);width:100%;max-width:380px;padding:2rem 1.75rem;">
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:0.95rem;font-weight:800;color:var(--navy);" id="loginAppName">BRAINY BUSINESS</div>
+      <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Connexion administrateur</div>
+    </div>
+    <form id="loginForm" onsubmit="return window.tenterConnexion(event)">
+      <div class="form-group mb-4">
+        <label class="form-label">Nom d'utilisateur</label>
+        <input id="loginUsername" type="text" autocomplete="username" class="form-input" placeholder="ex: admin" required>
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label">Mot de passe</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" class="form-input" placeholder="••••••••" required>
+      </div>
+      <div id="loginErrorMsg" class="hidden" style="background:#fee2e2;color:#991b1b;font-size:0.78rem;padding:0.55rem 0.75rem;border-radius:0.5rem;margin-bottom:1rem;"></div>
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">🔐 Se connecter</button>
+    </form>
+    <div id="loginBootstrapHint" class="hidden" style="margin-top:1rem;font-size:0.72rem;color:var(--text-muted);text-align:center;">
+      Aucun utilisateur trouvé — un compte Admin par défaut a été créé (identifiant : <b>admin</b> / mot de passe : <b>admin123</b>). Pensez à changer ce mot de passe.
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
+
+<!-- CUSTOM DIALOG -->
+<div id="customDialog" class="hidden">
+  <div id="customDialogBox">
+    <div id="customDialogIcon" class="text-5xl mb-4"></div>
+    <h3 id="customDialogTitle" class="text-xl font-bold text-slate-800 mb-2"></h3>
+    <p id="customDialogMessage" class="text-slate-500 text-sm leading-relaxed mb-6"></p>
+    <div id="customDialogButtons" class="flex gap-2 justify-center"></div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="brand-title" id="headerAppName">BRAINY BUSINESS</div>
+      <div class="brand-sub">Gestion Commandes</div>
+      <div class="brand-badge">ADMIN</div>
+    </div>
+
+    <nav id="sidebarNav">
+      <div class="nav-section-label">Tableau de bord</div>
+      <button data-tab="dashboard" onclick="switchTab('dashboard')" class="nav-item active">
+        <span class="nav-icon">📊</span> Dashboard
+      </button>
+
+      <div class="nav-section-label">Logistique</div>
+      <button data-tab="lancer" onclick="switchTab('lancer')" class="nav-item">
+        <span class="nav-icon">🚀</span> Lancer Session
+      </button>
+      <button data-tab="expeditions" onclick="switchTab('expeditions')" class="nav-item">
+        <span class="nav-icon">🚚</span> Sessions & Expéditions
+      </button>
+
+      <div class="nav-section-label">Commerce</div>
+      <button data-tab="produits" onclick="switchTab('produits')" class="nav-item">
+        <span class="nav-icon">🛍️</span> Produits
+      </button>
+      <button data-tab="commandes" onclick="switchTab('commandes')" class="nav-item">
+        <span class="nav-icon">📦</span> Commandes
+      </button>
+
+      <div class="nav-section-label">Clients</div>
+      <button data-tab="clients" onclick="switchTab('clients')" class="nav-item">
+        <span class="nav-icon">👥</span> Clients & Factures
+      </button>
+
+      <div class="nav-section-label">Système</div>
+      <button data-tab="parametres" onclick="switchTab('parametres')" class="nav-item">
+        <span class="nav-icon">⚙️</span> Paramètres
+      </button>
+      <button data-tab="utilisateurs" onclick="switchTab('utilisateurs')" class="nav-item">
+        <span class="nav-icon">🧑‍💼</span> Utilisateurs
+      </button>
+      <button data-tab="historique" onclick="switchTab('historique')" class="nav-item">
+        <span class="nav-icon">🕓</span> Historique
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div id="sidebarUserInfo" class="hidden" style="padding:0.6rem 0.75rem;margin-bottom:0.5rem;border-radius:0.5rem;background:rgba(255,255,255,0.06);">
+        <div style="font-size:0.78rem;font-weight:700;color:#fff;" id="sidebarUserName">—</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.05em;" id="sidebarUserRole">—</div>
+      </div>
+      <button onclick="window.deconnexionUtilisateur()" class="back-btn" id="btnDeconnexion">
+        <span>🔒</span> Déconnexion
+      </button>
+      <button onclick="showClient()" class="back-btn">
+        <span>←</span> Suivi Client
+      </button>
+    </div>
+  </aside>
+
+  <!-- SIDEBAR OVERLAY -->
+  <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- TOP BAR -->
+  <header id="topbar">
+    <button id="sidebarToggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <div style="flex:1;">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    </div>
+    <div style="font-size:0.75rem;color:var(--text-muted);" id="topbarDate"></div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main id="mainContent">
+    <div class="page-body animate-fade-up">
+
+      <!-- ========================================================== -->
+      <!-- ================== ONGLET DASHBOARD ====================== -->
+      <!-- ========================================================== -->
+      <div id="tabDashboard" class="tab-panel">
+
+        <div class="page-header">
+          <h1>Tableau de bord</h1>
+          <p>Vue d'ensemble de l'activité commerciale et financière</p>
+        </div>
+
+        <!-- FILTRES -->
+        <div class="card mb-5">
+          <div class="card-header">
+            <h2>🔍 Filtres d'analyse</h2>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+              <button onclick="appliquerPreset('semaine')" class="preset-btn">Cette semaine</button>
+              <button onclick="appliquerPreset('mois')" class="preset-btn">Ce mois</button>
+              <button onclick="appliquerPreset('annee')" class="preset-btn">Cette année</button>
+              <button onclick="reinitialiserFiltresDashboard()" class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;">✕ Réinitialiser</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="filter-bar">
+              <div class="filter-group" style="flex:1;min-width:150px;">
+                <label class="form-label">Session / Saison</label>
+                <select id="dashSessionFilter" onchange="afficherDashboard()" class="form-select">
+                  <option value="ALL">Toutes les sessions</option>
+                </select>
+              </div>
+              <div class="filter-group" style="flex:1;min-width:180px;">
+                <label class="form-label">Statut d'expédition</label>
+                <select id="dashStatutFilter" onchange="afficherDashboard()" class="form-select">
+                  <option value="ALL">Tous les statuts</option>
+                  <option value="Commande en préparation chez Brainy Agency">⏳ Préparation locale</option>
+                  <option value="Commande en preparation en chine">🏭 Préparation Chine</option>
+                  <option value="Commande arrivée chez le transitaire">📦 Chez le transitaire</option>
+                  <option value="Commande en transistion de chine vers lomé">🚢 En transit</option>
+                  <option value="Commande arriver au port de lomé en cours de dedouement">🛃 Port / Dédouanement</option>
+                  <option value="Commande arriver chez Brainy Agency veiller passer pour recuperer">✅ Prêt à récupérer</option>
+                </select>
+              </div>
+              <div class="filter-group" style="flex:1;min-width:150px;">
+                <label class="form-label">Client</label>
+                <select id="dashClientFilter" onchange="afficherDashboard()" class="form-select">
+                  <option value="ALL">Tous les clients</option>
+                </select>
+              </div>
+              <div class="filter-group" style="min-width:140px;">
+                <label class="form-label">Du (création)</label>
+                <input type="date" id="dashDateFrom" onchange="afficherDashboard()" class="form-input">
+              </div>
+              <div class="filter-group" style="min-width:140px;">
+                <label class="form-label">Au (création)</label>
+                <input type="date" id="dashDateTo" onchange="afficherDashboard()" class="form-input">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI GRID -->
+        <div id="dashboardStatsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-5">
+          <!-- Injected by JS -->
+        </div>
+
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- =================== ONGLET LANCER ======================== -->
+      <!-- ========================================================== -->
+      <div id="tabLancer" class="tab-panel hidden">
+
+        <div class="page-header">
+          <h1>Lancer / Programmer une session</h1>
+          <p>Configurez les dates de la session d'expédition. Toutes les commandes liées seront mises à jour automatiquement.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <form onsubmit="enregistrerLancementSession(event)">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+                <div class="form-group">
+                  <label class="form-label">Session / Saison <span style="color:var(--red)">*</span></label>
+                  <select id="lancerSessionSelect" onchange="surChangementLancerSession()" required class="form-select">
+                    <option value="">-- Sélectionner une session existante --</option>
+                    <option value="__NEW__">➕ Créer une nouvelle session / saison…</option>
+                  </select>
+                  <input id="lancerSessionNom" placeholder="Nom de la nouvelle session (Ex: Session 12 - Mars 2026)" class="form-input hidden" style="margin-top:0.5rem;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fournisseur / Agent <span style="color:var(--red)">*</span></label>
+                  <input id="lancerFournisseur" placeholder="Ex: Guangzhou Logistics Co." required class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Date de réception entrepôt</label>
+                  <input id="lancerDateEntrepot" type="date" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Date de chargement conteneur</label>
+                  <input id="lancerDateChargement" type="date" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Date de départ (Navire/Avion) <span style="color:var(--red)">*</span></label>
+                  <input id="lancerDateDepart" type="date" required class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Date d'arrivée prévue (Lomé) <span style="color:var(--red)">*</span></label>
+                  <input id="lancerDateArriveeLome" type="date" required class="form-input">
+                </div>
+              </div>
+
+              <div class="form-group mb-5">
+                <label class="form-label">Mettre à jour le statut global des commandes de cette session</label>
+                <select id="lancerStatutGlobal" class="form-select" style="max-width:520px;">
+                  <option value="">-- Conserver les statuts actuels des commandes --</option>
+                  <option value="Commande en preparation en chine">🏭 Commande en préparation en Chine</option>
+                  <option value="Commande arrivée chez le transitaire">📦 Commande arrivée chez le transitaire</option>
+                  <option value="Commande en transistion de chine vers lomé">🚢 Commande en transition de Chine vers Lomé</option>
+                  <option value="Commande arriver au port de lomé en cours de dedouement">🛃 Commande arrivée au port de Lomé (dédouanement)</option>
+                  <option value="Commande arriver chez Brainy Agency veiller passer pour recuperer">✅ Commande arrivée chez Brainy Agency, veuillez récupérer</option>
+                </select>
+              </div>
+
+              <div class="section-divider"></div>
+              <div style="display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  🚀 Lancer & Lier les dates aux commandes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- =================== ONGLET PRODUITS ====================== -->
+      <!-- ========================================================== -->
+      <div id="tabProduits" class="tab-panel hidden">
+
+        <div class="page-header">
+          <h1>Catalogue produits</h1>
+          <p>Gérez votre catalogue produits avec les prix, taxes et dimensions</p>
+        </div>
+
+        <!-- FORM PRODUIT -->
+        <div class="card mb-5">
+          <div class="card-header">
+            <h2>🛍️ <span id="prodFormTitle">Nouveau produit</span></h2>
+            <button onclick="reinitialiserFormProduit()" class="btn btn-ghost btn-sm">➕ Réinitialiser</button>
+          </div>
+          <div class="card-body">
+            <input type="hidden" id="prodId">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div class="form-group">
+                <label class="form-label">Nom du produit <span style="color:var(--red)">*</span></label>
+                <input id="prodNom" placeholder="Ex: Sac à main Cuir Luxe" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Photo (Upload Cloudflare R2)</label>
+                <div style="display:flex;gap:0.5rem;">
+                  <input type="file" id="prodPhotoFile" accept="image/*" class="form-input" style="flex:1;">
+                  <button type="button" onclick="uploaderPhotoCloudflare(event)" class="btn btn-navy btn-sm" style="white-space:nowrap;">☁️ Uploader</button>
+                </div>
+                <input id="prodPhoto" placeholder="URL publique (générée ou à coller)" class="form-input" style="margin-top:0.4rem;">
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label">Description</label>
+              <textarea id="prodDescription" rows="2" placeholder="Description détaillée du produit..." class="form-textarea"></textarea>
+            </div>
+
+            <!-- PRICING -->
+            <div class="pricing-section mb-4">
+              <div style="font-size:0.75rem;font-weight:700;color:#1e40af;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Prix & Tarification</div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="form-group">
+                  <label class="form-label">Prix chinois (USD $)</label>
+                  <input id="prodPrixUsd" type="number" step="0.01" oninput="calculerAutoProduit()" placeholder="0.00" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Coût converti (FCFA)</label>
+                  <input id="prodCoutChinoisFcfa" type="number" readonly class="form-input" style="background:#f0f7ff;color:#1d4ed8;font-weight:700;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Prix de commande (FCFA) <span style="color:var(--red)">*</span></label>
+                  <input id="prodPrixCommande" type="number" oninput="calculerAutoProduit()" placeholder="0" class="form-input" style="font-weight:700;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Prix de vente conseillé</label>
+                  <input id="prodPrixVente" type="number" placeholder="0" class="form-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- DIMENSIONS & TAXES -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:1rem;">
+                <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Dimensions & Volume</div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="form-group">
+                    <label class="form-label">Longueur (cm)</label>
+                    <input id="prodLongueur" type="number" step="0.1" oninput="calculerAutoProduit()" placeholder="0" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Largeur (cm)</label>
+                    <input id="prodLargeur" type="number" step="0.1" oninput="calculerAutoProduit()" placeholder="0" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Hauteur (cm)</label>
+                    <input id="prodHauteur" type="number" step="0.1" oninput="calculerAutoProduit()" placeholder="0" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Poids (kg)</label>
+                    <input id="prodPoids" type="number" step="0.01" placeholder="0.0" class="form-input">
+                  </div>
+                </div>
+              </div>
+
+              <div class="tax-section">
+                <div style="font-size:0.75rem;font-weight:700;color:#92400e;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Taxes & Douane</div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="form-group">
+                    <label class="form-label">CBM calculé (m³)</label>
+                    <input id="prodCbm" type="number" step="0.00001" readonly class="form-input" style="background:#fffbeb;color:#92400e;font-weight:700;">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Régime taxe</label>
+                    <select id="prodStatutTaxe" onchange="calculerAutoProduit()" class="form-select">
+                      <option value="HT">HT (Taxe en sus)</option>
+                      <option value="TTC">TTC (Taxe incluse)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Taxe estimée (FCFA)</label>
+                    <input id="prodTaxe" type="number" placeholder="0" class="form-input" style="color:#d97706;font-weight:600;">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Bénéfice unitaire</label>
+                    <div id="prodBeneficePreview" style="background:#d1fae5;border:1px solid #a7f3d0;border-radius:8px;padding:0.55rem 0.75rem;font-weight:800;font-size:0.85rem;color:#065f46;text-align:center;">0 FCFA</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+            <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+              <button onclick="reinitialiserFormProduit()" class="btn btn-ghost">Annuler</button>
+              <button id="btn-save-produit" onclick="enregistrerProduit()" class="btn btn-primary">💾 Enregistrer le produit</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLE PRODUITS -->
+        <div class="card">
+          <div class="card-header">
+            <h2>📋 Catalogue</h2>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+              <div style="position:relative;">
+                <span style="position:absolute;left:0.625rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;">🔍</span>
+                <input id="prodSearchInput" onkeyup="afficherProduits()" placeholder="Rechercher un produit..." class="form-input" style="padding-left:2rem;width:220px;">
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap" style="border-radius:0 0 12px 12px;border:none;border-top:1px solid var(--border);">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Photo</th>
+                  <th>Produit</th>
+                  <th>Prix Chine</th>
+                  <th>Converti FCFA</th>
+                  <th>Prix Commande</th>
+                  <th class="text-right">Qté</th>
+                  <th class="text-right">Total Cmd</th>
+                  <th class="text-right">Taxe Unit.</th>
+                  <th class="text-right">Taxe Totale</th>
+                  <th>CBM</th>
+                  <th class="text-right">Bénéfice</th>
+                  <th>Régime</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="produitsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- =================== ONGLET COMMANDES ===================== -->
+      <!-- ========================================================== -->
+      <div id="tabCommandes" class="tab-panel hidden">
+
+        <div class="page-header">
+          <h1>Commandes</h1>
+          <p>Créez et gérez les commandes clients</p>
+        </div>
+
+        <!-- FORM COMMANDE -->
+        <div class="card mb-5">
+          <div class="card-header">
+            <h2>📋 Créer / Modifier une commande</h2>
+            <button onclick="reinitialiserFormulaire()" class="btn btn-ghost btn-sm">➕ Nouvelle commande</button>
+          </div>
+          <div class="card-body">
+
+            <!-- CODE & SESSION -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+              <div class="form-group">
+                <label class="form-label">Code commande (14 car.)</label>
+                <div style="display:flex;gap:0.4rem;">
+                  <input id="adminCode" placeholder="Ex: BRAINY7K29P4X8" class="form-input mono" style="flex:1;text-transform:uppercase;">
+                  <button type="button" onclick="genererCodeUnique(true)" title="Générer code unique" class="btn btn-primary btn-sm" style="white-space:nowrap;">⚡ Auto</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Session / Saison</label>
+                <input id="session" list="sessionList" placeholder="Ex: Session 12" class="form-input">
+                <datalist id="sessionList"></datalist>
+              </div>
+              <div class="form-group md:col-span-2">
+                <label class="form-label">Client enregistré (optionnel)</label>
+                <select id="clientSelect" onchange="surSelectionClientExistants()" class="form-select" style="background:#eff6ff;border-color:#bfdbfe;">
+                  <option value="">-- Choisir un client existant ou saisir manuellement --</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- CLIENT INFO -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+              <div class="form-group">
+                <label class="form-label">Nom du client <span style="color:var(--red)">*</span></label>
+                <input id="nom" onchange="verifierIntegriteClient('nom')" placeholder="Nom complet" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Téléphone <span style="color:var(--red)">*</span></label>
+                <input id="tel" onchange="verifierIntegriteClient('tel')" placeholder="Ex: +228 90000000" class="form-input">
+              </div>
+              <div class="form-group md:col-span-2">
+                <label class="form-label">Lieu de livraison</label>
+                <input id="livraison" placeholder="Adresse complète" class="form-input">
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- PRODUITS COMMANDE -->
+            <div style="margin-bottom:1.25rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem;">
+                <div style="font-size:0.85rem;font-weight:700;color:var(--text-primary);">🛍️ Produits de la commande</div>
+                <div>
+                  <select id="statutTaxeCommande" onchange="recalculerCommandeTotaux()" class="form-select" style="width:auto;font-size:0.75rem;">
+                    <option value="HT">Régime HT (Taxe en sus)</option>
+                    <option value="TTC">Régime TTC (Taxe incluse)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="product-add-row mb-3">
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2" style="align-items:flex-end;">
+                  <div style="grid-column:span 5;">
+                    <label class="form-label">Catalogue produits</label>
+                    <select id="selectProduitCatalogue" onchange="chargerProduitDuCatalogueDansLigne()" class="form-select" style="font-size:0.78rem;">
+                      <option value="">-- Choisir un produit enregistré --</option>
+                    </select>
+                  </div>
+                  <div style="grid-column:span 3;">
+                    <label class="form-label">Prix unitaire (FCFA)</label>
+                    <input id="itemPrixTemp" type="number" placeholder="0" class="form-input" style="font-size:0.78rem;">
+                  </div>
+                  <div style="grid-column:span 2;">
+                    <label class="form-label">Quantité</label>
+                    <input id="itemQteTemp" type="number" min="1" value="1" class="form-input" style="font-size:0.78rem;">
+                  </div>
+                  <div style="grid-column:span 2;">
+                    <button type="button" onclick="ajouterLigneProduitCommande()" class="btn btn-primary" style="width:100%;font-size:0.78rem;">➕ Ajouter</button>
+                  </div>
+                </div>
+                <div class="section-divider" style="margin:0.75rem 0;"></div>
+                <div style="font-size:0.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">🎨 Précisions du client pour cet article (optionnel)</div>
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                  <div style="grid-column:span 3;">
+                    <label class="form-label">Couleur</label>
+                    <input id="itemCouleurTemp" placeholder="Ex: Rouge" class="form-input" style="font-size:0.78rem;">
+                  </div>
+                  <div style="grid-column:span 3;">
+                    <label class="form-label">Taille</label>
+                    <input id="itemTailleTemp" placeholder="Ex: M / 42 / Unique" class="form-input" style="font-size:0.78rem;">
+                  </div>
+                  <div style="grid-column:span 6;">
+                    <label class="form-label">Autres précisions du client</label>
+                    <input id="itemPrecisionsTemp" placeholder="Ex: Modèle avec fermeture éclair dorée" class="form-input" style="font-size:0.78rem;">
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table class="data-table" style="font-size:0.78rem;">
+                  <thead>
+                    <tr>
+                      <th>Photo</th>
+                      <th>Produit</th>
+                      <th class="text-right">Prix unitaire</th>
+                      <th class="text-center">Qté</th>
+                      <th class="text-right">Sous-total</th>
+                      <th class="text-right">CBM Total</th>
+                      <th class="text-right">Taxe estimée</th>
+                      <th class="text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="commandeItemsTbody">
+                    <tr><td colspan="8" style="padding:1.25rem;text-align:center;color:var(--text-muted);font-style:italic;font-size:0.8rem;">Aucun produit dans la commande.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- TOTAUX -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div class="form-group">
+                <label class="form-label">Montant produits (FCFA)</label>
+                <input id="montantCommande" type="number" oninput="recalculerCommandeTotaux()" placeholder="0" class="form-input" style="font-weight:700;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Montant payé produits (FCFA)</label>
+                <input id="total" type="number" oninput="recalculerCommandeTotaux()" placeholder="0" class="form-input value-green">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reste à payer produits (dette)</label>
+                <input id="dette" type="number" readonly placeholder="0" class="form-input value-red">
+              </div>
+              <div class="form-group">
+                <label class="form-label">CBM total de la commande</label>
+                <input id="cbm" placeholder="0" oninput="recalculerCommandeTotaux()" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Taxe totale (FCFA)</label>
+                <input id="taxe" type="number" oninput="recalculerCommandeTotaux()" placeholder="0" class="form-input value-amber">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Taxe payée (FCFA)</label>
+                <input id="taxePayee" type="number" oninput="recalculerCommandeTotaux()" placeholder="0" class="form-input value-green">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Taxe restante (FCFA)</label>
+                <input id="taxeRestantePreview" type="number" readonly placeholder="0" class="form-input value-red">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Grand total à payer</label>
+                <input id="grandTotalPreview" type="number" readonly placeholder="0" class="form-input value-blue">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div class="form-group">
+                <label class="form-label">Date de départ (liée session)</label>
+                <input id="paiement" placeholder="AAAA-MM-JJ" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Date d'arrivée prévue (Lomé)</label>
+                <input id="arrivee" placeholder="AAAA-MM-JJ" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Poids total (kg)</label>
+                <input id="poids" placeholder="0" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description résumée (client)</label>
+                <input id="produits" placeholder="Articles résumés" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label">Statut de la commande</label>
+              <select id="statut" class="form-select" style="max-width:520px;">
+                <option value="Commande en préparation chez Brainy Agency">⏳ Commande en préparation chez Brainy Agency</option>
+                <option value="Commande en preparation en chine">🏭 Commande en préparation en Chine</option>
+                <option value="Commande arrivée chez le transitaire">📦 Commande arrivée chez le transitaire</option>
+                <option value="Commande en transistion de chine vers lomé">🚢 Commande en transition de Chine vers Lomé</option>
+                <option value="Commande arriver au port de lomé en cours de dedouement">🛃 Commande arrivée au port de Lomé (dédouanement)</option>
+                <option value="Commande arrivée chez le transitaire au Togo">🛃 Commande arrivée chez le transitaire au Togo</option>
+                <option value="Commande arriver chez Brainy Agency veiller passer pour recuperer">✅ Commande arrivée chez Brainy Agency, veuillez récupérer</option>
+              </select>
+            </div>
+
+            <div class="section-divider"></div>
+            <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+              <button onclick="reinitialiserFormulaire()" class="btn btn-ghost">Réinitialiser</button>
+              <button id="btn-enregistrer" onclick="ajouterCommande()" class="btn btn-success">💾 Enregistrer / Modifier</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLE COMMANDES -->
+        <div class="card">
+          <div class="card-header">
+            <h2>📦 Liste des commandes</h2>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+              <div style="position:relative;">
+                <span style="position:absolute;left:0.625rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;">🔍</span>
+                <input id="searchInput" onkeyup="filtrerTableau()" placeholder="Rechercher..." class="form-input" style="padding-left:2rem;width:180px;">
+              </div>
+              <select id="sessionFilter" onchange="filtrerTableau()" class="form-select" style="width:200px;">
+                <option value="ALL">Toutes les sessions</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap" style="border-radius:0 0 12px 12px;border:none;border-top:1px solid var(--border);">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Code & Session</th>
+                  <th>Client</th>
+                  <th>Détails commande</th>
+                  <th>Finances</th>
+                  <th>Statut</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- =================== ONGLET EXPÉDITIONS =================== -->
+      <!-- ========================================================== -->
+      <div id="tabExpeditions" class="tab-panel hidden">
+
+        <div class="page-header">
+          <h1>Sessions & Expéditions</h1>
+          <p>Suivi regroupé par session d'expédition</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>🚚 Expéditions regroupées</h2>
+            <button onclick="switchTab('lancer')" class="btn btn-primary btn-sm">🚀 Programmer une session</button>
+          </div>
+          <div class="table-wrap" style="border-radius:0 0 12px 12px;border:none;border-top:1px solid var(--border);">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Session</th>
+                  <th>Fournisseur</th>
+                  <th>Départ / Arrivée</th>
+                  <th class="text-right">Cmds</th>
+                  <th class="text-right">Montant total</th>
+                  <th class="text-right">Dette totale</th>
+                  <th class="text-right">Taxe totale</th>
+                  <th class="text-center">Statut</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="expeditionsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- =================== ONGLET CLIENTS ======================= -->
+      <!-- ========================================================== -->
+      <div id="tabClients" class="tab-panel hidden">
+
+        <div class="page-header">
+          <h1>Clients & Facturation</h1>
+          <p>Suivi des comptes clients et génération de reçus</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>👥 Clients</h2>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+              <div style="position:relative;">
+                <span style="position:absolute;left:0.625rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;">🔍</span>
+                <input id="clientSearchInput" onkeyup="afficherClients()" placeholder="Rechercher un client..." class="form-input" style="padding-left:2rem;width:200px;">
+              </div>
+              <select id="clientSessionFilter" onchange="afficherClients()" class="form-select" style="width:180px;">
+                <option value="ALL">Toutes les sessions</option>
+              </select>
+              <select id="clientSortOrder" onchange="afficherClients()" class="form-select" style="width:180px;">
+                <option value="recent">Plus récent d'abord</option>
+                <option value="oldest">Plus ancien d'abord</option>
+                <option value="name">Par nom (A-Z)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- STATS CLIENTS -->
+          <div class="card-body" style="padding-bottom:0.75rem;">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="stat-card accent-blue">
+                <span class="stat-label">Clients totaux</span>
+                <span id="clientsStatTotal" class="stat-value">0</span>
+              </div>
+              <div class="stat-card accent-red">
+                <span class="stat-label">Avec dette</span>
+                <span id="clientsStatDette" class="stat-value">0</span>
+              </div>
+              <div class="stat-card accent-emerald">
+                <span class="stat-label">Grand total général</span>
+                <span id="clientsStatGrandTotal" class="stat-value">0</span>
+              </div>
+              <div class="stat-card accent-amber">
+                <span class="stat-label">Dette globale</span>
+                <span id="clientsStatDetteGlobale" class="stat-value" style="color:var(--red);">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="border-radius:0 0 12px 12px;border:none;border-top:1px solid var(--border);">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nom client</th>
+                  <th>Téléphone</th>
+                  <th>Livraison</th>
+                  <th class="text-right">Commandes</th>
+                  <th class="text-right">Grand total</th>
+                  <th class="text-right">Total payé</th>
+                  <th class="text-right">Dette restante</th>
+                  <th class="text-center">Actions factures</th>
+                </tr>
+              </thead>
+              <tbody id="clientsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- =================== ONGLET PARAMÈTRES ==================== -->
+      <!-- ========================================================== -->
+      <div id="tabParametres" class="tab-panel hidden">
+
+        <div class="page-header">
+          <h1>Paramètres système</h1>
+          <p>Configuration de l'entreprise, des taux de conversion et des reçus</p>
+        </div>
+
+        <!-- AJOUT : accès rapide à la gestion des utilisateurs (Admin) -->
+        <div class="card mb-5" style="max-width:720px;" id="parametresUtilisateursShortcut">
+          <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:700;font-size:0.9rem;">🧑‍💼 Gestion des utilisateurs</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);">Ajoutez des comptes, définissez leurs rôles (Admin / Gérant / Agent) et leurs autorisations.</div>
+            </div>
+            <button onclick="switchTab('utilisateurs')" class="btn btn-navy btn-sm">Gérer les utilisateurs →</button>
+          </div>
+        </div>
+
+        <div class="card" style="max-width:720px;">
+          <div class="card-header">
+            <h2>⚙️ Configuration</h2>
+            <button onclick="exporterDonneesCSV()" class="btn btn-navy btn-sm">📥 Exporter données (CSV)</button>
+          </div>
+          <div class="card-body">
+            <form onsubmit="enregistrerParametresSysteme(event)">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                <div class="form-group">
+                  <label class="form-label">Nom du logiciel</label>
+                  <input id="cfgAppName" type="text" placeholder="BRAINY BUSINESS Commande" class="form-input" style="font-weight:700;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nom de l'entreprise (reçus)</label>
+                  <input id="cfgCompanyName" type="text" placeholder="BRAINY AGENCY" class="form-input" style="font-weight:700;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Téléphone entreprise (reçus)</label>
+                  <input id="cfgCompanyTel" type="text" placeholder="+228 90 00 00 00" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Adresse / Siège entreprise</label>
+                  <input id="cfgCompanyAddress" type="text" placeholder="Lomé, Togo" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Taux de conversion — Achat / Coût (1 USD = X FCFA)</label>
+                  <input id="cfgTauxUsd" type="number" step="0.1" placeholder="620" class="form-input" style="font-weight:700;">
+                  <div style="font-size:0.68rem;color:var(--text-muted);margin-top:0.25rem;">Utilisé pour calculer le coût d'achat converti (prix chinois → FCFA).</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Taux de conversion — Commande / Vente (1 USD = X FCFA)</label>
+                  <input id="cfgTauxUsdVente" type="number" step="0.1" placeholder="620" class="form-input" style="font-weight:700;">
+                  <div style="font-size:0.68rem;color:var(--text-muted);margin-top:0.25rem;">Utilisé pour suggérer le prix de commande / vente, indépendamment du taux d'achat.</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Prix de 1 CBM (FCFA)</label>
+                  <input id="cfgPrixCbm" type="number" step="1000" placeholder="220000" class="form-input" style="font-weight:700;">
+                </div>
+              </div>
+
+              <div class="form-group mb-5">
+                <label class="form-label">Pied de page des reçus / factures</label>
+                <input id="cfgReceiptFooter" type="text" placeholder="Merci pour votre confiance ! Merci de conserver ce reçu." class="form-input">
+              </div>
+
+              <div class="section-divider"></div>
+              <div style="display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary btn-lg">💾 Enregistrer dans Firestore</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== ONGLET UTILISATEURS (AJOUT) ==================== -->
+      <div id="tabUtilisateurs" class="tab-panel hidden">
+        <div class="page-header">
+          <h1>Utilisateurs</h1>
+          <p>Gérez les comptes, rôles et autorisations d'accès (réservé à l'Admin)</p>
+        </div>
+
+        <div class="card mb-5">
+          <div class="card-header">
+            <h2 id="userFormTitle">➕ Ajouter un utilisateur</h2>
+            <button onclick="window.reinitialiserFormUtilisateur()" class="btn btn-ghost btn-sm">➕ Nouvel utilisateur</button>
+          </div>
+          <div class="card-body">
+            <input type="hidden" id="userEditId">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              <div class="form-group">
+                <label class="form-label">Nom</label>
+                <input id="userNom" type="text" class="form-input" placeholder="Nom">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Prénom</label>
+                <input id="userPrenom" type="text" class="form-input" placeholder="Prénom">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nom d'utilisateur</label>
+                <input id="userUsername" type="text" class="form-input" placeholder="ex: mawouko">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Adresse e-mail</label>
+                <input id="userEmail" type="email" class="form-input" placeholder="email@exemple.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Numéro de téléphone</label>
+                <input id="userTelephone" type="text" class="form-input" placeholder="+228 ...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Mot de passe</label>
+                <input id="userPassword" type="text" class="form-input" placeholder="Mot de passe">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Rôle</label>
+                <select id="userRole" class="form-select" onchange="window.majAffichagePermissionsForm()">
+                  <option value="agent" selected>Agent — accès limité</option>
+                  <option value="gerant">Gérant — accès limité</option>
+                  <option value="admin">Admin — accès complet</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="userPermissionsBlock" class="form-group mb-4">
+              <label class="form-label">Onglets autorisés (Gérant / Agent)</label>
+              <div id="userPermissionsCheckboxes" style="display:flex;flex-wrap:wrap;gap:0.6rem;"></div>
+            </div>
+
+            <div class="section-divider"></div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button onclick="window.enregistrerUtilisateur()" class="btn btn-primary btn-lg">💾 Enregistrer l'utilisateur</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>👥 Utilisateurs enregistrés</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nom complet</th>
+                  <th>Identifiant</th>
+                  <th>Contact</th>
+                  <th>Rôle</th>
+                  <th class="text-center">Statut</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="utilisateursTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== ONGLET HISTORIQUE (AJOUT) ==================== -->
+      <div id="tabHistorique" class="tab-panel hidden">
+        <div class="page-header">
+          <h1>Historique</h1>
+          <p>Journal des actions effectuées dans le logiciel</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>🕓 Journal des actions</h2>
+            <button onclick="window.chargerHistorique()" class="btn btn-ghost btn-sm">🔄 Actualiser</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Utilisateur</th>
+                  <th>Action</th>
+                  <th>Date</th>
+                  <th>Heure</th>
+                </tr>
+              </thead>
+              <tbody id="historiqueTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+  </main>
+</div><!-- /appShell -->
+
+
+<!-- ==================== MODAL FACTURE / REÇU ==================== -->
+<div id="modalFacture" class="hidden modal-overlay">
+  <div class="modal-box" style="max-width:860px;width:100%;">
+    <div class="modal-header">
+      <h3>📄 Reçu / Facture — <span id="factureModalClientNom" style="color:var(--blue);"></span></h3>
+      <button onclick="fermerModalFacture()" class="modal-close">&times;</button>
+    </div>
+
+    <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;gap:1rem;flex-wrap:wrap;background:#f8fafc;">
+      <div style="display:flex;align-items:center;gap:0.5rem;flex:1;min-width:180px;">
+        <label style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);white-space:nowrap;">Session :</label>
+        <select id="factureSessionSelect" onchange="regenererFactureCanvas()" class="form-select" style="font-size:0.78rem;">
+          <option value="ALL">Toutes les sessions de ce client</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;flex:1;min-width:180px;">
+        <label style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);white-space:nowrap;">Trier par :</label>
+        <select id="factureSortOrder" onchange="regenererFactureCanvas()" class="form-select" style="font-size:0.78rem;">
+          <option value="recent">Plus récent d'abord</option>
+          <option value="oldest">Plus ancien d'abord</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-body" style="background:#f1f5f9;display:flex;justify-content:center;align-items:flex-start;padding:1.25rem;">
+      <canvas id="factureCanvas"></canvas>
+    </div>
+
+    <div class="modal-footer">
+      <button onclick="fermerModalFacture()" class="btn btn-ghost">Fermer</button>
+      <button onclick="imprimerFactureCanvas()" class="btn btn-navy">🖨️ Imprimer</button>
+      <button onclick="telechargerFactureImage()" class="btn btn-success">📥 Télécharger image</button>
+      <button onclick="envoyerFactureWhatsApp()" class="btn" style="background:#25d366;color:#fff;">💬 Envoyer WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== MODAL PRODUIT DÉTAIL ==================== -->
+<div id="modalProduitDetail" class="hidden modal-overlay">
+  <div class="modal-box" style="max-width:760px;width:100%;">
+    <div class="modal-header">
+      <h3>🛍️ Détails produit — <span id="prodDetailTitle" style="color:var(--blue);"></span></h3>
+      <button onclick="fermerModalProduitDetail()" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="prodDetailSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4"></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Code commande</th>
+              <th>Client</th>
+              <th class="text-right">Quantité</th>
+              <th class="text-right">Prix commande</th>
+              <th class="text-right">Bénéfice généré</th>
+            </tr>
+          </thead>
+          <tbody id="prodDetailOrdersBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="fermerModalProduitDetail()" class="btn btn-ghost">Fermer</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== MODAL FILE D'ATTENTE WHATSAPP ==================== -->
+<div id="modalWaQueue" class="hidden modal-overlay">
+  <div class="modal-box" style="max-width:580px;width:100%;">
+    <div class="modal-header">
+      <h3>💬 File d'attente WhatsApp</h3>
+      <button onclick="fermerModalWaQueue()" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 0.875rem;">Pour éviter que le navigateur ne bloque les ouvertures multiples d'onglets, cliquez sur "Envoyer" pour chaque client individuellement.</p>
+      <div id="waQueueListContainer" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="fermerModalWaQueue()" class="btn btn-ghost">Terminer / Fermer</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== MODAL SÉLECTION CLIENTS WHATSAPP (SESSION) ==================== -->
+<div id="modalSelectionClientsWA" class="hidden modal-overlay">
+  <div class="modal-box" style="max-width:520px;width:100%;">
+    <div class="modal-header">
+      <h3>💬 Envoyer sur WhatsApp — <span id="waSelectionSessionTitle" style="color:var(--blue);"></span></h3>
+      <button onclick="fermerModalSelectionClientsWA()" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 0.75rem;">Sélectionnez les clients de cette session qui recevront automatiquement les informations de leur propre commande sur WhatsApp.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <label style="font-size:0.8rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+          <input type="checkbox" id="waSelectAllCheckbox" onchange="toggleSelectAllWAClients(this.checked)"> Tout sélectionner
+        </label>
+        <span id="waSelectionCount" style="font-size:0.75rem;color:var(--text-muted);">0 sélectionné(s)</span>
+      </div>
+      <div id="waClientsListContainer" style="display:flex;flex-direction:column;gap:0.4rem;max-height:360px;overflow-y:auto;"></div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="fermerModalSelectionClientsWA()" class="btn btn-ghost">Annuler</button>
+      <button onclick="validerSelectionClientsWA()" class="btn" style="background:#25d366;color:#fff;">💬 Envoyer</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== MODAL EDIT EXPÉDITION ==================== -->
+<div id="modalEditExpedition" class="hidden modal-overlay">
+  <div class="modal-box" style="max-width:440px;width:100%;">
+    <div class="modal-header">
+      <h3>🚚 Modifier session — <span id="modalExpSessionTitle" style="color:var(--blue);"></span></h3>
+      <button onclick="fermerModalEditExpedition()" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="modalExpSessionId">
+
+      <div class="form-group mb-4">
+        <label class="form-label">Statut d'expédition</label>
+        <select id="modalExpStatut" class="form-select">
+          <option value="Commande en préparation chez Brainy Agency">⏳ Commande en préparation chez Brainy Agency</option>
+          <option value="Commande en preparation en chine">🏭 Commande en préparation en Chine</option>
+          <option value="Commande arrivée chez le transitaire">📦 Commande arrivée chez le transitaire</option>
+          <option value="Commande en transistion de chine vers lomé">🚢 Commande en transition de Chine vers Lomé</option>
+          <option value="Commande arriver au port de lomé en cours de dedouement">🛃 Commande arrivée au port de Lomé (dédouanement)</option>
+          <option value="Commande arrivée chez le transitaire au Togo">🛃 Commande arrivée chez le transitaire au Togo</option>
+          <option value="Commande arriver chez Brainy Agency veiller passer pour recuperer">✅ Commande arrivée chez Brainy Agency, veuillez récupérer</option>
+        </select>
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label">Date de départ</label>
+        <input type="date" id="modalExpDateDepart" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date d'arrivée prévue</label>
+        <input type="date" id="modalExpDateArrivee" class="form-input">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="fermerModalEditExpedition()" class="btn btn-ghost">Annuler</button>
+      <button onclick="sauvegarderEditExpedition()" class="btn btn-primary">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== LIBRAIRIES GÉNÉRATION PDF / EXCEL ==================== -->
+<!-- Utilisées pour les nouveaux boutons "Liste Clients" (PDF) et "Fichier Commande" (Excel) de l'onglet Sessions / Expéditions -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+
+<!-- ==================== SCRIPT FIRESTORE & LOGIQUE ==================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, updateDoc, deleteDoc }
+from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCxmovWNKm7xxlDeHChiq4ilS-nNdVowdQ",
+  authDomain: "suivre-coli.firebaseapp.com",
+  projectId: "suivre-coli"
+});
+
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+
+// --- ÉTAT GLOBAL ---
+let allData = [];
+let produitsData = [];
+let sessionsData = [];
+let activeClientForFacture = null;
+let waQueue = [];
+
+let systemConfig = {
+  appName: "BRAINY BUSINESS Commande",
+  companyName: "BRAINY AGENCY",
+  companyTel: "+228 90 00 00 00",
+  companyAddress: "Lomé, Togo",
+  tauxUsdFcfa: 620,
+  tauxUsdFcfaVente: 620,
+  prixCbmFcfa: 220000,
+  receiptFooter: "Merci pour votre confiance ! Conservez ce reçu."
+};
+
+let commandeLignesTemp = [];
+let isEditingOrder = false;
+
+// --- AJOUT : GESTION UTILISATEURS / RÔLES / HISTORIQUE ---
+let usersData = [];
+let historiqueData = [];
+let currentUser = null; // { id, nom, prenom, username, email, telephone, role, permissions, blocked }
+let isEditingUser = false;
+
+const ALL_TAB_IDS = ["dashboard","lancer","expeditions","produits","commandes","clients","parametres"];
+const TAB_LABELS_PERM = {
+  dashboard: "Dashboard",
+  lancer: "Lancer Session",
+  expeditions: "Sessions & Expéditions",
+  produits: "Produits",
+  commandes: "Commandes",
+  clients: "Clients & Factures",
+  parametres: "Paramètres",
+  historique: "Historique"
+};
+const SESSION_STORAGE_KEY = "bb_session_user_id";
+
+// --- UTILITAIRES DE FORMATAGE & CALCUL ---
+function parseNum(v) {
+  if (v === null || v === undefined || v === "") return 0;
+  const n = parseFloat(String(v).replace(/[^\d.\-]/g, ""));
+  return isNaN(n) ? 0 : n;
+}
+
+function formatFCFA(n) {
+  return Math.round(n || 0).toLocaleString("fr-FR") + " FCFA";
+}
+
+function formatNum(n) {
+  return Math.round(n || 0).toLocaleString("fr-FR");
+}
+
+function prixCommandeDe(d) {
+  if (d.montantCommande !== undefined && d.montantCommande !== null && String(d.montantCommande).trim() !== "") {
+    return parseNum(d.montantCommande);
+  }
+  return parseNum(d.total) + parseNum(d.dette);
+}
+
+function grandTotalDe(d) {
+    const cmdPx = prixCommandeDe(d);
+    const taxTot = parseNum(d.taxe);
+    return (d.statutTaxe === "HT") ? (cmdPx + taxTot) : cmdPx;
+}
+
+// --- SIDEBAR & NAVIGATION ---
+function toggleSidebar() {
+  const s = $("sidebar");
+  const o = $("sidebarOverlay");
+  s.classList.toggle("open");
+  o.classList.toggle("open");
+}
+function closeSidebar() {
+  $("sidebar").classList.remove("open");
+  $("sidebarOverlay").classList.remove("open");
+}
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
+
+const TAB_TITLES = {
+  dashboard: "Tableau de bord",
+  lancer: "Lancer / Programmer une session",
+  produits: "Catalogue produits",
+  commandes: "Commandes",
+  expeditions: "Sessions & Expéditions",
+  clients: "Clients & Facturation",
+  parametres: "Paramètres système",
+  utilisateurs: "Gestion des utilisateurs",
+  historique: "Historique des actions"
+};
+
+// --- ONGLETS ---
+window.switchTab = function(tabId) {
+  // AJOUT : contrôle d'accès selon le rôle / les autorisations de l'utilisateur connecté
+  if (currentUser && !tabAutorise(tabId)) {
+    window.showToast("Vous n'avez pas accès à cette section.", "error");
+    return;
+  }
+
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1)).classList.remove('hidden');
+  const navBtn = document.querySelector(`[data-tab="${tabId}"]`);
+  if (navBtn) navBtn.classList.add('active');
+
+  const title = TAB_TITLES[tabId] || tabId;
+  if ($("topbarTitle")) $("topbarTitle").innerText = title;
+
+  if (tabId === 'dashboard') afficherDashboard();
+  if (tabId === 'commandes') filtrerTableau();
+  if (tabId === 'clients') afficherClients();
+  if (tabId === 'expeditions') afficherExpeditions();
+  if (tabId === 'utilisateurs') { window.afficherUtilisateurs(); window.majAffichagePermissionsForm(); }
+  if (tabId === 'historique') window.chargerHistorique();
+
+  closeSidebar();
+}
+
+window.showClient = function() {
+  window.location.href = "index.html"; 
+};
+
+// --- TOASTS ---
+window.showToast = function(message, type = "info", title = "") {
+  const container = $("toastContainer");
+  if (!container) return;
+
+  const icons = { success: "✅", error: "❌", warning: "⚠️", info: "ℹ️" };
+  const toast = document.createElement("div");
+  toast.className = `toast-item toast-${type}`;
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[type] || "ℹ️"}</span>
+    <div style="flex:1;">
+      ${title ? `<div class="toast-title">${title}</div>` : ''}
+      <div class="toast-msg">${message}</div>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+  `;
+
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => toast.remove(), 350);
+  }, 4500);
+};
+
+// --- DIALOG ---
+window.showDialog = function(options) {
+  return new Promise((resolve) => {
+    const dialog = $("customDialog");
+    const box = $("customDialogBox");
+    $("customDialogTitle").innerText = options.title || "";
+    $("customDialogMessage").innerHTML = options.message || "";
+    $("customDialogIcon").innerText = options.icon || "ℹ️";
+    const btnContainer = $("customDialogButtons");
+    btnContainer.innerHTML = "";
+
+    const closeDialog = (res) => {
+      box.classList.remove("scale-100");
+      dialog.classList.add("hidden");
+      resolve(res);
+    };
+
+    if (options.type === 'alert') {
+      const btn = document.createElement("button");
+      btn.className = "btn btn-primary btn-lg";
+      btn.style.width = "100%";
+      btn.innerText = "D'accord";
+      btn.onclick = () => closeDialog(true);
+      btnContainer.appendChild(btn);
+    } else {
+      const btnCancel = document.createElement("button");
+      btnCancel.className = "btn btn-ghost btn-lg";
+      btnCancel.style.flex = "1";
+      btnCancel.innerText = "Annuler";
+      btnCancel.onclick = () => closeDialog(false);
+
+      const btnOk = document.createElement("button");
+      btnOk.className = "btn btn-primary btn-lg";
+      btnOk.style.flex = "1";
+      btnOk.innerText = "Confirmer";
+      btnOk.onclick = () => closeDialog(true);
+
+      btnContainer.appendChild(btnCancel);
+      btnContainer.appendChild(btnOk);
+    }
+
+    dialog.classList.remove("hidden");
+    void dialog.offsetWidth;
+    box.classList.add("scale-100");
+  });
+};
+
+window.customAlert = (msg, title="Information", type="info") => {
+  window.showToast(msg, type, title);
+  return window.showDialog({ type: 'alert', title, message: msg, icon: type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️' });
+};
+
+window.customConfirm = (msg, title="Confirmation") =>
+  window.showDialog({ type: 'confirm', title, message: msg, icon: '❓' });
+
+// --- AJOUT : DIALOGUE À CHOIX MULTIPLES (utilisé pour la détection de doublon client) ---
+window.showChoiceDialog = function(options) {
+  return new Promise((resolve) => {
+    const dialog = $("customDialog");
+    const box = $("customDialogBox");
+    $("customDialogTitle").innerText = options.title || "";
+    $("customDialogMessage").innerHTML = options.message || "";
+    $("customDialogIcon").innerText = options.icon || "❓";
+    const btnContainer = $("customDialogButtons");
+    btnContainer.innerHTML = "";
+    btnContainer.style.flexDirection = "column";
+
+    const closeDialog = (val) => {
+      box.classList.remove("scale-100");
+      dialog.classList.add("hidden");
+      btnContainer.style.flexDirection = "";
+      resolve(val);
+    };
+
+    (options.choices || []).forEach((choice, idx) => {
+      const btn = document.createElement("button");
+      btn.className = idx === 0 ? "btn btn-primary btn-lg" : "btn btn-ghost btn-lg";
+      btn.style.width = "100%";
+      btn.innerText = choice.label;
+      btn.onclick = () => closeDialog(choice.value);
+      btnContainer.appendChild(btn);
+    });
+
+    dialog.classList.remove("hidden");
+    void dialog.offsetWidth;
+    box.classList.add("scale-100");
+  });
+};
+
+// ==================== AJOUT : AUTHENTIFICATION / UTILISATEURS / RÔLES ====================
+
+async function chargerUtilisateurs() {
+  try {
+    const snap = await getDocs(collection(db, "utilisateurs"));
+    usersData = [];
+    snap.forEach(d => usersData.push({ id: d.id, ...d.data() }));
+
+    if (usersData.length === 0) {
+      // Amorçage : crée un compte Admin par défaut si aucun utilisateur n'existe
+      const defaultAdmin = {
+        nom: "Admin", prenom: "Système", username: "admin",
+        email: "", telephone: "", password: "admin123",
+        role: "admin", permissions: [...ALL_TAB_IDS], blocked: false,
+        createdAt: Date.now()
+      };
+      await setDoc(doc(db, "utilisateurs", "admin"), defaultAdmin);
+      usersData = [{ id: "admin", ...defaultAdmin }];
+      if ($("loginBootstrapHint")) $("loginBootstrapHint").classList.remove("hidden");
+    }
+    afficherUtilisateurs();
+  } catch (e) {
+    console.error("Erreur chargement utilisateurs", e);
+  }
+}
+
+window.afficherUtilisateurs = function() {
+  const tbody = $("utilisateursTableBody");
+  if (!tbody) return;
+  if (usersData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem;">Aucun utilisateur enregistré.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = usersData.map(u => {
+    const roleLabel = u.role === "admin" ? "Admin" : (u.role === "gerant" ? "Gérant" : "Agent");
+    const roleBadge = u.role === "admin" ? "badge-indigo" : (u.role === "gerant" ? "badge-blue" : "badge-slate");
+    const blockedBadge = u.blocked ? `<span class="badge badge-red">Bloqué</span>` : `<span class="badge badge-green">Actif</span>`;
+    return `<tr>
+      <td><b>${u.prenom || ""} ${u.nom || ""}</b></td>
+      <td>${u.username || "-"}</td>
+      <td style="font-size:0.75rem;color:var(--text-secondary);">${u.email || ""}${u.email && u.telephone ? " · " : ""}${u.telephone || ""}</td>
+      <td><span class="badge ${roleBadge}">${roleLabel}</span></td>
+      <td class="text-center">${blockedBadge}</td>
+      <td class="text-right" style="white-space:nowrap;">
+        <button onclick="window.editerUtilisateur('${u.id}')" class="btn btn-sm btn-ghost" title="Modifier">✏️</button>
+        <button onclick="window.toggleBlocageUtilisateur('${u.id}')" class="btn btn-sm btn-ghost" title="${u.blocked ? 'Débloquer' : 'Bloquer'}">${u.blocked ? '🔓' : '🔒'}</button>
+      </td>
+    </tr>`;
+  }).join("");
+};
+
+window.majAffichagePermissionsForm = function() {
+  const role = $("userRole").value;
+  const block = $("userPermissionsBlock");
+  const box = $("userPermissionsCheckboxes");
+  if (role === "admin") {
+    block.style.opacity = "0.45";
+    box.innerHTML = `<span style="font-size:0.78rem;color:var(--text-muted);">L'Admin a accès à toutes les fonctionnalités par défaut.</span>`;
+    return;
+  }
+  block.style.opacity = "1";
+  const existing = (isEditingUser && $("userEditId").value) ? (usersData.find(u => u.id === $("userEditId").value)?.permissions || []) : [];
+  box.innerHTML = ALL_TAB_IDS.map(tabId => `
+    <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.78rem;background:#f8fafc;border:1px solid var(--border);padding:0.35rem 0.6rem;border-radius:0.4rem;cursor:pointer;">
+      <input type="checkbox" value="${tabId}" class="userPermCheckbox" ${existing.includes(tabId) ? "checked" : ""}>
+      ${TAB_LABELS_PERM[tabId]}
+    </label>`).join("");
+};
+
+window.reinitialiserFormUtilisateur = function() {
+  isEditingUser = false;
+  $("userFormTitle").innerText = "➕ Ajouter un utilisateur";
+  $("userEditId").value = "";
+  $("userNom").value = "";
+  $("userPrenom").value = "";
+  $("userUsername").value = "";
+  $("userEmail").value = "";
+  $("userTelephone").value = "";
+  $("userPassword").value = "";
+  $("userRole").value = "agent";
+  window.majAffichagePermissionsForm();
+};
+
+window.editerUtilisateur = function(id) {
+  const u = usersData.find(x => x.id === id);
+  if (!u) return;
+  isEditingUser = true;
+  $("userFormTitle").innerText = `✏️ Modifier — ${u.prenom || ""} ${u.nom || ""}`;
+  $("userEditId").value = u.id;
+  $("userNom").value = u.nom || "";
+  $("userPrenom").value = u.prenom || "";
+  $("userUsername").value = u.username || "";
+  $("userEmail").value = u.email || "";
+  $("userTelephone").value = u.telephone || "";
+  $("userPassword").value = u.password || "";
+  $("userRole").value = u.role || "agent";
+  window.majAffichagePermissionsForm();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.enregistrerUtilisateur = async function() {
+  if (currentUser && currentUser.role !== "admin") {
+    return window.showToast("Seul l'Admin peut gérer les utilisateurs.", "error");
+  }
+  const nom = $("userNom").value.trim();
+  const prenom = $("userPrenom").value.trim();
+  const username = $("userUsername").value.trim().toLowerCase().replace(/\s+/g, "");
+  const email = $("userEmail").value.trim();
+  const telephone = $("userTelephone").value.trim();
+  const password = $("userPassword").value;
+  const role = $("userRole").value;
+
+  if (!nom || !prenom || !username || !password) {
+    return window.showToast("Nom, prénom, nom d'utilisateur et mot de passe sont requis.", "error");
+  }
+
+  const editId = $("userEditId").value;
+  const targetId = editId || username;
+
+  const existingSameUsername = usersData.find(u => u.username === username && u.id !== editId);
+  if (existingSameUsername) {
+    return window.showToast("Ce nom d'utilisateur est déjà utilisé.", "error");
+  }
+
+  let permissions = [...ALL_TAB_IDS];
+  if (role !== "admin") {
+    permissions = Array.from(document.querySelectorAll(".userPermCheckbox:checked")).map(cb => cb.value);
+  }
+
+  const existing = usersData.find(u => u.id === targetId);
+  const payload = {
+    nom, prenom, username, email, telephone, password, role, permissions,
+    blocked: existing ? !!existing.blocked : false,
+    updatedAt: Date.now()
+  };
+  if (!existing) payload.createdAt = Date.now();
+
+  await setDoc(doc(db, "utilisateurs", targetId), payload, { merge: true });
+  window.showToast(`Utilisateur ${prenom} ${nom} enregistré.`, "success");
+  await enregistrerHistorique(editId ? `Modification de l'utilisateur ${username}` : `Création de l'utilisateur ${username}`);
+  await chargerUtilisateurs();
+  window.reinitialiserFormUtilisateur();
+};
+
+window.toggleBlocageUtilisateur = async function(id) {
+  if (currentUser && currentUser.role !== "admin") {
+    return window.showToast("Seul l'Admin peut bloquer/débloquer un utilisateur.", "error");
+  }
+  const u = usersData.find(x => x.id === id);
+  if (!u) return;
+  if (currentUser && u.id === currentUser.id) {
+    return window.showToast("Vous ne pouvez pas vous bloquer vous-même.", "warning");
+  }
+  const newBlocked = !u.blocked;
+  const confirmMsg = newBlocked
+    ? `Bloquer l'accès de ${u.prenom} ${u.nom} ?`
+    : `Débloquer l'accès de ${u.prenom} ${u.nom} ?`;
+  const ok = await window.customConfirm(confirmMsg, newBlocked ? "Blocage utilisateur" : "Déblocage utilisateur");
+  if (!ok) return;
+
+  await updateDoc(doc(db, "utilisateurs", id), { blocked: newBlocked });
+  window.showToast(`Utilisateur ${newBlocked ? "bloqué" : "débloqué"}.`, "success");
+  await enregistrerHistorique(`${newBlocked ? "Blocage" : "Déblocage"} de l'utilisateur ${u.username}`);
+  await chargerUtilisateurs();
+};
+
+// --- HISTORIQUE DES ACTIONS ---
+async function enregistrerHistorique(action) {
+  try {
+    const now = new Date();
+    const entry = {
+      nom: currentUser?.nom || "Système",
+      prenom: currentUser?.prenom || "",
+      utilisateur: currentUser?.username || "systeme",
+      action: action,
+      date: now.toLocaleDateString("fr-FR"),
+      heure: now.toLocaleTimeString("fr-FR"),
+      timestamp: Date.now()
+    };
+    const ref = doc(collection(db, "historique"));
+    await setDoc(ref, entry);
+  } catch (e) {
+    console.error("Erreur enregistrement historique", e);
+  }
+}
+window.enregistrerHistorique = enregistrerHistorique;
+
+window.chargerHistorique = async function() {
+  try {
+    const snap = await getDocs(collection(db, "historique"));
+    historiqueData = [];
+    snap.forEach(d => historiqueData.push({ id: d.id, ...d.data() }));
+    historiqueData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    window.afficherHistorique();
+  } catch (e) {
+    console.error("Erreur chargement historique", e);
+  }
+};
+
+window.afficherHistorique = function() {
+  const tbody = $("historiqueTableBody");
+  if (!tbody) return;
+  if (historiqueData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;">Aucune action enregistrée pour le moment.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = historiqueData.slice(0, 500).map(h => `
+    <tr>
+      <td><b>${h.prenom || ""} ${h.nom || ""}</b></td>
+      <td>${h.action || ""}</td>
+      <td>${h.date || ""}</td>
+      <td>${h.heure || ""}</td>
+    </tr>`).join("");
+};
+
+// --- CONNEXION / DÉCONNEXION ---
+window.tenterConnexion = async function(e) {
+  if (e) e.preventDefault();
+  const username = $("loginUsername").value.trim().toLowerCase();
+  const password = $("loginPassword").value;
+  const errBox = $("loginErrorMsg");
+  errBox.classList.add("hidden");
+
+  const user = usersData.find(u => (u.username || "").toLowerCase() === username);
+  if (!user || user.password !== password) {
+    errBox.innerText = "Identifiant ou mot de passe incorrect.";
+    errBox.classList.remove("hidden");
+    return false;
+  }
+  if (user.blocked) {
+    errBox.innerText = "Ce compte a été bloqué par l'administrateur.";
+    errBox.classList.remove("hidden");
+    return false;
+  }
+
+  currentUser = user;
+  localStorage.setItem(SESSION_STORAGE_KEY, user.id);
+  appliquerSessionUtilisateur();
+  await enregistrerHistorique("Connexion au logiciel");
+  return false;
+};
+
+window.deconnexionUtilisateur = async function() {
+  const ok = await window.customConfirm("Voulez-vous vraiment vous déconnecter ?", "Déconnexion");
+  if (!ok) return;
+  await enregistrerHistorique("Déconnexion du logiciel");
+  localStorage.removeItem(SESSION_STORAGE_KEY);
+  currentUser = null;
+  window.location.reload();
+};
+
+function appliquerSessionUtilisateur() {
+$("loginScreen").style.display = "none";
+  const info = $("sidebarUserInfo");
+  if (info) {
+    info.classList.remove("hidden");
+    $("sidebarUserName").innerText = `${currentUser.prenom || ""} ${currentUser.nom || ""}`.trim();
+    const roleLabel = currentUser.role === "admin" ? "Admin" : (currentUser.role === "gerant" ? "Gérant" : "Agent");
+    $("sidebarUserRole").innerText = roleLabel;
+  }
+  appliquerPermissionsUI();
+
+  // Si l'utilisateur n'a pas accès à l'onglet actuellement affiché (dashboard par défaut), basculer vers le premier onglet autorisé
+  if (!tabAutorise('dashboard')) {
+    const firstAllowed = ALL_TAB_IDS.find(t => tabAutorise(t)) || 'commandes';
+    window.switchTab(firstAllowed);
+  }
+}
+
+function appliquerPermissionsUI() {
+  if (!currentUser) return;
+  const isAdmin = currentUser.role === "admin";
+  document.querySelectorAll('.nav-item[data-tab]').forEach(btn => {
+    const tabId = btn.getAttribute('data-tab');
+    let allowed;
+    if (tabId === 'utilisateurs') {
+      allowed = isAdmin;
+    } else if (tabId === 'historique') {
+      allowed = isAdmin || (currentUser.permissions || []).includes('historique');
+    } else {
+      allowed = isAdmin || (currentUser.permissions || []).includes(tabId);
+    }
+    btn.style.display = allowed ? "" : "none";
+  });
+}
+
+function tabAutorise(tabId) {
+  if (!currentUser) return false;
+  if (currentUser.role === "admin") return true;
+  if (tabId === 'utilisateurs') return false;
+  if (tabId === 'historique') return (currentUser.permissions || []).includes('historique');
+  return (currentUser.permissions || []).includes(tabId);
+}
+
+async function initAuth() {
+  await chargerUtilisateurs();
+  const savedId = localStorage.getItem(SESSION_STORAGE_KEY);
+  const savedUser = savedId ? usersData.find(u => u.id === savedId) : null;
+
+  if (savedUser && !savedUser.blocked) {
+    currentUser = savedUser;
+    appliquerSessionUtilisateur();
+  } else {
+    if (savedUser && savedUser.blocked) {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+      window.showToast("Votre compte a été bloqué par l'administrateur.", "error");
+    }
+  $("loginScreen").style.display = "flex";
+  }
+}
+
+// --- CHARGEMENT DES DONNÉES FIRESTORE ---
+async function chargerParametresSysteme() {
+  try {
+    const snap = await getDoc(doc(db, "parametres", "config"));
+    if (snap.exists()) {
+      systemConfig = { ...systemConfig, ...snap.data() };
+    }
+    if ($("cfgAppName")) $("cfgAppName").value = systemConfig.appName || "BRAINY BUSINESS Commande";
+    if ($("cfgCompanyName")) $("cfgCompanyName").value = systemConfig.companyName || "BRAINY AGENCY";
+    if ($("cfgCompanyTel")) $("cfgCompanyTel").value = systemConfig.companyTel || "";
+    if ($("cfgCompanyAddress")) $("cfgCompanyAddress").value = systemConfig.companyAddress || "";
+    if ($("cfgTauxUsd")) $("cfgTauxUsd").value = systemConfig.tauxUsdFcfa || 620;
+    if ($("cfgTauxUsdVente")) $("cfgTauxUsdVente").value = systemConfig.tauxUsdFcfaVente || systemConfig.tauxUsdFcfa || 620;
+    if ($("cfgPrixCbm")) $("cfgPrixCbm").value = systemConfig.prixCbmFcfa || 220000;
+    if ($("cfgReceiptFooter")) $("cfgReceiptFooter").value = systemConfig.receiptFooter || "";
+
+    if ($("headerAppName")) $("headerAppName").innerText = systemConfig.appName || "BRAINY BUSINESS";
+    if ($("loginAppName")) $("loginAppName").innerText = systemConfig.appName || "BRAINY BUSINESS"; // AJOUT
+  } catch(e) { console.error("Erreur chargement paramètres", e); }
+}
+
+async function chargerSessions() {
+  try {
+    const snap = await getDocs(collection(db, "sessions"));
+    sessionsData = [];
+    snap.forEach(d => sessionsData.push({ id: d.id, ...d.data() }));
+    
+    let listHTML = "";
+    sessionsData.forEach(s => listHTML += `<option value="${s.id}">`);
+    if($("sessionList")) $("sessionList").innerHTML = listHTML;
+
+    const filterOptions = `<option value="ALL">Toutes les sessions / saisons</option>` + 
+                          sessionsData.map(s => `<option value="${s.id}">${s.id}</option>`).join("");
+    if($("sessionFilter")) $("sessionFilter").innerHTML = filterOptions;
+    if($("dashSessionFilter")) $("dashSessionFilter").innerHTML = filterOptions;
+    if($("clientSessionFilter")) $("clientSessionFilter").innerHTML = filterOptions;
+
+    if($("lancerSessionSelect")) {
+      const currentVal = $("lancerSessionSelect").value;
+      const lancerOptions = `<option value="">-- Sélectionner une session existante --</option>` +
+                            sessionsData.map(s => `<option value="${s.id}">${s.id}</option>`).join("") +
+                            `<option value="__NEW__">➕ Créer une nouvelle session / saison…</option>`;
+      $("lancerSessionSelect").innerHTML = lancerOptions;
+      if (currentVal && [...$("lancerSessionSelect").options].some(o => o.value === currentVal)) {
+        $("lancerSessionSelect").value = currentVal;
+      }
+    }
+
+  } catch(e) { console.error("Erreur sessions", e); }
+}
+
+async function chargerTableau() {
+  try {
+    const querySnapshot = await getDocs(collection(db, "commandes"));
+    allData = [];
+    querySnapshot.forEach((d) => {
+      let data = d.data();
+      data.code = d.id;
+      allData.push(data);
+    });
+    
+    allData.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+    
+    alimenterDropdownClients();
+    filtrerTableau();
+    afficherDashboard();
+    afficherClients();
+    afficherExpeditions();
+  } catch(e) {
+    console.error("Erreur chargement commandes", e);
+    window.showToast("Erreur lors de la récupération des commandes.", "error");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  // Topbar date
+  const now = new Date();
+  if ($("topbarDate")) {
+    $("topbarDate").innerText = now.toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  await initAuth(); // AJOUT : authentification / rôles (affiche l'écran de connexion si nécessaire)
+  await chargerParametresSysteme();
+  await chargerProduits();
+  await chargerSessions();
+  await chargerTableau();
+});
+
+window.enregistrerParametresSysteme = async function(e) {
+  if (e) e.preventDefault();
+  systemConfig.appName = $("cfgAppName").value.trim() || "BRAINY BUSINESS Commande";
+  systemConfig.companyName = $("cfgCompanyName").value.trim() || "BRAINY AGENCY";
+  systemConfig.companyTel = $("cfgCompanyTel").value.trim();
+  systemConfig.companyAddress = $("cfgCompanyAddress").value.trim();
+  systemConfig.tauxUsdFcfa = parseNum($("cfgTauxUsd").value) || 620;
+  systemConfig.tauxUsdFcfaVente = parseNum($("cfgTauxUsdVente").value) || systemConfig.tauxUsdFcfa || 620;
+  systemConfig.prixCbmFcfa = parseNum($("cfgPrixCbm").value) || 220000;
+  systemConfig.receiptFooter = $("cfgReceiptFooter").value.trim();
+
+  await setDoc(doc(db, "parametres", "config"), systemConfig);
+  if ($("headerAppName")) $("headerAppName").innerText = systemConfig.appName;
+  window.showToast("Paramètres enregistrés dans Firebase", "success", "Paramètres mis à jour");
+  await enregistrerHistorique("Modification des paramètres système"); // AJOUT
+  afficherProduits();
+  afficherDashboard();
+};
+
+window.exporterDonneesCSV = function() {
+  if (allData.length === 0) return window.showToast("Aucune donnée à exporter.", "warning");
+  
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "Code,Session,Client,Telephone,Statut,Montant Commande,Payé,Dette,Taxe Totale,Taxe Payee\r\n";
+
+  allData.forEach(function(rowArray) {
+      let row = [
+        rowArray.code,
+        rowArray.session || "-",
+        rowArray.nom,
+        rowArray.tel,
+        rowArray.statut,
+        prixCommandeDe(rowArray),
+        rowArray.total,
+        rowArray.dette,
+        rowArray.taxe,
+        rowArray.taxePayee || 0
+      ].map(e => `"${e}"`).join(",");
+      csvContent += row + "\r\n";
+  });
+
+  var encodedUri = encodeURI(csvContent);
+  var link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `Brainy_Export_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+
+// --- MODULE 1: ONGLET LANCER SESSION ---
+window.surChangementLancerSession = function() {
+  const val = $("lancerSessionSelect").value;
+  const newInput = $("lancerSessionNom");
+  if (val === "__NEW__") {
+    newInput.classList.remove("hidden");
+    newInput.value = "";
+    newInput.focus();
+  } else {
+    newInput.classList.add("hidden");
+    newInput.value = val;
+  }
+};
+
+window.enregistrerLancementSession = async function(e) {
+  if (e) e.preventDefault();
+  const selectVal = $("lancerSessionSelect").value;
+  const sessionNom = (selectVal === "__NEW__") ? $("lancerSessionNom").value.trim() : selectVal;
+  const fournisseur = $("lancerFournisseur").value.trim();
+  const dateEntrepot = $("lancerDateEntrepot").value;
+  const dateChargement = $("lancerDateChargement").value;
+  const dateDepart = $("lancerDateDepart").value;
+  const dateArrivee = $("lancerDateArriveeLome").value;
+  const statutGlobal = $("lancerStatutGlobal").value;
+
+  if (!sessionNom || !dateDepart || !dateArrivee) {
+    return window.showToast("Veuillez remplir les champs obligatoires (Session, Date Départ, Date Arrivée).", "error");
+  }
+
+  const sessionObj = {
+    id: sessionNom,
+    fournisseur,
+    dateEntrepot,
+    dateChargement,
+    dateDepart,
+    dateArrivee,
+    updatedAt: Date.now()
+  };
+
+  await setDoc(doc(db, "sessions", sessionNom), sessionObj, { merge: true });
+
+  let updatedCount = 0;
+  const promises = allData.filter(c => (c.session || "Général") === sessionNom).map(async (cmd) => {
+    const updatePayload = {
+      paiement: dateDepart,
+      arrivee: dateArrivee
+    };
+    if (statutGlobal) updatePayload.statut = statutGlobal;
+    await updateDoc(doc(db, "commandes", cmd.code), updatePayload);
+    updatedCount++;
+  });
+
+  await Promise.all(promises);
+  window.showToast(`Session "${sessionNom}" lancée ! ${updatedCount} commande(s) mise(s) à jour avec les dates.`, "success", "Lancement validé");
+  await enregistrerHistorique(`Lancement de la session "${sessionNom}"`); // AJOUT
+  await chargerSessions();
+  await chargerTableau();
+  if ($("lancerSessionSelect")) $("lancerSessionSelect").value = "";
+  if ($("lancerSessionNom")) { $("lancerSessionNom").value = ""; $("lancerSessionNom").classList.add("hidden"); }
+  switchTab("expeditions");
+};
+
+// --- MODULE 2 & PRODUITS ---
+window.uploaderPhotoCloudflare = async function(event) {
+    const fileInput = $("prodPhotoFile");
+    if (!fileInput.files || fileInput.files.length === 0) {
+        return window.showToast("Veuillez sélectionner une image à uploader.", "warning");
+    }
+    const file = fileInput.files[0];
+    const btn = event.target;
+    const oldText = btn.innerText;
+    btn.innerText = "⏳ Upload...";
+    btn.disabled = true;
+
+    try {
+        const cleanName = file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
+        const fileName = `produits/${Date.now()}_${cleanName}`;
+        const workerUrl = `https://boutique.contactetsbrainy.workers.dev/${fileName}`;
+        
+        const response = await fetch(workerUrl, {
+            method: 'PUT',
+            body: file,
+            headers: { 'Content-Type': file.type }
+        });
+
+        if (response.ok) {
+            const publicUrl = `https://pub-8baf2ff510794454ba9c970cae59caab.r2.dev/${fileName}`;
+            $("prodPhoto").value = publicUrl;
+            window.showToast("Photo uploadée avec succès !", "success");
+        } else {
+            throw new Error("Erreur serveur lors de l'upload.");
+        }
+    } catch (e) {
+        console.error("Erreur Upload Cloudflare:", e);
+        window.showToast("L'upload Cloudflare a échoué. Vous pouvez coller le lien manuellement.", "error");
+    } finally {
+        btn.innerText = oldText;
+        btn.disabled = false;
+    }
+};
+
+window.calculerAutoProduit = function() {
+  const usd = parseNum($("prodPrixUsd").value);
+  // Taux ACHAT (indépendant) : sert uniquement au coût converti du produit
+  const coutFcfa = Math.round(usd * systemConfig.tauxUsdFcfa);
+  $("prodCoutChinoisFcfa").value = coutFcfa;
+
+  // Taux COMMANDE / VENTE (indépendant) : sert à suggérer le prix de commande
+  const pxCmd = parseNum($("prodPrixCommande").value);
+  const tauxVente = systemConfig.tauxUsdFcfaVente || systemConfig.tauxUsdFcfa;
+  const pxCmdSuggere = Math.round(usd * tauxVente);
+  if (!pxCmd && pxCmdSuggere) {
+    $("prodPrixCommande").value = pxCmdSuggere;
+  }
+
+  const L = parseNum($("prodLongueur").value);
+  const l = parseNum($("prodLargeur").value);
+  const H = parseNum($("prodHauteur").value);
+  const cbm = (L * l * H) / 1000000;
+  $("prodCbm").value = cbm > 0 ? cbm.toFixed(5) : 0;
+
+  const stTaxe = $("prodStatutTaxe").value;
+  const taxeEstim = stTaxe === "HT" ? Math.round(cbm * systemConfig.prixCbmFcfa) : 0;
+  $("prodTaxe").value = taxeEstim;
+
+  const benef = (parseNum($("prodPrixCommande").value) || coutFcfa) - coutFcfa;
+  $("prodBeneficePreview").innerText = formatFCFA(benef);
+  $("prodBeneficePreview").style.background = benef >= 0 ? "#d1fae5" : "#fee2e2";
+  $("prodBeneficePreview").style.color = benef >= 0 ? "#065f46" : "#991b1b";
+  $("prodBeneficePreview").style.borderColor = benef >= 0 ? "#a7f3d0" : "#fecaca";
+};
+
+window.enregistrerProduit = async function() {
+  const nom = $("prodNom").value.trim();
+  if (!nom) return window.showToast("Le nom du produit est obligatoire.", "error");
+
+  const id = $("prodId").value || "PROD_" + Date.now();
+  const payload = {
+    id,
+    nom,
+    photo: $("prodPhoto").value.trim(),
+    description: $("prodDescription").value.trim(),
+    prixUsd: parseNum($("prodPrixUsd").value),
+    coutChinoisFcfa: parseNum($("prodCoutChinoisFcfa").value),
+    prixCommande: parseNum($("prodPrixCommande").value),
+    prixVente: parseNum($("prodPrixVente").value),
+    longueur: parseNum($("prodLongueur").value),
+    largeur: parseNum($("prodLargeur").value),
+    hauteur: parseNum($("prodHauteur").value),
+    poids: parseNum($("prodPoids").value),
+    cbm: parseNum($("prodCbm").value),
+    statutTaxe: $("prodStatutTaxe").value,
+    taxe: parseNum($("prodTaxe").value),
+    updatedAt: Date.now()
+  };
+
+  await setDoc(doc(db, "produits", id), payload, { merge: true });
+  window.showToast("Produit enregistré dans la base de données !", "success");
+  await enregistrerHistorique(`Enregistrement du produit "${nom}"`); // AJOUT
+  reinitialiserFormProduit();
+  chargerProduits();
+};
+
+window.reinitialiserFormProduit = function() {
+  $("prodId").value = "";
+  $("prodNom").value = "";
+  $("prodPhoto").value = "";
+  $("prodPhotoFile").value = "";
+  $("prodDescription").value = "";
+  $("prodPrixUsd").value = "";
+  $("prodCoutChinoisFcfa").value = "";
+  $("prodPrixCommande").value = "";
+  $("prodPrixVente").value = "";
+  $("prodLongueur").value = "";
+  $("prodLargeur").value = "";
+  $("prodHauteur").value = "";
+  $("prodPoids").value = "";
+  $("prodCbm").value = "";
+  $("prodTaxe").value = "";
+  $("prodStatutTaxe").value = "HT";
+  $("prodBeneficePreview").innerText = "0 FCFA";
+  $("prodBeneficePreview").style.background = "#d1fae5";
+  $("prodBeneficePreview").style.color = "#065f46";
+  if ($("prodFormTitle")) $("prodFormTitle").innerText = "Nouveau produit";
+};
+
+async function chargerProduits() {
+  const snap = await getDocs(collection(db, "produits"));
+  produitsData = [];
+  snap.forEach(d => produitsData.push({ id: d.id, ...d.data() }));
+  afficherProduits();
+  peuplerCatalogueCombos();
+}
+
+function calculerStatsParProduit(pId, pNom) {
+  let qteTotal = 0;
+  let totalPrixCmd = 0;
+  let totalTaxe = 0;
+  let commandesRel = [];
+
+  allData.forEach(cmd => {
+    if (cmd.items && Array.isArray(cmd.items)) {
+      cmd.items.forEach(it => {
+        if (it.productId === pId || (it.nom || "").toLowerCase() === (pNom || "").toLowerCase()) {
+          const q = parseNum(it.quantite);
+          const px = parseNum(it.prixUnitaire);
+          qteTotal += q;
+          totalPrixCmd += q * px;
+          totalTaxe += parseNum(it.taxeTotal || it.taxe);
+          commandesRel.push({ code: cmd.code, nomClient: cmd.nom, qte: q, px: px * q, benef: (px - parseNum(it.coutChinoisFcfa)) * q });
+        }
+      });
+    } else if (cmd.produits && cmd.produits.toLowerCase().includes((pNom || "").toLowerCase())) {
+      const q = parseNum(cmd.quantite) || 1;
+      qteTotal += q;
+      totalPrixCmd += prixCommandeDe(cmd);
+      totalTaxe += parseNum(cmd.taxe);
+      commandesRel.push({ code: cmd.code, nomClient: cmd.nom, qte: q, px: prixCommandeDe(cmd), benef: 0 });
+    }
+  });
+
+  return { qteTotal, totalPrixCmd, totalTaxe, commandesRel };
+}
+
+window.afficherProduits = function() {
+  const tbody = $("produitsTableBody");
+  if (!tbody) return;
+
+  const search = ($("prodSearchInput")?.value || "").toLowerCase();
+  const list = produitsData.filter(p => (p.nom || "").toLowerCase().includes(search));
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="13" style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.85rem;">Aucun produit trouvé.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(p => {
+    const st = calculerStatsParProduit(p.id, p.nom);
+    const coutFcfa = p.coutChinoisFcfa || Math.round((p.prixUsd || 0) * systemConfig.tauxUsdFcfa);
+    const benefUnit = (p.prixCommande || 0) - coutFcfa;
+
+    return `
+      <tr>
+        <td>
+          ${p.photo ? `<img src="${p.photo}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">` : `<div style="width:40px;height:40px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;">📷</div>`}
+        </td>
+        <td>
+          <div style="font-weight:700;color:var(--text-primary);">${p.nom}</div>
+          ${p.description ? `<div style="font-size:0.7rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.description}</div>` : ''}
+        </td>
+        <td><span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;">${p.prixUsd ? `$${p.prixUsd}` : '—'}</span></td>
+        <td style="color:var(--text-secondary);font-weight:500;">${formatFCFA(coutFcfa)}</td>
+        <td style="color:var(--blue);font-weight:700;">${formatFCFA(p.prixCommande)}</td>
+        <td class="text-right" style="font-weight:600;">${formatNum(st.qteTotal)}</td>
+        <td class="text-right" style="font-weight:500;">${formatFCFA(st.totalPrixCmd)}</td>
+        <td class="text-right" style="color:var(--amber);">${formatFCFA(p.taxe)}</td>
+        <td class="text-right" style="color:var(--amber);font-weight:500;">${formatFCFA(st.totalTaxe)}</td>
+        <td><span style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;">${p.cbm ? p.cbm + ' m³' : '—'}</span></td>
+        <td class="text-right" style="font-weight:700;color:${benefUnit >= 0 ? 'var(--emerald)' : 'var(--red)'};">${formatFCFA(benefUnit)}</td>
+        <td><span class="badge ${p.statutTaxe === 'TTC' ? 'badge-green' : 'badge-amber'}">${p.statutTaxe || 'HT'}</span></td>
+        <td class="text-right">
+          <div style="display:flex;gap:0.35rem;justify-content:flex-end;">
+            <button onclick="ouvrirModalProduitDetail('${p.id}')" class="btn btn-sm btn-ghost" style="border-color:#e0e7ff;color:#3730a3;background:#e0e7ff;">🔍</button>
+            <button onclick="editerProduit('${p.id}')" class="btn btn-sm btn-warning">✏️</button>
+            <button onclick="supprimerProduit('${p.id}')" class="btn btn-sm btn-danger">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+};
+
+window.editerProduit = function(id) {
+  const p = produitsData.find(x => x.id === id);
+  if (!p) return;
+  $("prodId").value = p.id;
+  $("prodNom").value = p.nom || "";
+  $("prodPhoto").value = p.photo || "";
+  $("prodDescription").value = p.description || "";
+  $("prodPrixUsd").value = p.prixUsd || "";
+  $("prodCoutChinoisFcfa").value = p.coutChinoisFcfa || "";
+  $("prodPrixCommande").value = p.prixCommande || "";
+  $("prodPrixVente").value = p.prixVente || "";
+  $("prodLongueur").value = p.longueur || "";
+  $("prodLargeur").value = p.largeur || "";
+  $("prodHauteur").value = p.hauteur || "";
+  $("prodPoids").value = p.poids || "";
+  $("prodCbm").value = p.cbm || "";
+  $("prodStatutTaxe").value = p.statutTaxe || "HT";
+  $("prodTaxe").value = p.taxe || "";
+  if ($("prodFormTitle")) $("prodFormTitle").innerText = "Modifier produit";
+  calculerAutoProduit();
+  switchTab("produits");
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.supprimerProduit = async function(id) {
+  const p = produitsData.find(x => x.id === id);
+  const st = calculerStatsParProduit(id, p ? p.nom : "");
+  
+  if (st.qteTotal > 0) {
+      const forc = await window.customConfirm(`Ce produit est présent dans l'historique de ${st.commandesRel.length} commandes.<br>La suppression est déconseillée car elle cassera les liens. Voulez-vous vraiment le supprimer définitivement ?`, "Produit en cours d'utilisation");
+      if(!forc) return;
+  } else {
+      const confirm = await window.customConfirm("Êtes-vous sûr de vouloir supprimer ce produit ?", "Suppression produit");
+      if (!confirm) return;
+  }
+  
+  await deleteDoc(doc(db, "produits", id));
+  window.showToast("Produit supprimé !", "success");
+  await enregistrerHistorique(`Suppression du produit "${p ? p.nom : id}"`); // AJOUT
+  chargerProduits();
+};
+
+window.ouvrirModalProduitDetail = function(id) {
+  const p = produitsData.find(x => x.id === id);
+  if (!p) return;
+  const st = calculerStatsParProduit(p.id, p.nom);
+
+  $("prodDetailTitle").innerText = p.nom;
+  const coutFcfa = p.coutChinoisFcfa || Math.round((p.prixUsd || 0) * systemConfig.tauxUsdFcfa);
+  const benefUnit = (p.prixCommande || 0) - coutFcfa;
+
+  $("prodDetailSummary").innerHTML = [
+    `<div class="stat-card accent-blue"><span class="stat-label">Prix Commande</span><span class="stat-value">${formatFCFA(p.prixCommande)}</span></div>`,
+    `<div class="stat-card"><span class="stat-label">Coût Chinois</span><span class="stat-value">${formatFCFA(coutFcfa)}</span></div>`,
+    `<div class="stat-card"><span class="stat-label">Qté Commandée</span><span class="stat-value">${formatNum(st.qteTotal)}</span></div>`,
+    `<div class="stat-card accent-emerald"><span class="stat-label">Bénéfice Unitaire</span><span class="stat-value" style="color:var(--emerald);">${formatFCFA(benefUnit)}</span></div>`
+  ].join("");
+
+  $("prodDetailOrdersBody").innerHTML = st.commandesRel.length === 0
+    ? `<tr><td colspan="5" style="padding:1.5rem;text-align:center;color:var(--text-muted);">Aucune commande liée.</td></tr>`
+    : st.commandesRel.map(c => `
+      <tr>
+        <td><span class="code-badge">${c.code}</span></td>
+        <td style="font-weight:500;">${c.nomClient || '—'}</td>
+        <td class="text-right" style="font-weight:700;">${formatNum(c.qte)}</td>
+        <td class="text-right">${formatFCFA(c.px)}</td>
+        <td class="text-right" style="color:var(--emerald);font-weight:700;">${c.benef > 0 ? formatFCFA(c.benef) : '<span style="color:var(--text-muted);">Non calculable</span>'}</td>
+      </tr>
+    `).join("");
+
+  $("modalProduitDetail").classList.remove("hidden");
+};
+
+window.fermerModalProduitDetail = function() {
+  $("modalProduitDetail").classList.add("hidden");
+};
+
+// --- GESTION ET INTÉGRATION CLIENT ---
+// AJOUT : détection de client déjà existant par nom ou numéro de téléphone
+function trouverClientSimilaire(nom, tel) {
+  const normNom = s => (s || "").trim().toLowerCase();
+  const normTel = s => (s || "").replace(/\D/g, "");
+  const nomN = normNom(nom);
+  const telN = normTel(tel);
+  if (!nomN && !telN) return null;
+
+  const seen = {};
+  for (const cmd of allData) {
+    const cNom = normNom(cmd.nom);
+    const cTel = normTel(cmd.tel);
+    if ((telN && cTel && cTel === telN) || (nomN && cNom && cNom === nomN)) {
+      const key = cTel || cNom;
+      if (!seen[key]) {
+        seen[key] = true;
+        return { nom: cmd.nom, tel: cmd.tel, livraison: cmd.livraison };
+      }
+    }
+  }
+  return null;
+}
+
+function alimenterDropdownClients() {
+  const clientsMap = {};
+  allData.forEach(cmd => {
+    if (cmd.tel) clientsMap[cmd.tel] = cmd.nom;
+  });
+
+  const select = $("clientSelect");
+  if (!select) return;
+  select.innerHTML = `<option value="">-- Choisir un client existant ou saisir manuellement --</option>` +
+    Object.keys(clientsMap).map(tel => `<option value="${tel}">${clientsMap[tel]} (${tel})</option>`).join("");
+    
+  const filterDash = $("dashClientFilter");
+  if(filterDash) {
+      filterDash.innerHTML = `<option value="ALL">Tous les clients</option>` +
+      Object.keys(clientsMap).map(tel => `<option value="${tel}">${clientsMap[tel]}</option>`).join("");
+  }
+}
+
+window.surSelectionClientExistants = function() {
+  const tel = $("clientSelect").value;
+  if (!tel) return;
+  const cmd = allData.find(c => c.tel === tel);
+  if (cmd) {
+    $("nom").value = cmd.nom || "";
+    $("tel").value = cmd.tel || "";
+    $("livraison").value = cmd.livraison || "";
+  }
+};
+
+window.verifierIntegriteClient = async function(field) {
+  const val = $(field).value.trim();
+  if (!val) return;
+
+  if (field === 'tel') {
+    const existant = allData.find(c => (c.tel || "").replace(/\D/g, "") === val.replace(/\D/g, ""));
+    if (existant && existant.nom && $("nom").value !== existant.nom) {
+      $("nom").value = existant.nom;
+      window.showToast(`Numéro associé à ${existant.nom}. Nom mis à jour.`, "info");
+    }
+  }
+};
+
+function peuplerCatalogueCombos() {
+  const sel = $("selectProduitCatalogue");
+  if (!sel) return;
+  sel.innerHTML = `<option value="">-- Choisir un produit enregistré --</option>` +
+    produitsData.map(p => `<option value="${p.id}">${p.nom} — ${formatFCFA(p.prixCommande)}</option>`).join("");
+}
+
+window.chargerProduitDuCatalogueDansLigne = function() {
+  const id = $("selectProduitCatalogue").value;
+  if (!id) return;
+  const p = produitsData.find(x => x.id === id);
+  if (p) {
+    $("itemPrixTemp").value = p.prixCommande || "";
+  }
+};
+
+window.ajouterLigneProduitCommande = function() {
+  const selId = $("selectProduitCatalogue").value;
+  const pObj = produitsData.find(x => x.id === selId);
+  
+  const nom = pObj ? pObj.nom : "Article personnalisé";
+  const px = parseNum($("itemPrixTemp").value);
+  const qte = parseNum($("itemQteTemp").value) || 1;
+
+  if (px <= 0) return window.showToast("Veuillez saisir un prix unitaire valide.", "warning");
+
+  const cbmUnit = pObj ? parseNum(pObj.cbm) : 0;
+  const coutChinois = pObj ? parseNum(pObj.coutChinoisFcfa) : px;
+  const taxeEstim = pObj ? parseNum(pObj.taxe) * qte : 0;
+  const photo = pObj ? (pObj.photo || "") : "";
+  const couleur = $("itemCouleurTemp") ? $("itemCouleurTemp").value.trim() : "";
+  const taille = $("itemTailleTemp") ? $("itemTailleTemp").value.trim() : "";
+  const precisions = $("itemPrecisionsTemp") ? $("itemPrecisionsTemp").value.trim() : "";
+
+  commandeLignesTemp.push({
+    productId: selId || null,
+    nom,
+    photo,
+    prixUnitaire: px,
+    quantite: qte,
+    coutChinoisFcfa: coutChinois,
+    cbmUnit,
+    cbmTotal: cbmUnit * qte,
+    taxeTotal: taxeEstim,
+    couleur,
+    taille,
+    precisions
+  });
+
+  $("selectProduitCatalogue").value = "";
+  $("itemPrixTemp").value = "";
+  $("itemQteTemp").value = "1";
+  if ($("itemCouleurTemp")) $("itemCouleurTemp").value = "";
+  if ($("itemTailleTemp")) $("itemTailleTemp").value = "";
+  if ($("itemPrecisionsTemp")) $("itemPrecisionsTemp").value = "";
+
+  afficherLignesCommandeTemp();
+  recalculerCommandeTotaux();
+};
+
+window.supprimerLigneCommandeTemp = function(idx) {
+  commandeLignesTemp.splice(idx, 1);
+  afficherLignesCommandeTemp();
+  recalculerCommandeTotaux();
+};
+
+function afficherLignesCommandeTemp() {
+  const tbody = $("commandeItemsTbody");
+  if (!tbody) return;
+
+  if (commandeLignesTemp.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="padding:1.25rem;text-align:center;color:var(--text-muted);font-style:italic;font-size:0.8rem;">Aucun produit dans la commande.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = commandeLignesTemp.map((it, idx) => {
+    const detailsParts = [];
+    if (it.couleur) detailsParts.push(`🎨 Couleur: ${it.couleur}`);
+    if (it.taille) detailsParts.push(`📏 Taille: ${it.taille}`);
+    if (it.precisions) detailsParts.push(`📝 ${it.precisions}`);
+    const detailsHTML = detailsParts.length
+      ? `<div style="margin-top:2px;font-size:0.68rem;color:var(--text-muted);line-height:1.4;">${detailsParts.join(' · ')}</div>`
+      : '';
+
+    return `
+    <tr>
+      <td>
+        ${it.photo ? `<img src="${it.photo}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">` : `<div style="width:36px;height:36px;background:#f1f5f9;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;">📷</div>`}
+      </td>
+      <td style="font-weight:600;">
+        ${it.nom}
+        ${detailsHTML}
+      </td>
+      <td class="text-right">${formatFCFA(it.prixUnitaire)}</td>
+      <td class="text-center" style="font-weight:700;">${it.quantite}</td>
+      <td class="text-right" style="color:var(--blue);font-weight:700;">${formatFCFA(it.prixUnitaire * it.quantite)}</td>
+      <td class="text-right" style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);">${it.cbmTotal ? it.cbmTotal.toFixed(4) + ' m³' : '—'}</td>
+      <td class="text-right" style="color:var(--amber);font-weight:500;">${formatFCFA(it.taxeTotal)}</td>
+      <td class="text-center">
+        <button onclick="supprimerLigneCommandeTemp(${idx})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:1rem;line-height:1;padding:0.25rem;" title="Supprimer">✕</button>
+      </td>
+    </tr>
+  `;
+  }).join("");
+}
+
+window.recalculerCommandeTotaux = function() {
+  let sousTotalPx = 0;
+  let cbmTot = 0;
+  let taxeTot = 0;
+
+  if (commandeLignesTemp.length > 0) {
+    commandeLignesTemp.forEach(it => {
+      sousTotalPx += it.prixUnitaire * it.quantite;
+      cbmTot += it.cbmTotal || 0;
+      taxeTot += it.taxeTotal || 0;
+    });
+    $("montantCommande").value = sousTotalPx;
+    $("cbm").value = cbmTot > 0 ? cbmTot.toFixed(4) : "";
+    if (!$("taxe").value || $("taxe").value == 0) $("taxe").value = taxeTot;
+  } else {
+    sousTotalPx = parseNum($("montantCommande").value);
+  }
+
+  const paye = parseNum($("total").value);
+  const dette = Math.max(0, sousTotalPx - paye);
+  $("dette").value = dette;
+
+  const stTaxe = $("statutTaxeCommande").value;
+  const taxeVal = parseNum($("taxe").value);
+  const taxePayeeVal = parseNum($("taxePayee").value);
+  const taxeRestante = Math.max(0, taxeVal - taxePayeeVal);
+  $("taxeRestantePreview").value = taxeRestante;
+
+  const grandTotal = stTaxe === "HT" ? (sousTotalPx + taxeVal) : sousTotalPx;
+  $("grandTotalPreview").value = grandTotal;
+
+  if (!$("produits").value && commandeLignesTemp.length > 0) {
+    $("produits").value = commandeLignesTemp.map(i => {
+      const det = [];
+      if (i.couleur) det.push(i.couleur);
+      if (i.taille) det.push(i.taille);
+      if (i.precisions) det.push(i.precisions);
+      const detStr = det.length ? ` (${det.join(', ')})` : '';
+      return `${i.quantite}x ${i.nom}${detStr}`;
+    }).join(", ");
+  }
+};
+
+window.genererCodeUnique = function(force = false) {
+  if (isEditingOrder && !force) return;
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "BRAINY";
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  $("adminCode").value = result;
+};
+
+window.ajouterCommande = async function() {
+  let code = $("adminCode").value.trim().toUpperCase();
+  if (!code) {
+    genererCodeUnique(true);
+    code = $("adminCode").value;
+  }
+
+  let nom = $("nom").value.trim();
+  let tel = $("tel").value.trim();
+  if (!nom || !tel) return window.showToast("Nom et Téléphone sont requis.", "error");
+
+  // AJOUT : vérification de doublon client (nom ou téléphone déjà existant)
+  if (!isEditingOrder) {
+    const similaire = trouverClientSimilaire(nom, tel);
+    if (similaire) {
+      const choix = await window.showChoiceDialog({
+        title: "Client déjà existant",
+        icon: "👤",
+        message: `Un client correspondant existe déjà :<br><b>${similaire.nom}</b> — ${similaire.tel}<br><br>Souhaitez-vous utiliser ce client existant, ou confirmer qu'il s'agit bien d'un nouveau client différent ?`,
+        choices: [
+          { label: "✅ Utiliser le client existant", value: "existing" },
+          { label: "➕ C'est un nouveau client différent", value: "new" },
+          { label: "Annuler", value: "cancel" }
+        ]
+      });
+      if (!choix || choix === "cancel") return;
+      if (choix === "existing") {
+        $("nom").value = similaire.nom;
+        $("tel").value = similaire.tel;
+        if (similaire.livraison) $("livraison").value = similaire.livraison;
+        nom = similaire.nom;
+        tel = similaire.tel;
+        window.showToast("Client existant sélectionné.", "info");
+      }
+      // si "new" : on conserve le nom/téléphone saisis tels quels
+    }
+  }
+
+  const session = $("session").value.trim() || "Général";
+  const montantCommande = parseNum($("montantCommande").value);
+  const total = parseNum($("total").value);
+  const dette = parseNum($("dette").value);
+  const taxe = parseNum($("taxe").value);
+  const taxePayee = parseNum($("taxePayee").value);
+
+  const payload = {
+    session,
+    nom,
+    tel,
+    livraison: $("livraison").value.trim(),
+    montantCommande,
+    total,
+    dette,
+    taxe,
+    taxePayee,
+    statutTaxe: $("statutTaxeCommande").value,
+    cbm: $("cbm").value.trim(),
+    poids: $("poids").value.trim(),
+    paiement: $("paiement").value.trim(),
+    arrivee: $("arrivee").value.trim(),
+    produits: $("produits").value.trim() || "Commande",
+    statut: $("statut").value,
+    items: commandeLignesTemp,
+    updatedAt: Date.now()
+  };
+
+  if (!isEditingOrder) {
+    payload.createdAt = Date.now();
+  }
+
+  await setDoc(doc(db, "commandes", code), payload, { merge: true });
+  window.showToast(`Commande ${code} enregistrée avec succès !`, "success");
+  await enregistrerHistorique(`${isEditingOrder ? "Modification" : "Création"} de la commande ${code} (${nom})`); // AJOUT
+
+  if (session && !sessionsData.find(s => s.id === session)) {
+    await setDoc(doc(db, "sessions", session), { id: session, createdAt: Date.now() }, { merge: true });
+    await chargerSessions();
+  }
+
+  reinitialiserFormulaire();
+  chargerTableau();
+};
+
+window.reinitialiserFormulaire = function() {
+  isEditingOrder = false;
+  $("adminCode").value = "";
+  $("adminCode").readOnly = false;
+  $("session").value = "";
+  $("clientSelect").value = "";
+  $("nom").value = "";
+  $("tel").value = "";
+  $("livraison").value = "";
+  $("montantCommande").value = "";
+  $("total").value = "";
+  $("dette").value = "";
+  $("cbm").value = "";
+  $("taxe").value = "";
+  $("taxePayee").value = "";
+  $("taxeRestantePreview").value = "";
+  $("grandTotalPreview").value = "";
+  $("paiement").value = "";
+  $("arrivee").value = "";
+  $("poids").value = "";
+  $("produits").value = "";
+  $("statutTaxeCommande").value = "HT";
+  $("statut").value = "Commande en préparation chez Brainy Agency";
+  
+  if ($("itemCouleurTemp")) $("itemCouleurTemp").value = "";
+  if ($("itemTailleTemp")) $("itemTailleTemp").value = "";
+  if ($("itemPrecisionsTemp")) $("itemPrecisionsTemp").value = "";
+
+  commandeLignesTemp = [];
+  afficherLignesCommandeTemp();
+  genererCodeUnique(true);
+  
+  if ($("btn-enregistrer")) $("btn-enregistrer").innerText = "💾 Enregistrer / Modifier";
+};
+
+window.editerCommande = function(code) {
+  const item = allData.find(c => c.code === code);
+  if (!item) return;
+
+  isEditingOrder = true;
+  $("adminCode").value = item.code;
+  $("adminCode").readOnly = true;
+  $("session").value = item.session || "";
+  $("nom").value = item.nom || "";
+  $("tel").value = item.tel || "";
+  $("livraison").value = item.livraison || "";
+  $("montantCommande").value = prixCommandeDe(item);
+  $("total").value = item.total || 0;
+  $("dette").value = item.dette || 0;
+  $("cbm").value = item.cbm || "";
+  $("taxe").value = item.taxe || 0;
+  $("taxePayee").value = item.taxePayee || 0;
+  $("paiement").value = item.paiement || "";
+  $("arrivee").value = item.arrivee || "";
+  $("poids").value = item.poids || "";
+  $("produits").value = item.produits || "";
+  $("statutTaxeCommande").value = item.statutTaxe || "HT";
+  $("statut").value = item.statut || "Commande en préparation chez Brainy Agency";
+
+  commandeLignesTemp = Array.isArray(item.items) ? [...item.items] : [];
+  afficherLignesCommandeTemp();
+  recalculerCommandeTotaux();
+
+  if ($("btn-enregistrer")) $("btn-enregistrer").innerText = "🔄 Mettre à jour la commande";
+  switchTab("commandes");
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.supprimerCommande = async function(code) {
+  const confirm = await window.customConfirm(`Êtes-vous sûr de vouloir supprimer définitivement la commande ${code} ?`, "Suppression commande");
+  if (!confirm) return;
+
+  await deleteDoc(doc(db, "commandes", code));
+  window.showToast("Commande supprimée de Firestore.", "success");
+  await enregistrerHistorique(`Suppression de la commande ${code}`); // AJOUT
+  chargerTableau();
+};
+
+// Statut -> CSS class
+function statutClass(statut) {
+  const map = {
+    "Commande en préparation chez Brainy Agency": "status-prep",
+    "Commande en preparation en chine": "status-china",
+    "Commande arrivée chez le transitaire": "status-transit2",
+    "Commande en transistion de chine vers lomé": "status-transit",
+    "Commande arriver au port de lomé en cours de dedouement": "status-port",
+    "Commande arrivée chez le transitaire au Togo": "status-transit2",
+    "Commande arriver chez Brainy Agency veiller passer pour recuperer": "status-ready"
+  };
+  return map[statut] || "status-prep";
+}
+
+function statutShort(statut) {
+  const map = {
+    "Commande en préparation chez Brainy Agency": "⏳ Préparation locale",
+    "Commande en preparation en chine": "🏭 Préparation Chine",
+    "Commande arrivée chez le transitaire": "📦 Chez transitaire",
+    "Commande en transistion de chine vers lomé": "🚢 En transit",
+    "Commande arriver au port de lomé en cours de dedouement": "🛃 Port Lomé",
+    "Commande arrivée chez le transitaire au Togo": "🛃 Transitaire Togo",
+    "Commande arriver chez Brainy Agency veiller passer pour recuperer": "✅ Prêt à récupérer"
+  };
+  return map[statut] || statut || "En cours";
+}
+
+window.filtrerTableau = function() {
+  const search = ($("searchInput")?.value || "").toLowerCase();
+  const sessionSel = $("sessionFilter")?.value || "ALL";
+
+  const filtered = allData.filter(d => {
+    const matchSearch = (d.code || "").toLowerCase().includes(search) ||
+                        (d.nom || "").toLowerCase().includes(search) ||
+                        (d.tel || "").toLowerCase().includes(search) ||
+                        (d.produits || "").toLowerCase().includes(search);
+    const matchSession = (sessionSel === "ALL") || (d.session || "Général") === sessionSel;
+    return matchSearch && matchSession;
+  });
+
+  const tbody = $("tableBody");
+  if (!tbody) return;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-muted);">Aucune commande trouvée.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(d => {
+    const cmdPx = prixCommandeDe(d);
+    const gTotal = grandTotalDe(d);
+    const detteTot = parseNum(d.dette) + Math.max(0, parseNum(d.taxe) - parseNum(d.taxePayee));
+    const cls = statutClass(d.statut);
+    const lblShort = statutShort(d.statut);
+
+    return `
+      <tr>
+        <td>
+          <div><span class="code-badge">${d.code}</span></div>
+          <div style="margin-top:3px;font-size:0.72rem;color:var(--text-muted);font-weight:500;">${d.session || 'Général'}</div>
+        </td>
+        <td>
+          <div style="font-weight:700;">${d.nom}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">${d.tel}</div>
+        </td>
+        <td style="max-width:200px;">
+          <div style="font-size:0.78rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.produits || 'Articles divers'}</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);">${d.cbm ? d.cbm + ' m³' : ''} ${d.poids ? '| ' + d.poids + ' kg' : ''}</div>
+        </td>
+        <td>
+          <div style="font-size:0.78rem;font-weight:700;">${formatFCFA(gTotal)}</div>
+          <div style="font-size:0.72rem;font-weight:600;color:${detteTot > 0 ? 'var(--red)' : 'var(--emerald)'};">
+            ${detteTot > 0 ? 'Reste: ' + formatFCFA(detteTot) : '✅ Soldée'}
+          </div>
+        </td>
+        <td>
+          <span class="status-pill ${cls}">${lblShort}</span>
+        </td>
+        <td class="text-right">
+          <div style="display:flex;gap:0.35rem;justify-content:flex-end;">
+            <button onclick="editerCommande('${d.code}')" class="btn btn-sm btn-ghost">✏️ Modifier</button>
+            <button onclick="supprimerCommande('${d.code}')" class="btn btn-sm btn-danger">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+};
+
+
+// --- MODULE 3: DASHBOARD STATISTIQUES ---
+window.reinitialiserFiltresDashboard = function() {
+  $("dashSessionFilter").value = "ALL";
+  $("dashStatutFilter").value = "ALL";
+  $("dashClientFilter").value = "ALL";
+  $("dashDateFrom").value = "";
+  $("dashDateTo").value = "";
+  afficherDashboard();
+};
+
+window.appliquerPreset = function(preset) {
+  const now = new Date();
+  let from = new Date();
+
+  if (preset === 'semaine') {
+    const day = now.getDay() || 7;
+    if (day !== 1) from.setHours(-24 * (day - 1));
+  } else if (preset === 'mois') {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else if (preset === 'annee') {
+    from = new Date(now.getFullYear(), 0, 1);
+  }
+
+  $("dashDateFrom").value = from.toISOString().split('T')[0];
+  $("dashDateTo").value = now.toISOString().split('T')[0];
+  afficherDashboard();
+};
+
+window.afficherDashboard = function() {
+  const sessFilter = $("dashSessionFilter")?.value || "ALL";
+  const statFilter = $("dashStatutFilter")?.value || "ALL";
+  const clientFilter = $("dashClientFilter")?.value || "ALL";
+  const dateFrom = $("dashDateFrom")?.value ? new Date($("dashDateFrom").value).getTime() : 0;
+  const dateTo = $("dashDateTo")?.value ? new Date($("dashDateTo").value + "T23:59:59").getTime() : Infinity;
+
+  const dataFiltered = allData.filter(d => {
+    const mSess = sessFilter === "ALL" || (d.session || "Général") === sessFilter;
+    const mStat = statFilter === "ALL" || d.statut === statFilter;
+    const mClient = clientFilter === "ALL" || d.tel === clientFilter;
+    const created = d.createdAt || 0;
+    const mDate = created >= dateFrom && created <= dateTo;
+    return mSess && mStat && mClient && mDate;
+  });
+
+  let nbCmds = dataFiltered.length;
+  let totalMontantCmds = 0;
+  let totalPayeProduits = 0;
+  let totalDetteProduits = 0;
+  let totalTaxes = 0;
+  let totalTaxesPayees = 0;
+  let totalBenefice = 0;
+
+  dataFiltered.forEach(d => {
+    const pxCmd = prixCommandeDe(d);
+    totalMontantCmds += pxCmd;
+    totalPayeProduits += parseNum(d.total);
+    totalDetteProduits += parseNum(d.dette);
+    totalTaxes += parseNum(d.taxe);
+    totalTaxesPayees += parseNum(d.taxePayee);
+
+    if (d.items && Array.isArray(d.items)) {
+      d.items.forEach(it => {
+        const q = parseNum(it.quantite);
+        const px = parseNum(it.prixUnitaire);
+        const cout = parseNum(it.coutChinoisFcfa);
+        totalBenefice += (px - cout) * q;
+      });
+    }
+  });
+
+  const grandTotal = totalMontantCmds + totalTaxes;
+  const totalEncaisse = totalPayeProduits + totalTaxesPayees;
+  const detteGlobale = (totalMontantCmds - totalPayeProduits) + (totalTaxes - totalTaxesPayees);
+
+  const grid = $("dashboardStatsGrid");
+  if (!grid) return;
+
+  const kpis = [
+    { label: "Commandes", value: nbCmds, cls: "accent-blue", color: "", isCount: true },
+    { label: "Chiffre d'affaires produits", value: formatFCFA(totalMontantCmds), cls: "", color: "" },
+    { label: "Total taxes estimées", value: formatFCFA(totalTaxes), cls: "accent-amber", color: "var(--amber)" },
+    { label: "Grand total général", value: formatFCFA(grandTotal), cls: "accent-blue", color: "var(--blue)" },
+    { label: "Total encaissé", value: formatFCFA(totalEncaisse), cls: "accent-emerald", color: "var(--emerald)" },
+    { label: "Dette globale clients", value: formatFCFA(detteGlobale), cls: "accent-red", color: "var(--red)" },
+    { label: "Bénéfice estimé", value: formatFCFA(totalBenefice), cls: "accent-emerald", color: "var(--emerald)" },
+  ];
+
+  grid.innerHTML = kpis.map(k => `
+    <div class="stat-card ${k.cls}">
+      <span class="stat-label">${k.label}</span>
+      <span class="stat-value" style="${k.color ? 'color:' + k.color : ''}">${k.value}</span>
+    </div>
+  `).join("");
+};
+
+
+// --- MODULE 4: EXPÉDITIONS REGROUPÉES ---
+window.afficherExpeditions = function() {
+  const tbody = $("expeditionsTableBody");
+  if (!tbody) return;
+
+  const sessionsMap = {};
+
+  allData.forEach(d => {
+    const sId = d.session || "Général";
+    if (!sessionsMap[sId]) {
+      const sessInfo = sessionsData.find(x => x.id === sId) || {};
+      sessionsMap[sId] = {
+        id: sId,
+        fournisseur: sessInfo.fournisseur || "—",
+        dateDepart: sessInfo.dateDepart || d.paiement || "—",
+        dateArrivee: sessInfo.dateArrivee || d.arrivee || "—",
+        cmdsCount: 0,
+        montantTotal: 0,
+        detteTotale: 0,
+        taxeTotale: 0,
+        statutsSet: new Set()
+      };
+    }
+
+    sessionsMap[sId].cmdsCount++;
+    sessionsMap[sId].montantTotal += grandTotalDe(d);
+    sessionsMap[sId].detteTotale += parseNum(d.dette) + Math.max(0, parseNum(d.taxe) - parseNum(d.taxePayee));
+    sessionsMap[sId].taxeTotale += parseNum(d.taxe);
+    if (d.statut) sessionsMap[sId].statutsSet.add(d.statut);
+  });
+
+  const list = Object.values(sessionsMap);
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--text-muted);">Aucune session/expédition trouvée.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(s => {
+    const statutsArray = Array.from(s.statutsSet);
+    const statutAffichage = statutsArray.length === 0 ? "Non défini" : (statutsArray.length === 1 ? statutShort(statutsArray[0]) : `Multiple (${statutsArray.length})`);
+    const statusCls = statutsArray.length === 1 ? statutClass(statutsArray[0]) : "status-prep";
+    
+    return `
+      <tr>
+        <td style="font-weight:700;">${s.id}</td>
+        <td style="color:var(--text-secondary);">${s.fournisseur}</td>
+        <td>
+          <div style="font-size:0.75rem;">🛫 ${s.dateDepart}</div>
+          <div style="font-size:0.75rem;margin-top:2px;">🛬 ${s.dateArrivee}</div>
+        </td>
+        <td class="text-right" style="font-weight:700;">${s.cmdsCount}</td>
+        <td class="text-right" style="color:var(--blue);font-weight:600;">${formatFCFA(s.montantTotal)}</td>
+        <td class="text-right" style="font-weight:700;color:${s.detteTotale > 0 ? 'var(--red)' : 'var(--emerald)'};">${formatFCFA(s.detteTotale)}</td>
+        <td class="text-right" style="color:var(--amber);font-weight:600;">${formatFCFA(s.taxeTotale)}</td>
+        <td class="text-center" style="cursor:pointer;" onclick="ouvrirModalEditExpedition('${s.id}')">
+          <span class="status-pill ${statusCls}">${statutAffichage}</span>
+        </td>
+        <td class="text-center">
+          <div style="display:flex;flex-wrap:wrap;gap:0.3rem;justify-content:center;">
+            <button onclick="changerStatutMasseSession('${s.id}')" class="btn btn-sm btn-primary" title="Changer le statut">🔄 Statut</button>
+            <button onclick="genererListeClientsPDF('${s.id}')" class="btn btn-sm btn-ghost" title="Générer la liste des clients (PDF)">📄 Liste Clients</button>
+            <button onclick="genererFichierCommandeExcel('${s.id}')" class="btn btn-sm btn-ghost" title="Générer le fichier commande (Excel)">📊 Fichier Commande</button>
+            <button onclick="ouvrirModalEnvoiWhatsApp('${s.id}')" class="btn btn-sm" style="background:#25d366;color:#fff;" title="Envoyer sur WhatsApp">💬 Envoyer</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+};
+
+window.changerStatutMasseSession = function(sId) {
+  ouvrirModalEditExpedition(sId);
+};
+
+// --- NOUVEAU : GÉNÉRATION PDF "LISTE CLIENTS" PAR SESSION ---
+window.genererListeClientsPDF = function(sId) {
+  const cmds = allData.filter(c => (c.session || "Général") === sId);
+  if (cmds.length === 0) return window.showToast("Aucun client dans cette session.", "error");
+
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    return window.showToast("Le module PDF n'a pas pu être chargé. Vérifiez votre connexion.", "error");
+  }
+
+  const docPdf = new window.jspdf.jsPDF();
+
+  docPdf.setFontSize(14);
+  docPdf.setTextColor(15, 30, 60);
+  docPdf.text(`${systemConfig.companyName || "BRAINY AGENCY"} — Liste des clients`, 14, 15);
+
+  docPdf.setFontSize(10);
+  docPdf.setTextColor(100, 116, 139);
+  docPdf.text(`Session : ${sId}`, 14, 22);
+  docPdf.text(`Édité le : ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}`, 14, 27);
+
+  const rows = cmds.map(c => {
+    const produitsStr = (c.items && c.items.length)
+      ? c.items.map(it => `${it.quantite}x ${it.nom}`).join(", ")
+      : (c.produits || "-");
+
+    const qte = (c.items && c.items.length)
+      ? c.items.reduce((s, it) => s + parseNum(it.quantite), 0)
+      : (parseNum(c.quantite) || 1);
+
+    const description = (c.items && c.items.length)
+      ? (c.items.map(it => it.precisions || "").filter(Boolean).join(" | ") || "-")
+      : "-";
+
+    const montantGeneral = grandTotalDe(c);
+    const montantPaye = parseNum(c.total) + parseNum(c.taxePayee);
+    const reste = Math.max(0, montantGeneral - montantPaye);
+
+    return [
+      c.nom || "-",
+      produitsStr,
+      String(qte),
+      description,
+      formatFCFA(montantGeneral),
+      formatFCFA(montantPaye),
+      formatFCFA(reste)
+    ];
+  });
+
+  docPdf.autoTable({
+    startY: 34,
+    head: [["Client", "Produit(s)", "Qté", "Description", "Montant général", "Montant payé", "Reste à payer"]],
+    body: rows,
+    styles: { fontSize: 8, cellPadding: 2.5, overflow: "linebreak" },
+    headStyles: { fillColor: [15, 30, 60], textColor: 255, fontStyle: "bold" },
+    columnStyles: {
+      2: { halign: "center", cellWidth: 12 },
+      4: { halign: "right" },
+      5: { halign: "right" },
+      6: { halign: "right" }
+    },
+    didParseCell: function(data) {
+      if (data.section === "body" && data.column.index === 6) {
+        const val = parseFloat((data.cell.raw || "").replace(/[^\d]/g, ""));
+        if (val > 0) data.cell.styles.textColor = [220, 38, 38];
+      }
+    }
+  });
+
+  const finalY = docPdf.lastAutoTable.finalY || 40;
+  const totalGeneral = rows.reduce((s, r) => s + parseNum(r[4]), 0);
+  const totalPaye = rows.reduce((s, r) => s + parseNum(r[5]), 0);
+  const totalReste = rows.reduce((s, r) => s + parseNum(r[6]), 0);
+
+  docPdf.setFontSize(9);
+  docPdf.setTextColor(71, 85, 105);
+  docPdf.text(`Total général : ${formatFCFA(totalGeneral)}    |    Total payé : ${formatFCFA(totalPaye)}    |    Reste à payer : ${formatFCFA(totalReste)}`, 14, Math.min(finalY + 10, 285));
+
+  const fileName = `Liste_Clients_${String(sId).replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+
+  // AJOUT : téléchargement automatique et immédiat du PDF (sans passer par le menu de partage,
+  // qui obligeait auparavant l'utilisateur à cliquer une seconde fois)
+  const blob = docPdf.output("blob");
+  telechargerBlobGenerique(blob, fileName);
+  window.showToast("Téléchargement du PDF lancé.", "success");
+};
+
+// --- NOUVEAU : GÉNÉRATION EXCEL "FICHIER COMMANDE" PAR SESSION ---
+window.genererFichierCommandeExcel = async function(sId) {
+  const cmds = allData.filter(c => (c.session || "Général") === sId);
+  if (cmds.length === 0) return window.showToast("Aucun produit dans cette session.", "error");
+
+  if (!window.ExcelJS) {
+    return window.showToast("Le module Excel n'a pas pu être chargé. Vérifiez votre connexion.", "error");
+  }
+
+  window.showToast("Génération du fichier commande en cours...", "info");
+
+  const produitsMap = {};
+  cmds.forEach(c => {
+    if (c.items && c.items.length) {
+      c.items.forEach(it => {
+        const key = it.productId || it.nom;
+        if (!produitsMap[key]) {
+          produitsMap[key] = {
+            nom: it.nom || "Produit",
+            description: it.precisions || "-",
+            photo: it.photo || "",
+            prixUnitaire: parseNum(it.prixUnitaire),
+            quantite: 0
+          };
+        }
+        produitsMap[key].quantite += parseNum(it.quantite);
+      });
+    } else if (c.produits) {
+      const key = c.produits;
+      if (!produitsMap[key]) {
+        produitsMap[key] = {
+          nom: c.produits,
+          description: "-",
+          photo: "",
+          prixUnitaire: prixCommandeDe(c),
+          quantite: 0
+        };
+      }
+      produitsMap[key].quantite += 1;
+    }
+  });
+
+  const produitsListe = Object.values(produitsMap);
+  if (produitsListe.length === 0) return window.showToast("Aucun produit à exporter pour cette session.", "error");
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = systemConfig.companyName || "BRAINY AGENCY";
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet(`Commande ${sId}`.substring(0, 31));
+
+  sheet.columns = [
+    { header: "Image", key: "image", width: 14 },
+    { header: "Nom du produit", key: "nom", width: 30 },
+    { header: "Description", key: "description", width: 38 },
+    { header: "Quantité totale commandée", key: "quantite", width: 20 },
+    { header: "Prix unitaire (FCFA)", key: "prixUnitaire", width: 20 },
+    { header: "Prix total (FCFA)", key: "prixTotal", width: 20 }
+  ];
+
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell(cell => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F1E3C" } };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+  headerRow.height = 22;
+
+  let rowIndex = 2;
+  let totalGeneral = 0;
+
+  for (const p of produitsListe) {
+    const prixTotal = p.prixUnitaire * p.quantite;
+    totalGeneral += prixTotal;
+
+    const row = sheet.addRow({
+      image: "",
+      nom: p.nom,
+      description: p.description || "-",
+      quantite: p.quantite,
+      prixUnitaire: p.prixUnitaire,
+      prixTotal: prixTotal
+    });
+    row.getCell("prixUnitaire").numFmt = "#,##0";
+    row.getCell("prixTotal").numFmt = "#,##0";
+    row.height = 58;
+    row.alignment = { vertical: "middle" };
+
+    if (p.photo) {
+      try {
+        const resp = await fetch(p.photo);
+        const blob = await resp.blob();
+        const buffer = await blob.arrayBuffer();
+        let ext = "png";
+        if (/\.jpe?g($|\?)/i.test(p.photo)) ext = "jpeg";
+        else if (/\.gif($|\?)/i.test(p.photo)) ext = "gif";
+        const imageId = workbook.addImage({ buffer, extension: ext });
+        sheet.addImage(imageId, {
+          tl: { col: 0.1, row: rowIndex - 1 + 0.1 },
+          ext: { width: 55, height: 55 }
+        });
+      } catch (e) {
+        // Image inaccessible (CORS ou lien invalide) : on laisse la cellule vide sans bloquer l'export.
+      }
+    }
+    rowIndex++;
+  }
+
+  const totalRow = sheet.addRow({ nom: "", description: "", quantite: "", prixUnitaire: "TOTAL GÉNÉRAL", prixTotal: totalGeneral });
+  totalRow.getCell("prixUnitaire").font = { bold: true };
+  totalRow.getCell("prixTotal").font = { bold: true };
+  totalRow.getCell("prixTotal").numFmt = "#,##0";
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const fileName = `Fichier_Commande_${String(sId).replace(/[^a-zA-Z0-9]/g, "_")}.xlsx`;
+
+  if (navigator.canShare) {
+    const file = new File([blob], fileName, { type: blob.type });
+    if (navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: fileName, text: `Fichier commande — ${sId}` })
+        .catch(() => telechargerBlobGenerique(blob, fileName));
+      return;
+    }
+  }
+  telechargerBlobGenerique(blob, fileName);
+};
+
+function telechargerBlobGenerique(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+// --- NOUVEAU : ENVOI WHATSAPP GROUPÉ PAR SESSION (SÉLECTION CLIENTS + FILE D'ATTENTE) ---
+window.ouvrirModalEnvoiWhatsApp = function(sId) {
+  const cmds = allData.filter(c => (c.session || "Général") === sId);
+  if (cmds.length === 0) return window.showToast("Aucun client dans cette session.", "error");
+
+  if ($("waSelectionSessionTitle")) $("waSelectionSessionTitle").innerText = sId;
+
+  const container = $("waClientsListContainer");
+  if (container) {
+    container.innerHTML = cmds.map(c => `
+      <label style="display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.7rem;border:1px solid var(--border);border-radius:8px;font-size:0.8rem;cursor:pointer;">
+        <input type="checkbox" class="waClientCheckbox" value="${c.code}" onchange="majCompteurSelectionWA()">
+        <span style="flex:1;">
+          <span style="font-weight:700;">${c.nom}</span>
+          <span style="color:var(--text-muted);"> — ${c.tel}</span>
+        </span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted);">${c.code}</span>
+      </label>
+    `).join("");
+  }
+
+  if ($("waSelectAllCheckbox")) $("waSelectAllCheckbox").checked = false;
+  majCompteurSelectionWA();
+  $("modalSelectionClientsWA").classList.remove("hidden");
+};
+
+window.fermerModalSelectionClientsWA = function() {
+  $("modalSelectionClientsWA").classList.add("hidden");
+};
+
+window.toggleSelectAllWAClients = function(checked) {
+  document.querySelectorAll(".waClientCheckbox").forEach(cb => { cb.checked = checked; });
+  majCompteurSelectionWA();
+};
+
+window.majCompteurSelectionWA = function() {
+  const total = document.querySelectorAll(".waClientCheckbox").length;
+  const selected = document.querySelectorAll(".waClientCheckbox:checked").length;
+  if ($("waSelectionCount")) $("waSelectionCount").innerText = `${selected} sélectionné(s) sur ${total}`;
+};
+
+window.validerSelectionClientsWA = function() {
+  const codes = Array.from(document.querySelectorAll(".waClientCheckbox:checked")).map(cb => cb.value);
+  if (codes.length === 0) return window.showToast("Sélectionnez au moins un client.", "error");
+
+  waQueue = codes.map(code => allData.find(c => c.code === code)).filter(Boolean);
+  fermerModalSelectionClientsWA();
+  afficherFileWaQueue();
+};
+
+const STATUT_MESSAGE_WA = {
+  "Commande en préparation chez Brainy Agency": "Commande en préparation chez Brainy Agency.",
+  "Commande en preparation en chine": "Commande en préparation en Chine.",
+  "Commande arrivée chez le transitaire": "Commande arrivée chez le transitaire.",
+  "Commande en transistion de chine vers lomé": "Commande en transition de Chine vers Lomé.",
+  "Commande arriver au port de lomé en cours de dedouement": "Commande arrivée au port de Lomé, en cours de dédouanement.",
+  "Commande arrivée chez le transitaire au Togo": "Commande arrivée chez le transitaire au Togo.",
+  "Commande arriver chez Brainy Agency veiller passer pour recuperer": "Commande arrivée chez Brainy Agency. Veuillez passer récupérer votre colis."
+};
+
+function construireMessageWhatsAppCommande(c) {
+  const produitsStr = (c.items && c.items.length)
+    ? c.items.map(it => `${it.nom} (${it.quantite})`).join(", ")
+    : (c.produits || "-");
+
+  const paye = parseNum(c.total) + parseNum(c.taxePayee);
+  const reste = Math.max(0, grandTotalDe(c) - paye);
+  const statutMsg = STATUT_MESSAGE_WA[c.statut] || c.statut || "En cours de traitement";
+
+  return `Bonjour ${c.nom || ""},
+
+Voici les détails de votre commande :
+
+*Code de suivi* : ${c.code || "-"}
+*Produits* : ${produitsStr}
+*Poids* : ${c.poids || "-"}
+*CBM* : ${c.cbm || "-"}
+*Lieu de livraison* : ${c.livraison || "-"}
+*Date de départ* : ${c.paiement || "-"}
+*Arrivée prévue/réelle* : ${c.arrivee || "-"}
+*Taxe* : ${formatFCFA(c.taxe)}
+*Montant total payé* : ${formatFCFA(paye)}
+*Reste à payer (Dette)* : ${formatFCFA(reste)}
+*Statut actuel de la commande* : ${statutMsg}
+
+Voici le lien pour suivre votre commande :
+https://brainybasededonnee-lang.github.io/BRAINYWALLET/
+
+Merci de votre confiance !
+
+L'équipe ${systemConfig.companyName || "Brainy Agency"}.`;
+}
+
+window.afficherFileWaQueue = function() {
+  const container = $("waQueueListContainer");
+  if (!container) return;
+
+  if (waQueue.length === 0) {
+    container.innerHTML = `<p style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:1rem;">File d'attente vide.</p>`;
+  } else {
+    container.innerHTML = waQueue.map((c, idx) => `
+      <div id="waQueueItem_${idx}" style="display:flex;align-items:center;justify-content:space-between;gap:0.6rem;padding:0.6rem 0.75rem;border:1px solid var(--border);border-radius:8px;">
+        <div>
+          <div style="font-weight:700;font-size:0.82rem;">${c.nom}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">${c.tel} · ${c.code}</div>
+        </div>
+        <button onclick="envoyerUnWhatsAppDeLaFile(${idx})" class="btn btn-sm" style="background:#25d366;color:#fff;">💬 Envoyer</button>
+      </div>
+    `).join("");
+  }
+
+  if ($("modalWaQueue")) $("modalWaQueue").classList.remove("hidden");
+};
+
+window.envoyerUnWhatsAppDeLaFile = function(idx) {
+  const c = waQueue[idx];
+  if (!c) return;
+  const telClean = String(c.tel || "").replace(/[^\d]/g, "");
+  const msg = encodeURIComponent(construireMessageWhatsAppCommande(c));
+  window.open(`https://wa.me/${telClean}?text=${msg}`, "_blank");
+
+  const item = $(`waQueueItem_${idx}`);
+  if (item) {
+    item.style.opacity = "0.55";
+    const btn = item.querySelector("button");
+    if (btn) { btn.disabled = true; btn.innerText = "✅ Envoyé"; }
+  }
+};
+
+window.fermerModalWaQueue = function() {
+  $("modalWaQueue").classList.add("hidden");
+  waQueue = [];
+};
+
+window.ouvrirModalEditExpedition = function(sId) {
+  const sessInfo = sessionsData.find(x => x.id === sId) || {};
+  
+  const cmdsSession = allData.filter(c => (c.session || "Général") === sId);
+  let defaultStatut = "Commande en préparation chez Brainy Agency";
+  let defaultDepart = sessInfo.dateDepart || "";
+  let defaultArrivee = sessInfo.dateArrivee || "";
+
+  if (cmdsSession.length > 0) {
+    if (cmdsSession[0].statut) defaultStatut = cmdsSession[0].statut;
+    if (!defaultDepart && cmdsSession[0].paiement) defaultDepart = cmdsSession[0].paiement;
+    if (!defaultArrivee && cmdsSession[0].arrivee) defaultArrivee = cmdsSession[0].arrivee;
+  }
+
+  $("modalExpSessionId").value = sId;
+  $("modalExpSessionTitle").innerText = sId;
+  $("modalExpStatut").value = defaultStatut;
+  $("modalExpDateDepart").value = defaultDepart;
+  $("modalExpDateArrivee").value = defaultArrivee;
+
+  $("modalEditExpedition").classList.remove("hidden");
+};
+
+window.fermerModalEditExpedition = function() {
+  $("modalEditExpedition").classList.add("hidden");
+};
+
+window.sauvegarderEditExpedition = async function() {
+  const sId = $("modalExpSessionId").value;
+  const nouveauStatut = $("modalExpStatut").value;
+  const nouvelleDateDepart = $("modalExpDateDepart").value;
+  const nouvelleDateArrivee = $("modalExpDateArrivee").value;
+
+  if (!sId) return;
+
+  const sessionObj = {
+    id: sId,
+    dateDepart: nouvelleDateDepart,
+    dateArrivee: nouvelleDateArrivee,
+    updatedAt: Date.now()
+  };
+  await setDoc(doc(db, "sessions", sId), sessionObj, { merge: true });
+
+  let updatedCount = 0;
+  const promises = allData.filter(c => (c.session || "Général") === sId).map(async (cmd) => {
+    const updatePayload = {};
+    if (nouveauStatut) updatePayload.statut = nouveauStatut;
+    if (nouvelleDateDepart) updatePayload.paiement = nouvelleDateDepart;
+    if (nouvelleDateArrivee) updatePayload.arrivee = nouvelleDateArrivee;
+
+    await updateDoc(doc(db, "commandes", cmd.code), updatePayload);
+    
+    if (nouveauStatut) cmd.statut = nouveauStatut;
+    if (nouvelleDateDepart) cmd.paiement = nouvelleDateDepart;
+    if (nouvelleDateArrivee) cmd.arrivee = nouvelleDateArrivee;
+    
+    updatedCount++;
+  });
+
+  await Promise.all(promises);
+
+  const sessInMemory = sessionsData.find(x => x.id === sId);
+  if (sessInMemory) {
+    sessInMemory.dateDepart = nouvelleDateDepart;
+    sessInMemory.dateArrivee = nouvelleDateArrivee;
+  } else {
+    sessionsData.push(sessionObj);
+  }
+
+  window.showToast(`Session "${sId}" mise à jour ! ${updatedCount} commande(s) modifiée(s).`, "success", "Mise à jour réussie");
+  await enregistrerHistorique(`Modification de l'expédition de la session "${sId}"`); // AJOUT
+  fermerModalEditExpedition();
+
+  afficherExpeditions();
+  filtrerTableau();
+  afficherClients();
+  afficherDashboard();
+};
+
+
+// --- MODULE 5: CLIENTS ET FACTURES ---
+window.afficherClients = function() {
+  const tbody = $("clientsTableBody");
+  if (!tbody) return;
+
+  const search = ($("clientSearchInput")?.value || "").toLowerCase();
+  const sessionFilter = $("clientSessionFilter")?.value || "ALL";
+  const sortOrder = $("clientSortOrder")?.value || "recent";
+
+  const clientsMap = {};
+
+  allData.forEach(d => {
+    const tel = d.tel || "Inconnu";
+    const sessionMatch = (sessionFilter === "ALL") || (d.session || "Général") === sessionFilter;
+
+    if (!clientsMap[tel]) {
+      clientsMap[tel] = {
+        nom: d.nom || "Client",
+        tel: tel,
+        livraison: d.livraison || "—",
+        commandesCount: 0,
+        grandTotal: 0,
+        totalPaye: 0,
+        detteRestante: 0,
+        latestCreatedAt: 0,
+        oldestCreatedAt: Infinity,
+        commandesList: []
+      };
+    }
+
+    if (sessionMatch) {
+      const gTotal = grandTotalDe(d);
+      const paye = parseNum(d.total) + parseNum(d.taxePayee);
+      const dette = (prixCommandeDe(d) - parseNum(d.total)) + (parseNum(d.taxe) - parseNum(d.taxePayee));
+      const created = d.createdAt || 0;
+
+      clientsMap[tel].commandesCount++;
+      clientsMap[tel].grandTotal += gTotal;
+      clientsMap[tel].totalPaye += paye;
+      clientsMap[tel].detteRestante += Math.max(0, dette);
+      if (created > clientsMap[tel].latestCreatedAt) clientsMap[tel].latestCreatedAt = created;
+      if (created < clientsMap[tel].oldestCreatedAt) clientsMap[tel].oldestCreatedAt = created;
+      clientsMap[tel].commandesList.push(d);
+    }
+  });
+
+  let list = Object.values(clientsMap).filter(c => {
+    const matchSearch = c.nom.toLowerCase().includes(search) || c.tel.toLowerCase().includes(search);
+    const matchSess = (sessionFilter === "ALL") || c.commandesCount > 0;
+    return matchSearch && matchSess;
+  });
+
+  if (sortOrder === "recent") {
+    list.sort((a, b) => (b.latestCreatedAt || 0) - (a.latestCreatedAt || 0));
+  } else if (sortOrder === "oldest") {
+    list.sort((a, b) => (a.oldestCreatedAt || 0) - (b.oldestCreatedAt || 0));
+  } else if (sortOrder === "name") {
+    list.sort((a, b) => a.nom.localeCompare(b.nom));
+  }
+
+  let totalDetteGlob = 0;
+  let totalGrandTot = 0;
+  let countAvecDette = 0;
+
+  list.forEach(c => {
+    totalGrandTot += c.grandTotal;
+    totalDetteGlob += c.detteRestante;
+    if (c.detteRestante > 0) countAvecDette++;
+  });
+
+  if ($("clientsStatTotal")) $("clientsStatTotal").innerText = list.length;
+  if ($("clientsStatDette")) $("clientsStatDette").innerText = countAvecDette;
+  if ($("clientsStatGrandTotal")) $("clientsStatGrandTotal").innerText = formatFCFA(totalGrandTot);
+  if ($("clientsStatDetteGlobale")) $("clientsStatDetteGlobale").innerText = formatFCFA(totalDetteGlob);
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--text-muted);">Aucun client trouvé.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td style="font-weight:700;">${c.nom}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text-secondary);">${c.tel}</td>
+      <td style="font-size:0.78rem;color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.livraison}</td>
+      <td class="text-right" style="font-weight:700;">${c.commandesCount}</td>
+      <td class="text-right" style="color:var(--blue);font-weight:600;">${formatFCFA(c.grandTotal)}</td>
+      <td class="text-right" style="color:var(--emerald);font-weight:500;">${formatFCFA(c.totalPaye)}</td>
+      <td class="text-right" style="font-weight:700;color:${c.detteRestante > 0 ? 'var(--red)' : 'var(--text-muted)'};">${formatFCFA(c.detteRestante)}</td>
+      <td class="text-center">
+        <div style="display:flex;gap:0.35rem;justify-content:center;flex-wrap:wrap;">
+          <button onclick="ouvrirModalFacture('${c.tel}')" class="btn btn-sm btn-primary">📄 Facture / Reçu</button>
+          <button onclick="imprimerFacture('${c.tel}')" class="btn btn-sm btn-ghost" title="Imprimer directement le reçu">🖨️ Imprimer</button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+};
+
+
+// --- MODULE FACTURES CANVAS & REÇUS ---
+window.ouvrirModalFacture = function(tel) {
+  activeClientForFacture = tel;
+  const clientCmds = allData.filter(c => c.tel === tel);
+  if (clientCmds.length === 0) return;
+
+  if ($("factureModalClientNom")) $("factureModalClientNom").innerText = clientCmds[0].nom + ` (${tel})`;
+
+  const sessionsSet = new Set(clientCmds.map(c => c.session || "Général"));
+  const select = $("factureSessionSelect");
+  if (select) {
+    select.innerHTML = `<option value="ALL">Toutes les sessions de ce client</option>` +
+      Array.from(sessionsSet).map(s => `<option value="${s}">${s}</option>`).join("");
+  }
+
+  $("modalFacture").classList.remove("hidden");
+  regenererFactureCanvas();
+};
+
+window.fermerModalFacture = function() {
+  $("modalFacture").classList.add("hidden");
+};
+
+window.regenererFactureCanvas = function() {
+  if (!activeClientForFacture) return;
+  const sessSel = $("factureSessionSelect")?.value || "ALL";
+  const sortOrder = $("factureSortOrder")?.value || "recent";
+
+  let cmds = allData.filter(c => c.tel === activeClientForFacture && (sessSel === "ALL" || (c.session || "Général") === sessSel));
+  
+  if (sortOrder === "recent") {
+    cmds.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  } else if (sortOrder === "oldest") {
+    cmds.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  }
+
+  if (cmds.length === 0) return;
+
+  const canvas = $("factureCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const width = 800;
+  let height = 440 + (cmds.length * 90);
+  canvas.width = width;
+  canvas.height = height;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = "#0f1e3c";
+  ctx.font = "bold 24px Inter, sans-serif";
+  ctx.fillText(systemConfig.companyName || "BRAINY AGENCY", 40, 45);
+
+  ctx.fillStyle = "#64748b";
+  ctx.font = "12px Inter, sans-serif";
+  ctx.fillText(systemConfig.companyAddress || "Lomé, Togo", 40, 65);
+  ctx.fillText("Tél: " + (systemConfig.companyTel || ""), 40, 80);
+
+  ctx.fillStyle = "#2563eb";
+  ctx.font = "bold 20px Inter, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText("REÇU / FACTURE CLIENT", width - 40, 45);
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "12px Inter, sans-serif";
+  ctx.fillText("Date: " + new Date().toLocaleDateString("fr-FR"), width - 40, 65);
+
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(40, 100);
+  ctx.lineTo(width - 40, 100);
+  ctx.stroke();
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#1e293b";
+  ctx.font = "bold 14px Inter, sans-serif";
+  ctx.fillText("Client : " + (cmds[0].nom || "Standard"), 40, 125);
+  ctx.font = "12px Inter, sans-serif";
+  ctx.fillStyle = "#64748b";
+  ctx.fillText("Téléphone : " + activeClientForFacture, 40, 145);
+
+  let y = 180;
+  ctx.fillStyle = "#f8fafc";
+  ctx.fillRect(40, y, width - 80, 30);
+  
+  ctx.fillStyle = "#475569";
+  ctx.font = "bold 11px Inter, sans-serif";
+  ctx.fillText("CODE / SESSION", 50, y + 19);
+  ctx.fillText("DÉTAILS ARTICLES", 200, y + 19);
+  ctx.textAlign = "right";
+  ctx.fillText("MONTANT", 520, y + 19);
+  ctx.fillText("PAYÉ", 640, y + 19);
+  ctx.fillText("RESTE", width - 50, y + 19);
+
+  y += 35;
+
+  let grandTotalGlobal = 0;
+  let totalPayeGlobal = 0;
+  let detteGlobale = 0;
+  let totalProduitsGlobal = 0;
+  let totalTaxeGlobal = 0;
+
+  cmds.forEach(c => {
+    const gTotal = grandTotalDe(c);
+    const paye = parseNum(c.total) + parseNum(c.taxePayee);
+    const reste = Math.max(0, gTotal - paye);
+
+    grandTotalGlobal += gTotal;
+    totalPayeGlobal += paye;
+    detteGlobale += reste;
+    totalProduitsGlobal += prixCommandeDe(c);
+    totalTaxeGlobal += parseNum(c.taxe);
+
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#2563eb";
+    ctx.font = "bold 12px monospace";
+    ctx.fillText(c.code, 50, y + 15);
+
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "10px Inter, sans-serif";
+    ctx.fillText(c.session || "Général", 50, y + 30);
+
+    ctx.fillStyle = "#334155";
+    ctx.font = "11px Inter, sans-serif";
+    ctx.fillText((c.produits || "Articles").substring(0, 35), 200, y + 20);
+
+    ctx.textAlign = "right";
+    ctx.font = "bold 12px Inter, sans-serif";
+    ctx.fillStyle = "#1e293b";
+    ctx.fillText(formatFCFA(gTotal), 520, y + 20);
+
+    ctx.fillStyle = "#16a34a";
+    ctx.fillText(formatFCFA(paye), 640, y + 20);
+
+    ctx.fillStyle = reste > 0 ? "#dc2626" : "#64748b";
+    ctx.fillText(formatFCFA(reste), width - 50, y + 20);
+
+    y += 45;
+    ctx.strokeStyle = "#f1f5f9";
+    ctx.beginPath();
+    ctx.moveTo(40, y);
+    ctx.lineTo(width - 40, y);
+    ctx.stroke();
+    y += 10;
+  });
+
+  y += 10;
+  const boxW = 340;
+  const boxX = width - 40 - boxW;
+  const boxH = 160;
+
+  // Cadre principal du récapitulatif
+  ctx.fillStyle = "#f8fafc";
+  ctx.fillRect(boxX, y, boxW, boxH);
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(boxX, y, boxW, boxH);
+
+  // En-tête du récapitulatif
+  ctx.fillStyle = "#0f1e3c";
+  ctx.fillRect(boxX, y, boxW, 26);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 11px Inter, sans-serif";
+  ctx.fillText("RÉCAPITULATIF FINANCIER", boxX + 14, y + 17);
+
+  const rowLabelX = boxX + 14;
+  const rowValueX = boxX + boxW - 14;
+  let ry = y + 26;
+
+  const drawSummaryRow = (label, value, opts = {}) => {
+    ry += opts.rowH || 24;
+    if (opts.separatorBefore) {
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.beginPath();
+      ctx.moveTo(boxX + 10, ry - (opts.rowH || 24) + 6);
+      ctx.lineTo(boxX + boxW - 10, ry - (opts.rowH || 24) + 6);
+      ctx.stroke();
+    }
+    ctx.textAlign = "left";
+    ctx.fillStyle = opts.labelColor || "#475569";
+    ctx.font = opts.labelFont || "11px Inter, sans-serif";
+    ctx.fillText(label, rowLabelX, ry);
+    ctx.textAlign = "right";
+    ctx.fillStyle = opts.valueColor || "#1e293b";
+    ctx.font = opts.valueFont || "bold 12px Inter, sans-serif";
+    ctx.fillText(value, rowValueX, ry);
+  };
+
+  drawSummaryRow("Prix total des produits", formatFCFA(totalProduitsGlobal), { rowH: 26 });
+  drawSummaryRow("Taxe totale", formatFCFA(totalTaxeGlobal), { valueColor: "#d97706" });
+  drawSummaryRow("GRAND TOTAL (produits + taxe)", formatFCFA(grandTotalGlobal), {
+    separatorBefore: true,
+    labelFont: "bold 11.5px Inter, sans-serif",
+    labelColor: "#0f1e3c",
+    valueFont: "bold 13px Inter, sans-serif",
+    valueColor: "#0f1e3c"
+  });
+  drawSummaryRow("Total payé", formatFCFA(totalPayeGlobal), { valueColor: "#16a34a" });
+  drawSummaryRow("RESTE À PAYER", formatFCFA(detteGlobale), {
+    separatorBefore: true,
+    labelFont: "bold 12px Inter, sans-serif",
+    labelColor: detteGlobale > 0 ? "#dc2626" : "#16a34a",
+    valueFont: "bold 15px Inter, sans-serif",
+    valueColor: detteGlobale > 0 ? "#dc2626" : "#16a34a"
+  });
+
+  y += boxH + 30;
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "italic 11px Inter, sans-serif";
+  ctx.fillText(systemConfig.receiptFooter || "Merci pour votre confiance !", width / 2, y);
+
+  // AJOUT : affichage du prénom (uniquement) de l'agent ayant traité l'opération — jamais son rôle
+  if (currentUser && currentUser.prenom) {
+    y += 22;
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "10px Inter, sans-serif";
+    ctx.fillText(`Agent de traitement : ${currentUser.prenom}`, width / 2, y);
+  }
+};
+
+// --- NOUVEAU : IMPRESSION DIRECTE DU REÇU / FACTURE ---
+window.imprimerFacture = function(tel) {
+  ouvrirModalFacture(tel);
+  setTimeout(() => window.imprimerFactureCanvas(), 150);
+};
+
+window.imprimerFactureCanvas = function() {
+  const canvas = $("factureCanvas");
+  if (!canvas || !activeClientForFacture) return;
+
+  const dataUrl = canvas.toDataURL("image/png");
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    window.showToast("Veuillez autoriser les fenêtres popup pour imprimer le reçu.", "error");
+    return;
+  }
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Impression — Reçu / Facture</title>
+        <style>
+          body { margin: 0; display: flex; justify-content: center; align-items: flex-start; padding: 20px; background: #fff; }
+          img { max-width: 100%; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <img src="${dataUrl}" onload="window.focus(); window.print();">
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+};
+
+window.telechargerFactureImage = function() {
+  const canvas = $("factureCanvas");
+  const link = document.createElement("a");
+  link.download = `Facture_${activeClientForFacture}_${Date.now()}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+};
+
+window.envoyerFactureWhatsApp = function() {
+  if (!activeClientForFacture) return;
+  const telClean = activeClientForFacture.replace(/[^\d]/g, "");
+  const msg = encodeURIComponent(`Bonjour, voici le récapitulatif de votre facture chez ${systemConfig.companyName}. Merci de votre confiance !`);
+  window.open(`https://wa.me/${telClean}?text=${msg}`, "_blank");
+};
+
+// Exposer globalement pour l'HTML
+window.afficherExpeditions = afficherExpeditions;
+window.afficherClients = afficherClients;
+window.afficherDashboard = afficherDashboard;
+window.filtrerTableau = filtrerTableau;
+</script>
+
+</body>
+</html>

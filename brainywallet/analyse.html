@@ -1,0 +1,680 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW Admin - Analyse des Comptes</title>
+<style>
+/* --- REPRISE DU DESIGN EXISTANT --- */
+:root { --primary: #007bff; --success: #28a745; --danger: #dc3545; --info: #17a2b8; --warning: #ffcc00; --dark: #343a40; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f6ff; margin: 0; box-sizing: border-box; }
+.container { width: 95%; max-width: 1000px; margin: 30px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.hidden { display: none !important; }
+
+/* Inputs & Buttons */
+input, select, button { padding: 10px; margin: 5px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
+button { background: var(--primary); color: white; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+button:active { transform: scale(0.98); }
+
+/* Layout Recherche */
+.search-bar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.search-actions { display: flex; gap: 10px; }
+.search-actions input { flex: 1; }
+
+/* Onglets (Tabs) */
+.tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+.tab-btn { background: #eee; color: #333; padding: 8px 15px; border-radius: 20px; font-size: 13px; }
+.tab-btn.active { background: var(--primary); color: white; }
+
+/* Contenu des sections */
+.section-content { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 15px; }
+.grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+.stat-box { background: white; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.stat-box.success { border-color: var(--success); }
+.stat-box.danger { border-color: var(--danger); }
+.stat-title { font-size: 12px; color: #666; margin-bottom: 5px; }
+.stat-val { font-size: 20px; font-weight: bold; color: #333; }
+
+/* Tables pour l'historique */
+table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; background: white; }
+th, td { padding: 10px; border-bottom: 1px solid #ddd; }
+th { background: var(--dark); color: white; }
+.text-success { color: var(--success); font-weight: bold; }
+.text-danger { color: var(--danger); font-weight: bold; }
+
+/* Alertes Fraude */
+.alert-box { background: #fff3cd; color: #856404; padding: 15px; border-left: 5px solid #ffeeba; border-radius: 5px; margin-bottom: 10px; font-size: 13px; }
+.alert-box.severe { background: #f8d7da; color: #721c24; border-left-color: #f5c6cb; }
+.alert-title { font-weight: bold; margin-bottom: 5px; }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="color: var(--primary); margin-top: 0;">Analyse Détaillée des Comptes</h2>
+    
+    <!-- 1. Sélection et Recherche d'utilisateur -->
+    <div class="search-bar">
+        <div class="search-actions">
+            <input type="text" id="userSearchInput" placeholder="Rechercher par nom, email, téléphone, identifiant/matricule..." oninput="filterUsers()" />
+            <button onclick="analyserUtilisateur()">Analyser ce compte</button>
+            <button onclick="ouvrirHistoriqueRecuDirect()" style="background: var(--info);">Historique Reçu</button>
+        </div>
+        <select id="userSelect" style="width: 100%;" onchange="handleUserSelectionChange()">
+            <option value="">Chargement des utilisateurs...</option>
+        </select>
+    </div>
+
+    <!-- 2. Affichage automatique des fraudes récentes (quand aucun utilisateur n'est sélectionné) -->
+    <div id="recentFraudsSection" class="section-content">
+        <h3 style="margin-top: 0; color: var(--danger);">🛡️ Comptes avec Fraudes / Anomalies Récentes</h3>
+        <p style="font-size: 13px; color: #666;">Aucun utilisateur sélectionné. Voici la liste des comptes présentant des anomalies, classés par ordre de détection le plus récent :</p>
+        <div id="global-frauds-container">
+            <!-- Rempli dynamiquement -->
+        </div>
+        <div id="global-frauds-clean" class="alert-box success hidden" style="background: #d4edda; color: #155724; border-left-color: #c3e6cb;">
+            <div class="alert-title">Plateforme Saine</div>
+            Aucun comportement anormal détecté sur l'ensemble des comptes de la plateforme.
+        </div>
+    </div>
+
+    <div id="analysisDashboard" class="hidden">
+        <!-- 7. Présentation : Onglets -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tab-info')">Infos & Finance</button>
+            <button class="tab-btn" onclick="switchTab('tab-depots')">Dépôts</button>
+            <button class="tab-btn" onclick="switchTab('tab-transferts')">Transferts</button>
+            <button class="tab-btn" onclick="switchTab('tab-historique-recu')" style="background: var(--info); color: white;">Historique Reçu</button>
+            <button class="tab-btn" onclick="switchTab('tab-jeux')">Analyse des Jeux</button>
+            <button class="tab-btn" onclick="switchTab('tab-fraude')" style="background: var(--danger); color: white;">Sécurité & Fraude</button>
+        </div>
+
+        <!-- ONGLET: INFOS & FINANCE GLOBALE (Points 1 & 5 + Statut du compte) -->
+        <div id="tab-info" class="tab-content">
+            <div class="grid-stats">
+                <div class="stat-box"><div class="stat-title">Nom complet</div><div class="stat-val" id="info-nom">---</div></div>
+                <div class="stat-box"><div class="stat-title">Email</div><div class="stat-val" id="info-email" style="font-size: 14px;">---</div></div>
+                <div class="stat-box"><div class="stat-title">Téléphone / Paiement</div><div class="stat-val" id="info-phone" style="font-size: 14px;">---</div></div>
+                <div class="stat-box success"><div class="stat-title">Solde Actuel</div><div class="stat-val" id="info-balance">0 FCFA</div></div>
+                <!-- 3. Statut du compte -->
+                <div class="stat-box" id="box-status">
+                    <div class="stat-title">Statut du Compte</div>
+                    <div class="stat-val" id="info-status" style="font-size: 16px; margin: 5px 0;">🟢 Actif</div>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px;">
+                        <button onclick="changeUserStatus('Actif')" style="background: var(--success); padding: 5px 10px; font-size: 11px;">🟢 Actif</button>
+                        <button onclick="changeUserStatus('Désactivé')" style="background: var(--warning); color: #333; padding: 5px 10px; font-size: 11px;">🟠 Désactivé</button>
+                        <button onclick="changeUserStatus('Banni')" style="background: var(--danger); padding: 5px 10px; font-size: 11px;">🔴 Banni</button>
+                    </div>
+                </div>
+            </div>
+            <h3 style="font-size: 16px; color: #555;">5. Résumé Financier Global</h3>
+            <div class="grid-stats">
+                <div class="stat-box"><div class="stat-title">Total Dépôts</div><div class="stat-val" id="fin-depots">0 FCFA</div></div>
+                <div class="stat-box"><div class="stat-title">Total Reçu (P2P)</div><div class="stat-val success" id="fin-recu">0 FCFA</div></div>
+                <div class="stat-box"><div class="stat-title">Total Envoyé (P2P)</div><div class="stat-val danger" id="fin-envoye">0 FCFA</div></div>
+                <div class="stat-box"><div class="stat-title">Total Investi (Jeux)</div><div class="stat-val danger" id="fin-investi">0 FCFA</div></div>
+                <div class="stat-box"><div class="stat-title">Total Gagné (Jeux)</div><div class="stat-val success" id="fin-gagne">0 FCFA</div></div>
+                <div class="stat-box"><div class="stat-title">Total Pertes (Jeux)</div><div class="stat-val danger" id="fin-pertes">0 FCFA</div></div>
+                <div class="stat-box" id="box-benefice"><div class="stat-title">Bénéfice/Perte Global(e)</div><div class="stat-val" id="fin-benefice">0 FCFA</div></div>
+            </div>
+        </div>
+
+        <!-- ONGLET: DÉPÔTS (Point 2) -->
+        <div id="tab-depots" class="tab-content hidden">
+            <div class="grid-stats">
+                <div class="stat-box"><div class="stat-title">Montant Total des Dépôts</div><div class="stat-val success" id="total-depot-val">0 FCFA</div></div>
+                <div class="stat-box"><div class="stat-title">Nombre de Dépôts</div><div class="stat-val" id="count-depot-val">0</div></div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Date & Heure</th><th>Montant</th><th>Statut/Moyen (si dispo)</th></tr></thead>
+                    <tbody id="table-depots"></tbody>
+                </table>
+                <p id="no-depots" class="hidden" style="text-align: center; color: #666;">Aucun dépôt trouvé.</p>
+            </div>
+        </div>
+
+        <!-- ONGLET: TRANSFERTS (Point 3) -->
+        <div id="tab-transferts" class="tab-content hidden">
+            <div class="grid-stats">
+                <div class="stat-box success"><div class="stat-title">Total Reçu</div><div class="stat-val" id="total-transfert-recu">0 FCFA</div></div>
+                <div class="stat-box danger"><div class="stat-title">Total Envoyé</div><div class="stat-val" id="total-transfert-envoye">0 FCFA</div></div>
+                <div class="stat-box"><div class="stat-title">Nbr Transferts (Reçus/Envoyés)</div><div class="stat-val" id="count-transfert">0 / 0</div></div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Date & Heure</th><th>Type</th><th>Montant</th><th>Infos (Utilisateur)</th></tr></thead>
+                    <tbody id="table-transferts"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ONGLET: HISTORIQUE REÇU (Point 4) -->
+        <div id="tab-historique-recu" class="tab-content hidden">
+            <h3 style="margin-top: 0; color: var(--info);">📥 Historique Reçu de l'Utilisateur</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date & Heure</th>
+                            <th>Informations de l'opération</th>
+                            <th>Expéditeur</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-historique-recu"></tbody>
+                </table>
+                <p id="no-historique-recu" class="hidden" style="text-align: center; color: #666;">Aucun historique reçu trouvé.</p>
+            </div>
+        </div>
+
+        <!-- ONGLET: JEUX (Point 4) -->
+        <div id="tab-jeux" class="tab-content hidden">
+            <!-- TRADING -->
+            <div class="section-content">
+                <h3 style="margin-top: 0;">📈 Trading</h3>
+                <div class="grid-stats">
+                    <div class="stat-box"><div class="stat-title">Investi</div><div class="stat-val danger" id="trad-investi">0 F</div></div>
+                    <div class="stat-box"><div class="stat-title">Gagné</div><div class="stat-val success" id="trad-gagne">0 F</div></div>
+                    <div class="stat-box"><div class="stat-title">Pertes</div><div class="stat-val danger" id="trad-perte">0 F</div></div>
+                    <div class="stat-box"><div class="stat-title">Bénéfice</div><div class="stat-val" id="trad-benef">0 F</div></div>
+                </div>
+            </div>
+            <!-- CRASH -->
+            <div class="section-content">
+                <h3 style="margin-top: 0;">🚀 Crash</h3>
+                <div class="grid-stats">
+                    <div class="stat-box"><div class="stat-title">Investi</div><div class="stat-val danger" id="crash-investi">0 F</div></div>
+                    <div class="stat-box"><div class="stat-title">Gagné</div><div class="stat-val success" id="crash-gagne">0 F</div></div>
+                    <div class="stat-box"><div class="stat-title">Pertes</div><div class="stat-val danger" id="crash-perte">0 F</div></div>
+                    <div class="stat-box"><div class="stat-title">Bénéfice</div><div class="stat-val" id="crash-benef">0 F</div></div>
+                </div>
+            </div>
+            <!-- TOMBOLA -->
+            <div class="section-content">
+                <h3 style="margin-top: 0;">🎁 Tombola</h3>
+                <div class="grid-stats">
+                    <div class="stat-box"><div class="stat-title">Investi</div><div class="stat-val danger" id="tomb-investi">0 F</div></div>
+                    <div class="stat-box"><div class="stat-title">Gagné</div><div class="stat-val success" id="tomb-gagne">0 F</div></div>
+                    <div class="stat-box"><div class="stat-title">Pertes</div><div class="stat-val danger" id="tomb-perte">0 F</div></div>
+                    <div class="stat-box"><div class="stat-title">Bénéfice</div><div class="stat-val" id="tomb-benef">0 F</div></div>
+                </div>
+            </div>
+             <!-- ACTION -->
+             <div class="section-content">
+                <h3 style="margin-top: 0;">📊 Action</h3>
+                <p style="font-size: 13px; color: #666;"><em>Note : L'analyse détaillée des actions nécessite la structure exacte des données du module "Action" pour afficher le détail ici. L'historique général est pris en compte dans le financier global.</em></p>
+                <div class="grid-stats">
+                    <div class="stat-box"><div class="stat-title">Opérations recensées</div><div class="stat-val" id="act-count">0</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET: SÉCURITÉ ET FRAUDE (Point 6) -->
+        <div id="tab-fraude" class="tab-content hidden">
+            <h3 style="margin-top: 0; color: var(--danger);">🛡️ Détection de Comportements Suspects</h3>
+            <p style="font-size: 13px;">Ces indicateurs signalent des anomalies basées sur les données mathématiques. Une analyse humaine est requise avant toute sanction.</p>
+            <div id="fraude-container">
+                <!-- Les alertes seront générées ici par JS -->
+            </div>
+            <div id="fraude-clean" class="alert-box success hidden" style="background: #d4edda; color: #155724; border-left-color: #c3e6cb;">
+                <div class="alert-title">Compte Sain</div>
+                Aucun comportement anormal détecté sur ce compte selon les critères actuels.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+// Configuration Firebase extraite des fichiers fournis
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig); 
+const db = getFirestore(app);
+
+// Variables globales
+let allUsers = [];
+
+// Formater la monnaie
+const formatFCFA = (amount) => new Intl.NumberFormat('fr-FR').format(amount || 0) + ' FCFA';
+// Formater la date
+const formatDate = (isoString) => new Date(isoString).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'});
+
+// 1. Chargement des utilisateurs et mise en place de la recherche multicritère
+async function loadUsers() {
+    const userSelect = document.getElementById("userSelect");
+    try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        allUsers = [];
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            allUsers.push({ id: docSnap.id, ...data });
+        });
+        filterUsers();
+        displayRecentFrauds();
+    } catch (e) {
+        userSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+        console.error("Erreur:", e);
+    }
+}
+
+window.filterUsers = () => {
+    const searchVal = document.getElementById("userSearchInput").value.toLowerCase().trim();
+    const userSelect = document.getElementById("userSelect");
+    const currentSelected = userSelect.value;
+
+    let filtered = allUsers.filter(u => {
+        if (!searchVal) return true;
+        let idMatch = (u.id || "").toLowerCase().includes(searchVal);
+        let nameMatch = (u.fullName || "").toLowerCase().includes(searchVal);
+        let emailMatch = (u.email || "").toLowerCase().includes(searchVal);
+        let phoneMatch = (u.phone || "").toLowerCase().includes(searchVal);
+        let paymentMatch = (u.paymentNumber || "").toLowerCase().includes(searchVal);
+        return idMatch || nameMatch || emailMatch || phoneMatch || paymentMatch;
+    });
+
+    userSelect.innerHTML = `<option value="">-- Sélectionnez un utilisateur (${filtered.length} trouvés) --</option>`;
+    filtered.forEach(data => {
+        const option = document.createElement("option");
+        option.value = data.id;
+        option.textContent = `${data.fullName || "Sans nom"} (${data.email || "Pas d'email"}) - ${data.balance || 0} FCFA [ID: ${data.id}]`;
+        userSelect.appendChild(option);
+    });
+
+    if (currentSelected) {
+        userSelect.value = currentSelected;
+    }
+};
+
+// 2. Affichage automatique des fraudes récentes lorsque aucun utilisateur n'est sélectionné
+window.handleUserSelectionChange = () => {
+    const userId = document.getElementById("userSelect").value;
+    if (!userId) {
+        document.getElementById("analysisDashboard").classList.add("hidden");
+        document.getElementById("recentFraudsSection").classList.remove("hidden");
+        displayRecentFrauds();
+    } else {
+        document.getElementById("recentFraudsSection").classList.add("hidden");
+        analyserUtilisateur();
+    }
+};
+
+function getAllDetectedFrauds() {
+    let allFrauds = [];
+    allUsers.forEach(user => {
+        let history = user.history || [];
+        let totalInvesti = 0, totalGagne = 0;
+
+        if (user.trades && Array.isArray(user.trades)) {
+            user.trades.forEach(t => {
+                totalInvesti += Number(t.stake) || 0;
+                if(t.status === "gagné") totalGagne += (Number(t.stake) * 1.3);
+            });
+        }
+
+        // A. Ratio de gain anormalement élevé
+        if (totalInvesti > 0 && totalGagne > (totalInvesti * 5)) {
+            let latestDate = history.length > 0 ? history[history.length - 1].date : new Date().toISOString();
+            allFrauds.push({
+                userId: user.id,
+                userName: user.fullName || "Utilisateur",
+                title: "Ratio de gain anormalement élevé",
+                desc: `Utilisateur <b>${user.fullName || 'Inconnu'}</b> (${user.email || 'Pas d\'email'}) : Gain de ${formatFCFA(totalGagne)} pour ${formatFCFA(totalInvesti)} investis.`,
+                date: latestDate,
+                isSevere: true
+            });
+        }
+
+        // B. Vitesse d'exécution anormale (Bots)
+        let fastActions = 0;
+        let lastFastDate = new Date().toISOString();
+        for(let i=1; i < history.length; i++) {
+            let t1 = new Date(history[i-1].date).getTime();
+            let t2 = new Date(history[i].date).getTime();
+            if (!isNaN(t1) && !isNaN(t2) && Math.abs(t1 - t2) < 2000) {
+                fastActions++;
+                lastFastDate = history[i].date;
+            }
+        }
+        if (fastActions > 10) {
+            allFrauds.push({
+                userId: user.id,
+                userName: user.fullName || "Utilisateur",
+                title: "Vitesse d'exécution anormale",
+                desc: `Utilisateur <b>${user.fullName || 'Inconnu'}</b> (${user.email || 'Pas d\'email'}) : ${fastActions} actions en < 2 secondes.`,
+                date: lastFastDate,
+                isSevere: true
+            });
+        }
+
+        // C. Numéro de paiement partagé
+        if (user.paymentNumber && user.paymentNumber.trim() !== "") {
+            let sharedAccounts = allUsers.filter(u => u.paymentNumber === user.paymentNumber && u.id !== user.id);
+            if (sharedAccounts.length > 0) {
+                let names = sharedAccounts.map(u => u.fullName).join(", ");
+                allFrauds.push({
+                    userId: user.id,
+                    userName: user.fullName || "Utilisateur",
+                    title: "Numéro de paiement partagé",
+                    desc: `Utilisateur <b>${user.fullName || 'Inconnu'}</b> partage son numéro avec : ${names}.`,
+                    date: history.length > 0 ? history[history.length - 1].date : new Date().toISOString(),
+                    isSevere: true
+                });
+            }
+        }
+    });
+
+    // Tri par ordre décroissant (fraude la plus récente en premier)
+    allFrauds.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return allFrauds;
+}
+
+window.displayRecentFrauds = () => {
+    const container = document.getElementById("global-frauds-container");
+    const cleanBox = document.getElementById("global-frauds-clean");
+    if (!container) return;
+
+    container.innerHTML = "";
+    let frauds = getAllDetectedFrauds();
+
+    if (frauds.length === 0) {
+        cleanBox.classList.remove("hidden");
+    } else {
+        cleanBox.classList.add("hidden");
+        frauds.forEach(f => {
+            container.innerHTML += `
+                <div class="alert-box ${f.isSevere ? 'severe' : ''}" style="cursor: pointer;" onclick="selectUserAndAnalyze('${f.userId}')">
+                    <div class="alert-title">${f.isSevere ? '⚠️ CRITIQUE' : '📌 AVERTISSEMENT'} - ${formatDate(f.date)} : ${f.title}</div>
+                    ${f.desc} <br><small style="color: #333; font-weight: bold;">➔ Cliquez ici pour analyser ce compte</small>
+                </div>`;
+        });
+    }
+};
+
+window.selectUserAndAnalyze = (userId) => {
+    document.getElementById("userSelect").value = userId;
+    handleUserSelectionChange();
+};
+
+// Naviguer entre les onglets
+window.switchTab = (tabId) => {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.remove('hidden');
+    event.currentTarget.classList.add('active');
+};
+
+window.switchTabDirect = (tabId) => {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.remove('hidden');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
+            btn.classList.add('active');
+        }
+    });
+};
+
+window.ouvrirHistoriqueRecuDirect = () => {
+    const userId = document.getElementById("userSelect").value;
+    if (!userId) return alert("Veuillez d'abord sélectionner un utilisateur.");
+    analyserUtilisateur();
+    switchTabDirect('tab-historique-recu');
+};
+
+// 3. Statut du compte (Enregistrement dans Firebase / Firestore)
+window.changeUserStatus = async (newStatus) => {
+    const userId = document.getElementById("userSelect").value;
+    if (!userId) return;
+    try {
+        await updateDoc(doc(db, "users", userId), { status: newStatus });
+        const user = allUsers.find(u => u.id === userId);
+        if (user) user.status = newStatus;
+        
+        let statusDisplay = "🟢 Actif";
+        if (newStatus === "Désactivé") statusDisplay = "🟠 Désactivé";
+        if (newStatus === "Banni") statusDisplay = "🔴 Banni";
+        document.getElementById("info-status").textContent = statusDisplay;
+        alert(`Statut du compte mis à jour avec succès : ${newStatus}`);
+    } catch (e) {
+        console.error("Erreur lors de la mise à jour du statut:", e);
+        alert("Erreur lors de la mise à jour du statut dans Firestore.");
+    }
+};
+
+// Analyse principale
+window.analyserUtilisateur = async () => {
+    const userId = document.getElementById("userSelect").value;
+    if(!userId) {
+        document.getElementById("analysisDashboard").classList.add("hidden");
+        document.getElementById("recentFraudsSection").classList.remove("hidden");
+        displayRecentFrauds();
+        return;
+    }
+    
+    document.getElementById("recentFraudsSection").classList.add("hidden");
+    const user = allUsers.find(u => u.id === userId);
+    if(!user) return;
+
+    document.getElementById("analysisDashboard").classList.remove("hidden");
+
+    // --- INFOS DE BASE & STATUT ---
+    document.getElementById("info-nom").textContent = user.fullName || "---";
+    document.getElementById("info-email").textContent = user.email || "---";
+    document.getElementById("info-phone").textContent = `${user.phone || "---"} / Paiement: ${user.paymentNumber || "---"}`;
+    document.getElementById("info-balance").textContent = formatFCFA(user.balance);
+
+    let currentStatus = user.status || "Actif";
+    let statusDisplay = "🟢 Actif";
+    if (currentStatus === "Désactivé") statusDisplay = "🟠 Désactivé";
+    if (currentStatus === "Banni") statusDisplay = "🔴 Banni";
+    document.getElementById("info-status").textContent = statusDisplay;
+
+    const history = user.history || [];
+    
+    // --- VARIABLES D'ANALYSE ---
+    let stats = {
+        depots: { total: 0, count: 0, list: [] },
+        transferts: { recu: 0, envoye: 0, countRecu: 0, countEnvoye: 0, list: [] },
+        jeux: {
+            trad: { investi: 0, gagne: 0, perte: 0 },
+            crash: { investi: 0, gagne: 0, perte: 0 },
+            tomb: { investi: 0, gagne: 0, perte: 0 }
+        },
+        global: { operationsCount: history.length }
+    };
+
+    // Parcourir l'historique pour catégoriser
+    history.forEach(item => {
+        let amt = Number(item.amount) || 0;
+        let typeStr = (item.type || "").toLowerCase();
+        let descStr = (item.desc || "").toLowerCase();
+
+        // Dépôts
+        if(typeStr.includes('dépôt') || typeStr.includes('depot') || descStr.includes('rechargement')) {
+            stats.depots.total += amt;
+            stats.depots.count++;
+            stats.depots.list.push(item);
+        }
+        // Transferts
+        else if(typeStr.includes('transfert') || typeStr.includes('envoi') || typeStr.includes('reçu')) {
+            stats.transferts.list.push(item);
+            if(amt > 0) { stats.transferts.recu += amt; stats.transferts.countRecu++; }
+            else { stats.transferts.envoye += Math.abs(amt); stats.transferts.countEnvoye++; }
+        }
+        // Jeux - Trading
+        else if(typeStr.includes('trading')) {
+            if(amt < 0) { stats.jeux.trad.investi += Math.abs(amt); }
+            else if (amt > 0) { stats.jeux.trad.gagne += amt; }
+        }
+        // Jeux - Crash
+        else if(typeStr.includes('crash')) {
+            if(amt < 0) { stats.jeux.crash.investi += Math.abs(amt); }
+            else if (amt > 0) { stats.jeux.crash.gagne += amt; }
+        }
+        // Jeux - Tombola
+        else if(typeStr.includes('tombola')) {
+            if(amt < 0) { stats.jeux.tomb.investi += Math.abs(amt); }
+            else if (amt > 0) { stats.jeux.tomb.gagne += amt; }
+        }
+    });
+
+    // Raffinement Trading depuis la base de données réelle 'trades'
+    if (user.trades && Array.isArray(user.trades)) {
+        let exactTradInvesti = 0, exactTradGagne = 0;
+        user.trades.forEach(t => {
+            exactTradInvesti += Number(t.stake) || 0;
+            if(t.status === "gagné") exactTradGagne += (Number(t.stake) * 1.3);
+        });
+        stats.jeux.trad.investi = exactTradInvesti;
+        stats.jeux.trad.gagne = exactTradGagne;
+    }
+
+    // Calculs des Pertes
+    stats.jeux.trad.perte = Math.max(0, stats.jeux.trad.investi - stats.jeux.trad.gagne);
+    stats.jeux.crash.perte = Math.max(0, stats.jeux.crash.investi - stats.jeux.crash.gagne);
+    stats.jeux.tomb.perte = Math.max(0, stats.jeux.tomb.investi - stats.jeux.tomb.gagne);
+
+    // --- MISE A JOUR UI : DÉPÔTS ---
+    document.getElementById("total-depot-val").textContent = formatFCFA(stats.depots.total);
+    document.getElementById("count-depot-val").textContent = stats.depots.count;
+    const tbodyDepot = document.getElementById("table-depots");
+    tbodyDepot.innerHTML = "";
+    if(stats.depots.list.length === 0) { document.getElementById("no-depots").classList.remove("hidden"); } 
+    else {
+        document.getElementById("no-depots").classList.add("hidden");
+        stats.depots.list.slice().reverse().forEach(d => {
+            tbodyDepot.innerHTML += `<tr><td>${formatDate(d.date)}</td><td class="text-success">+${formatFCFA(d.amount)}</td><td>${d.desc}</td></tr>`;
+        });
+    }
+
+    // --- MISE A JOUR UI : TRANSFERTS ---
+    document.getElementById("total-transfert-recu").textContent = formatFCFA(stats.transferts.recu);
+    document.getElementById("total-transfert-envoye").textContent = formatFCFA(stats.transferts.envoye);
+    document.getElementById("count-transfert").textContent = `${stats.transferts.countRecu} / ${stats.transferts.countEnvoye}`;
+    const tbodyTrans = document.getElementById("table-transferts");
+    tbodyTrans.innerHTML = "";
+    stats.transferts.list.slice().reverse().forEach(t => {
+        let isRecu = Number(t.amount) > 0;
+        tbodyTrans.innerHTML += `<tr><td>${formatDate(t.date)}</td><td>${isRecu ? 'Reçu' : 'Envoyé'}</td><td class="${isRecu ? 'text-success' : 'text-danger'}">${isRecu ? '+' : ''}${formatFCFA(t.amount)}</td><td style="font-size:11px;">${t.desc}</td></tr>`;
+    });
+
+    // --- 4. MISE A JOUR UI : HISTORIQUE REÇU ---
+    const tbodyHistRecu = document.getElementById("table-historique-recu");
+    tbodyHistRecu.innerHTML = "";
+    let receivedHistory = history.filter(item => {
+        let amt = Number(item.amount) || 0;
+        let typeStr = (item.type || "").toLowerCase();
+        let descStr = (item.desc || "").toLowerCase();
+        return amt > 0 || typeStr.includes('reçu') || typeStr.includes('dépôt') || typeStr.includes('depot') || descStr.includes('reçu') || descStr.includes('rechargement');
+    });
+
+    if (receivedHistory.length === 0) {
+        document.getElementById("no-historique-recu").classList.remove("hidden");
+    } else {
+        document.getElementById("no-historique-recu").classList.add("hidden");
+        receivedHistory.slice().reverse().forEach(h => {
+            let sender = h.sender || h.from || h.expediteur || h.desc || "---";
+            let status = h.status || h.etat || "Succès";
+            tbodyHistRecu.innerHTML += `
+                <tr>
+                    <td>${formatDate(h.date)}</td>
+                    <td>${h.type || h.desc || "Opération"}</td>
+                    <td>${sender}</td>
+                    <td class="text-success">+${formatFCFA(h.amount)}</td>
+                    <td>${status}</td>
+                </tr>`;
+        });
+    }
+
+    // --- MISE A JOUR UI : JEUX ---
+    const updateJeuUI = (prefix, data) => {
+        document.getElementById(`${prefix}-investi`).textContent = formatFCFA(data.investi);
+        document.getElementById(`${prefix}-gagne`).textContent = formatFCFA(data.gagne);
+        document.getElementById(`${prefix}-perte`).textContent = formatFCFA(data.perte);
+        let benef = data.gagne - data.investi;
+        let elBenef = document.getElementById(`${prefix}-benef`);
+        elBenef.textContent = formatFCFA(benef);
+        elBenef.className = `stat-val ${benef >= 0 ? 'success' : 'danger'}`;
+    };
+    updateJeuUI('trad', stats.jeux.trad);
+    updateJeuUI('crash', stats.jeux.crash);
+    updateJeuUI('tomb', stats.jeux.tomb);
+    document.getElementById("act-count").textContent = (user.actions ? user.actions.length : 0);
+
+    // --- MISE A JOUR UI : FINANCE GLOBALE ---
+    let totalInvesti = stats.jeux.trad.investi + stats.jeux.crash.investi + stats.jeux.tomb.investi;
+    let totalGagne = stats.jeux.trad.gagne + stats.jeux.crash.gagne + stats.jeux.tomb.gagne;
+    let totalPertes = stats.jeux.trad.perte + stats.jeux.crash.perte + stats.jeux.tomb.perte;
+    let beneficeGlobal = totalGagne - totalInvesti;
+
+    document.getElementById("fin-depots").textContent = formatFCFA(stats.depots.total);
+    document.getElementById("fin-recu").textContent = formatFCFA(stats.transferts.recu);
+    document.getElementById("fin-envoye").textContent = formatFCFA(stats.transferts.envoye);
+    document.getElementById("fin-investi").textContent = formatFCFA(totalInvesti);
+    document.getElementById("fin-gagne").textContent = formatFCFA(totalGagne);
+    document.getElementById("fin-pertes").textContent = formatFCFA(totalPertes);
+    
+    let elFinBenef = document.getElementById("fin-benefice");
+    elFinBenef.textContent = formatFCFA(beneficeGlobal);
+    document.getElementById("box-benefice").className = `stat-box ${beneficeGlobal >= 0 ? 'success' : 'danger'}`;
+
+    // --- DÉTECTION DE FRAUDE UTILISATEUR ---
+    const fraudeContainer = document.getElementById("fraude-container");
+    fraudeContainer.innerHTML = "";
+    let fraudCount = 0;
+
+    const addAlert = (titre, desc, isSevere = false) => {
+        fraudCount++;
+        fraudeContainer.innerHTML += `
+            <div class="alert-box ${isSevere ? 'severe' : ''}">
+                <div class="alert-title">${isSevere ? '⚠️ CRITIQUE :' : '📌 AVERTISSEMENT :'} ${titre}</div>
+                ${desc}
+            </div>`;
+    };
+
+    if (totalInvesti > 0 && totalGagne > (totalInvesti * 5)) {
+        addAlert("Ratio de gain anormalement élevé", `L'utilisateur a gagné ${formatFCFA(totalGagne)} en n'investissant que ${formatFCFA(totalInvesti)}. Ce ratio de x${(totalGagne/totalInvesti).toFixed(1)} est hautement inhabituel.`, true);
+    }
+
+    let fastActions = 0;
+    for(let i=1; i < history.length; i++) {
+        let t1 = new Date(history[i-1].date).getTime();
+        let t2 = new Date(history[i].date).getTime();
+        if (Math.abs(t1 - t2) < 2000) fastActions++;
+    }
+    if (fastActions > 10) {
+        addAlert("Vitesse d'exécution anormale", `Détection de ${fastActions} actions réalisées avec moins de 2 secondes d'intervalle. Possibilité d'utilisation d'un bot.`, true);
+    }
+
+    if (user.paymentNumber && user.paymentNumber.trim() !== "") {
+        let sharedAccounts = allUsers.filter(u => u.paymentNumber === user.paymentNumber && u.id !== user.id);
+        if (sharedAccounts.length > 0) {
+            let names = sharedAccounts.map(u => u.fullName).join(", ");
+            addAlert("Numéro de paiement partagé", `Le numéro de paiement de cet utilisateur est identique à celui de : <b>${names}</b>. Risque de multi-comptes frauduleux.`, true);
+        }
+    }
+
+    let soldeCalcule = stats.depots.total + stats.transferts.recu - stats.transferts.envoye - totalInvesti + totalGagne - (user.totalWithdrawn || 0);
+    if (Math.abs(user.balance - soldeCalcule) > 5000) {
+         addAlert("Incohérence du Solde", `Le solde théorique (${formatFCFA(soldeCalcule)}) diffère fortement du solde actuel (${formatFCFA(user.balance)}).`, true);
+    }
+
+    if(fraudCount === 0) {
+        document.getElementById("fraude-clean").classList.remove("hidden");
+    } else {
+        document.getElementById("fraude-clean").classList.add("hidden");
+    }
+};
+
+// Lancement au chargement
+window.onload = loadUsers;
+</script>
+</body>
+</html>

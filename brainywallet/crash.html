@@ -1,0 +1,557 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW - Crash Multiplier</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* --- STYLES GLOBAUX --- */
+body{ font-family: Arial,sans-serif; background:#f0f6ff; margin:0; }
+.container{ width:90%; max-width:700px; margin:30px auto; background:white; padding:25px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+input, button, select{ width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing: border-box; font-size: 14px; }
+button{ background:#007bff; color:white; font-weight:bold; cursor:pointer; transition: all 0.3s; } 
+button:disabled { background:#555 !important; cursor:not-allowed; opacity: 0.7; }
+.message{text-align:center;font-weight:bold;margin-top:10px;}
+
+/* WALLET CARD (Existant) */
+.wallet-card{ background:linear-gradient(135deg,#0a7a18,#0f9d2f); color:white; border-radius:18px; padding:20px; box-shadow: 0 4px 15px rgba(10,122,24,0.3);}
+.wallet-header{ display:flex; justify-content:space-between; font-weight:bold; align-items: center; flex-wrap: wrap; gap: 10px;}
+.wallet-main{ margin:20px 0; } .amount{ font-size:28px; font-weight:bold; } .label{ font-size:14px; opacity:0.9; }
+.wallet-footer{ display:flex; gap:10px; } .box{ flex:1; background:rgba(255,255,255,0.15); border-radius:12px; padding:10px; text-align:center; } .box-title{font-size:12px;} .box-amount{font-size:16px;font-weight:bold;margin-top:5px;}
+
+/* POPUPS ET HISTORIQUES (Existant) */
+.hist-item { border-bottom: 1px dashed #ccc; padding: 8px 0; display:flex; justify-content: space-between; align-items: center;}
+.hist-positive { color: green; font-weight: bold; } .hist-negative { color: red; font-weight: bold; } .hist-neutral { color: #555; font-weight: bold; }
+.notif-item { padding: 10px; margin-bottom: 8px; border-radius: 5px; font-size: 13px; line-height:1.4; }
+.notif-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; } .notif-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; } .notif-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+.popup-overlay.show { opacity: 1; visibility: visible; }
+.popup-content { background: white; padding: 25px; border-radius: 12px; text-align: center; max-width: 320px; width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3); transform: translateY(-20px); transition: transform 0.3s ease; box-sizing: border-box; }
+.popup-overlay.show .popup-content { transform: translateY(0); }
+.popup-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px; width: 100%; }
+
+/* --- DESIGN EXCLUSIF CRASH MULTIPLIER --- */
+.crash-module { background: #12141d; color: white; border-radius: 15px; padding: 20px; margin-top: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; box-sizing: border-box; }
+.crash-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e45; padding-bottom: 10px; margin-bottom: 15px; }
+.crash-header h3 { margin: 0; color: #ffc107; font-size: 20px; }
+.history-bar { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; }
+.history-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #2a2e45; white-space: nowrap; }
+.badge-low { color: #dc3545; } .badge-med { color: #007bff; } .badge-high { color: #28a745; }
+
+.canvas-container { position: relative; height: 260px; background: #1b1e2c; border-radius: 10px; border: 2px solid #2a2e45; overflow: hidden; }
+#crashCanvas { width: 100%; height: 100%; }
+.multiplier-display { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 55px; font-weight: 900; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.8); letter-spacing: 2px; }
+.potential-win { position: absolute; top: 75%; left: 50%; transform: translate(-50%, -50%); font-size: 18px; color: #28a745; font-weight: bold; text-shadow: 0 0 10px rgba(0,0,0,0.8); display: none; }
+
+.controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+.control-box { background: #1b1e2c; padding: 15px; border-radius: 10px; border: 1px solid #2a2e45; }
+.control-box label { font-size: 12px; color: #8a92b2; display: block; margin-bottom: 5px; font-weight: bold; }
+.control-box input { background: #12141d; color: white; border: 1px solid #2a2e45; text-align: center; font-size: 18px; font-weight: bold; padding: 10px; }
+
+.action-btn { width: 100%; padding: 18px; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; border-radius: 10px; margin-top: 15px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+.btn-bet { background: linear-gradient(135deg, #007bff, #0056b3); color: white; }
+.btn-cashout { background: linear-gradient(135deg, #28a745, #1e7e34); color: white; animation: pulse 1.5s infinite; }
+
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+/* FAKE LIVE PLAYERS */
+.live-players-section { margin-top: 20px; background: #1b1e2c; border-radius: 10px; border: 1px solid #2a2e45; padding: 15px; box-sizing: border-box; }
+.live-players-header { font-size: 14px; font-weight: bold; color: #8a92b2; margin-bottom: 10px; border-bottom: 1px solid #2a2e45; padding-bottom: 5px; }
+.player-row { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-bottom: 1px solid #2a2e45; color: #ccc; }
+.player-row:last-child { border-bottom: none; }
+.p-name { width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } 
+.p-bet { width: 30%; text-align: right; } 
+.p-cashout { width: 30%; text-align: right; font-weight: bold; white-space: nowrap; }
+.p-win { color: #28a745; }
+
+/* ========================================================================= */
+/* --- DESIGN RESPONSIVE (Mobiles & Tablettes) --- */
+/* ========================================================================= */
+@media (max-width: 600px) {
+    .container { width: 95%; margin: 15px auto; padding: 15px; }
+    .amount { font-size: 24px; }
+    .wallet-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .wallet-footer { flex-direction: column; gap: 8px; }
+    .box-amount { font-size: 14px; }
+    
+    /* Adaptations spécifiques au Crash */
+    .crash-module { padding: 15px; margin-top: 15px; }
+    .canvas-container { height: 200px; } /* Moins haut sur mobile pour ne pas prendre tout l'écran */
+    .multiplier-display { font-size: 40px; } /* Texte moins gros sur mobile */
+    .potential-win { font-size: 15px; }
+    
+    .controls-grid { grid-template-columns: 1fr; gap: 10px; } /* Empile les inputs l'un sur l'autre */
+    .control-box { padding: 10px; }
+    .action-btn { padding: 15px; font-size: 16px; } /* Bouton légèrement plus petit */
+    .live-players-section { padding: 10px; }
+    .player-row { font-size: 11px; } /* Texte des joueurs ajusté */
+}
+</style>
+</head>
+<body>
+
+<div id="customPopup" class="popup-overlay"><div class="popup-content"><h3 id="popupTitle">Notification</h3><p id="popupMessage">Message</p><button class="popup-btn" onclick="closePopup()">OK</button></div></div>
+<div id="notifPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:420px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#e0a800; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">🔔 Notifications Récentes</strong><button onclick="closeNotifPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="notifPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px; color:#333;"></div></div></div>
+<div id="histPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:460px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#17a2b8; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">📜 Historique Transactions</strong><button onclick="closeHistoryPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="histPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px; color:#333;"></div></div></div>
+
+<div class="container hidden" id="dashboard-section">
+
+  <div class="wallet-card">
+    <div class="wallet-header">
+      <span id="clientName">Chargement...</span>
+      <div style="display:flex; gap:8px;">
+        <button onclick="openNotifPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; position:relative;">
+          🔔 Notifs <span id="notifBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+        </button>
+        <button onclick="openHistoryPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:5px 10px; border-radius:20px; font-size:13px; cursor:pointer; position:relative;">
+          📜 Historique <span id="histBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+        </button>
+      </div>
+    </div>
+    <div class="wallet-main"><div class="amount" id="balanceAmount">0 FCFA</div><div class="label">Solde disponible</div></div>
+  </div>
+
+  <div class="crash-module">
+    <div class="crash-header">
+        <h3>🚀 CRASH MULTIPLIER</h3>
+        <div class="history-bar" id="multiplierHistory">
+            </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="crashCanvas"></canvas>
+        <div class="multiplier-display" id="multiplierDisplay" style="color: white;">1.00x</div>
+        <div class="potential-win" id="potentialWinDisplay">Gain: 0 F</div>
+    </div>
+
+    <div class="controls-grid">
+        <div class="control-box">
+            <label>Mise (FCFA)</label>
+            <input type="number" id="crashStake" placeholder="1000" min="100">
+        </div>
+        <div class="control-box">
+            <label>Retrait Auto (Optionnel)</label>
+            <input type="number" id="crashAuto" placeholder="Ex: 2.50" step="0.01" min="1.01">
+        </div>
+    </div>
+
+    <button id="btnCrashAction" class="action-btn btn-bet" onclick="handleCrashAction()">Commencer la partie</button>
+
+    <div class="live-players-section">
+        <div class="live-players-header">👥 Joueurs en direct (<span id="onlineCount">42</span>)</div>
+        <div id="livePlayersList">
+            </div>
+    </div>
+  </div>
+  
+  <br>
+  <button onclick="window.location.href='index.html'" style="background:#6c757d; font-size: 14px; padding: 12px; margin-top:10px;">Retour à l'accueil</button>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+
+// Variables Globales
+let currentUser = null;
+let currentBalance = 0;
+window._clientNotifications = []; window._clientHistory = [];
+
+// Variables du Jeu Crash
+let gameState = 0; // 0: Arrêté, 1: En vol, 2: Crashé
+let currentMultiplier = 1.00;
+let crashPoint = 0;
+let currentStake = 0;
+let autoCashoutVal = 0;
+let userHasCashedOut = false;
+let animationReqId;
+let flightStartTime;
+let historyMultipliers = [1.25, 3.40, 1.05, 2.10, 5.50, 1.12]; // Historique factice initial
+let fakePlayers = [];
+
+// ==========================================
+// INITIALISATION DE LA SESSION
+// ==========================================
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if(snap.exists()) {
+            const userData = snap.data();
+            if (userData.isAdmin) { window.location.href = "admin.html"; return; }
+            document.getElementById("dashboard-section").classList.remove("hidden");
+            document.getElementById("clientName").textContent = userData.fullName;
+            
+            currentBalance = userData.balance;
+            document.getElementById("balanceAmount").textContent = currentBalance + " FCFA";
+            
+            window._clientNotifications = userData.notifications || []; 
+            window._clientHistory = userData.history || [];
+            window.updateBadges();
+            
+            initCrashGameUI();
+        }
+    } else window.location.href = "principal.html";
+});
+
+// POPUPS ET UTILS GLOBAUX
+window.showPopup = (title, msg, err=false) => { document.getElementById("popupTitle").textContent=title; document.getElementById("popupTitle").style.color=err?"#dc3545":"#28a745"; document.getElementById("popupMessage").textContent=msg; document.getElementById("customPopup").classList.add("show"); };
+window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
+function getSeenCount(k) { return parseInt(localStorage.getItem(`bw_${currentUser.uid}_${k}`) || "0"); }
+function setSeenCount(k, c) { localStorage.setItem(`bw_${currentUser.uid}_${k}`, c); }
+
+window.updateBadges = () => {
+  const uN = Math.max(0, window._clientNotifications.length - getSeenCount("notif")); const uH = Math.max(0, window._clientHistory.length - getSeenCount("hist"));
+  const nb = document.getElementById("notifBadge"); const hb = document.getElementById("histBadge");
+  if(nb) { nb.textContent = uN; nb.style.display = uN > 0 ? "block" : "none"; }
+  if(hb) { hb.textContent = uH; hb.style.display = uH > 0 ? "block" : "none"; }
+};
+
+window.openNotifPopup = () => {
+  const l = document.getElementById("notifPopupList");
+  l.innerHTML = window._clientNotifications.length === 0 ? "<i>Aucune notification.</i>" : [...window._clientNotifications].reverse().map(n => `<div class="notif-item ${n.type==='success'?'notif-success':(n.type==='error'?'notif-error':'notif-info')}"><div style="font-size:11px; margin-bottom:3px; opacity:0.8;">${new Date(n.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}</div><div>${n.message}</div></div>`).join("");
+  document.getElementById("notifPopup").classList.add("show"); setSeenCount("notif", window._clientNotifications.length); window.updateBadges();
+};
+window.closeNotifPopup = () => document.getElementById("notifPopup").classList.remove("show");
+
+window.openHistoryPopup = () => {
+  const l = document.getElementById("histPopupList");
+  l.innerHTML = window._clientHistory.length === 0 ? "<i>Aucune transaction.</i>" : [...window._clientHistory].reverse().map(h => `<div class="hist-item"><div><strong>${h.type}</strong><br><span style="font-size:11px; color:#666;">${new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})} | ${h.desc}</span></div><div class="${h.amount>0?'hist-positive':(h.amount<0?'hist-negative':'hist-neutral')}">${h.amount>0?'+':''}${h.amount} FCFA</div></div>`).join("");
+  document.getElementById("histPopup").classList.add("show"); setSeenCount("hist", window._clientHistory.length); window.updateBadges();
+};
+window.closeHistoryPopup = () => document.getElementById("histPopup").classList.remove("show");
+
+
+// ==========================================
+// LOGIQUE EXCLUSIVE DU JEU CRASH MULTIPLIER
+// ==========================================
+
+const canvas = document.getElementById('crashCanvas');
+const ctx = canvas.getContext('2d');
+let cw = canvas.width = canvas.offsetWidth;
+let ch = canvas.height = canvas.offsetHeight;
+
+window.addEventListener('resize', () => { cw = canvas.width = canvas.offsetWidth; ch = canvas.height = canvas.offsetHeight; drawCurve(1.00); });
+
+function initCrashGameUI() {
+    updateHistoryBar();
+    generateFakePlayers();
+    drawCurve(1.00);
+}
+
+// 1. Algorithme de gestion des risques (House Edge & Limites)
+function generateSafeCrashPoint(stake) {
+    // Risque pour la plateforme : 6% de chance de crash instantané (1.00x)
+    if (Math.random() < 0.06) return 1.00;
+
+    // Calcul Provably Fair standard inversé
+    let r = Math.random();
+    let point = Math.max(1.01, 1 / (1 - r));
+    
+    // Limitation stricte des gains excessifs pour protéger la plateforme
+    let maxPlatformLoss = 50000; // La plateforme évite de payer plus de 50 000 FCFA d'un coup
+    if (stake > 0 && (stake * point) > maxPlatformLoss) {
+        point = maxPlatformLoss / stake;
+    }
+    
+    // Hard cap global à x100 maximum pour le spectacle
+    if(point > 100) point = 100;
+
+    // Arrondir à 2 décimales
+    return Math.floor(point * 100) / 100;
+}
+
+// 2. Gestion du clic Principal (Commencer / Retirer)
+window.handleCrashAction = async () => {
+    const btn = document.getElementById("btnCrashAction");
+    
+    if (gameState === 0) {
+        // --- PHASE 1 : COMMENCER ---
+        const stakeInput = document.getElementById("crashStake").value;
+        currentStake = parseInt(stakeInput);
+        autoCashoutVal = parseFloat(document.getElementById("crashAuto").value) || 0;
+
+        if (isNaN(currentStake) || currentStake < 100) return showPopup("Attention", "La mise minimum est de 100 FCFA.", true);
+        if (currentStake > currentBalance) return showPopup("Attention", "Solde insuffisant pour cette mise.", true);
+
+        btn.disabled = true;
+        btn.textContent = "Validation...";
+
+        try {
+            // Déduction immédiate de la mise en base de données
+            currentBalance -= currentStake;
+            const newHistory = {date: new Date().toISOString(), type: 'Mise Crash', amount: -currentStake, desc: 'Démarrage partie Crash'};
+            const newNotif = {date: new Date().toISOString(), message: `Mise validée : ${currentStake} FCFA. Bonne chance !`, type: 'info'};
+            
+            await updateDoc(doc(db,"users",currentUser.uid), { 
+                balance: currentBalance, 
+                history: arrayUnion(newHistory),
+                notifications: arrayUnion(newNotif)
+            });
+
+            // MAJ Interface
+            document.getElementById("balanceAmount").textContent = currentBalance + " FCFA";
+            window._clientHistory.push(newHistory); window._clientNotifications.push(newNotif); updateBadges();
+            
+            // Démarrage du jeu
+            startGame();
+
+        } catch (e) {
+            btn.disabled = false;
+            btn.textContent = "Commencer la partie";
+            showPopup("Erreur", "Erreur réseau. Impossible de miser.", true);
+        }
+
+    } else if (gameState === 1 && !userHasCashedOut) {
+        // --- PHASE 2 : RETIRER AVANT LE CRASH ---
+        performCashout();
+    }
+};
+
+function startGame() {
+    gameState = 1;
+    userHasCashedOut = false;
+    currentMultiplier = 1.00;
+    crashPoint = generateSafeCrashPoint(currentStake);
+    
+    const btn = document.getElementById("btnCrashAction");
+    btn.disabled = false;
+    btn.className = "action-btn btn-cashout";
+    btn.innerHTML = `Retirer <span id="btnPotentialWin">(${currentStake} F)</span>`;
+
+    document.getElementById("multiplierDisplay").style.color = "white";
+    document.getElementById("potentialWinDisplay").style.display = "block";
+    document.getElementById("potentialWinDisplay").textContent = `Gain potentiel: ${currentStake} F`;
+    
+    generateFakePlayers(); // Nouveaux joueurs pour le tour
+
+    flightStartTime = Date.now();
+    animateFlight();
+}
+
+function animateFlight() {
+    if (gameState !== 1) return;
+
+    let elapsed = Date.now() - flightStartTime;
+    // Courbe exponentielle douce
+    currentMultiplier = Math.pow(Math.E, 0.00008 * elapsed);
+    
+    if(currentMultiplier < 1.00) currentMultiplier = 1.00;
+
+    // Affichage UI
+    let displayMult = currentMultiplier.toFixed(2);
+    document.getElementById("multiplierDisplay").textContent = displayMult + "x";
+    
+    if (!userHasCashedOut) {
+        let potWin = Math.floor(currentStake * currentMultiplier);
+        document.getElementById("potentialWinDisplay").textContent = `Gain: ${potWin} F`;
+        document.getElementById("btnPotentialWin").textContent = `(${potWin} F)`;
+        
+        // AUTO CASHOUT CHECK
+        if (autoCashoutVal > 1.00 && currentMultiplier >= autoCashoutVal) {
+            performCashout(autoCashoutVal); // Cashout au moment exact demandé
+        }
+    }
+
+    drawCurve(currentMultiplier);
+    updateFakePlayers(currentMultiplier);
+
+    // CRASH CHECK
+    if (currentMultiplier >= crashPoint) {
+        triggerCrash();
+        return;
+    }
+
+    animationReqId = requestAnimationFrame(animateFlight);
+}
+
+// 3. Action de Retrait (Gain)
+async function performCashout(exactMultiplier = null) {
+    userHasCashedOut = true;
+    let finalMult = exactMultiplier || currentMultiplier;
+    let winAmount = Math.floor(currentStake * finalMult);
+
+    const btn = document.getElementById("btnCrashAction");
+    btn.disabled = true;
+    btn.className = "action-btn";
+    btn.style.background = "#28a745";
+    btn.textContent = `Encaissé : ${winAmount} FCFA !`;
+
+    document.getElementById("multiplierDisplay").style.color = "#28a745";
+    document.getElementById("potentialWinDisplay").textContent = `Gain Sécurisé : ${winAmount} F`;
+
+    // Envoi du gain à la BDD
+    currentBalance += winAmount;
+    const newHistory = {date: new Date().toISOString(), type: 'Gain Crash', amount: winAmount, desc: `Retrait à x${finalMult.toFixed(2)}`};
+    const newNotif = {date: new Date().toISOString(), message: `Félicitations ! Vous avez gagné ${winAmount} FCFA.`, type: 'success'};
+    
+    try {
+        await updateDoc(doc(db,"users",currentUser.uid), { 
+            balance: currentBalance, 
+            history: arrayUnion(newHistory),
+            notifications: arrayUnion(newNotif)
+        });
+        document.getElementById("balanceAmount").textContent = currentBalance + " FCFA";
+        window._clientHistory.push(newHistory); window._clientNotifications.push(newNotif); updateBadges();
+    } catch(e) {
+        console.error("Erreur d'ajout de gain");
+    }
+}
+
+// 4. Action de Crash (Arrêt et Perte)
+async function triggerCrash() {
+    gameState = 2;
+    cancelAnimationFrame(animationReqId);
+    
+    let displayMult = crashPoint.toFixed(2);
+    document.getElementById("multiplierDisplay").textContent = displayMult + "x";
+    document.getElementById("multiplierDisplay").style.color = "#dc3545";
+    
+    const btn = document.getElementById("btnCrashAction");
+    btn.disabled = true;
+    btn.className = "action-btn";
+    btn.style.background = "#dc3545";
+    
+    if (!userHasCashedOut) {
+        btn.textContent = "CRASH ! Mise perdue.";
+        document.getElementById("potentialWinDisplay").textContent = "Mise Perdue";
+        document.getElementById("potentialWinDisplay").style.color = "#dc3545";
+        
+        const newNotif = {date: new Date().toISOString(), message: `La courbe s'est crashée à ${displayMult}x. Vous avez perdu ${currentStake} FCFA.`, type: 'error'};
+        await updateDoc(doc(db,"users",currentUser.uid), { notifications: arrayUnion(newNotif) });
+        window._clientNotifications.push(newNotif); updateBadges();
+    } else {
+        btn.textContent = "Le jeu est terminé.";
+    }
+
+    // Mise à jour de l'historique de la barre
+    historyMultipliers.unshift(crashPoint);
+    if(historyMultipliers.length > 10) historyMultipliers.pop();
+    updateHistoryBar();
+
+    // Réinitialisation de l'interface après 3 secondes
+    setTimeout(() => {
+        gameState = 0;
+        document.getElementById("multiplierDisplay").textContent = "1.00x";
+        document.getElementById("multiplierDisplay").style.color = "white";
+        document.getElementById("potentialWinDisplay").style.display = "none";
+        document.getElementById("potentialWinDisplay").style.color = "#28a745";
+        drawCurve(1.00);
+        
+        btn.disabled = false;
+        btn.className = "action-btn btn-bet";
+        btn.textContent = "Commencer la partie";
+        btn.style.background = "";
+    }, 3000);
+}
+
+// ==========================================
+// ANIMATIONS ET EFFETS VISUELS
+// ==========================================
+
+function drawCurve(mult) {
+    ctx.clearRect(0, 0, cw, ch);
+    
+    // Grille de fond
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
+    for(let i=0; i<cw; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,ch); ctx.stroke(); }
+    for(let i=0; i<ch; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(cw,i); ctx.stroke(); }
+
+    if(mult <= 1.00 && gameState === 0) return;
+
+    // Calcul de la courbe dynamique
+    let progress = Math.min(1, (mult - 1) / 5); // Normalise la progression visuelle
+    let endX = cw * 0.8 * progress;
+    let endY = ch - (ch * 0.8 * progress);
+
+    ctx.beginPath();
+    ctx.moveTo(0, ch);
+    // Courbe de bezier pour effet accélération
+    ctx.quadraticCurveTo(endX * 0.5, ch, endX, endY);
+    
+    ctx.strokeStyle = gameState === 2 ? '#dc3545' : '#007bff';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Remplissage dégradé sous la courbe
+    let grad = ctx.createLinearGradient(0, endY, 0, ch);
+    grad.addColorStop(0, gameState === 2 ? 'rgba(220, 53, 69, 0.4)' : 'rgba(0, 123, 255, 0.4)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.lineTo(endX, ch);
+    ctx.lineTo(0, ch);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Point lumineux au bout
+    ctx.beginPath();
+    ctx.arc(endX, endY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = gameState === 2 ? '#dc3545' : '#fff';
+    ctx.fill();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = ctx.fillStyle;
+}
+
+function updateHistoryBar() {
+    const bar = document.getElementById("multiplierHistory");
+    bar.innerHTML = historyMultipliers.map(m => {
+        let badgeClass = m < 2 ? 'badge-low' : (m < 5 ? 'badge-med' : 'badge-high');
+        return `<div class="history-badge ${badgeClass}">${m.toFixed(2)}x</div>`;
+    }).join("");
+}
+
+// Modification de la liste des faux joueurs (Plus de monde et suppression de BrainyBoss)
+function generateFakePlayers() {
+    fakePlayers = [];
+    const names = ["Koffi***", "Nadia77", "User_318", "TogoWin", "Mawuli", "Kevin_T", "Kodjo228", "David_55", "Eric***", "Sandra_M", "LuckyTogo", "WinPlus", "Momo_22", "Elom**", "Kossi_Win"];
+    
+    // Nombre aléatoire entre 8 et 15 joueurs actifs visibles
+    let count = Math.floor(Math.random() * 8) + 8;
+    
+    // Illusion qu'il y a plus d'une centaine de joueurs connectés
+    document.getElementById("onlineCount").textContent = count + 115; 
+    
+    for(let i=0; i<count; i++) {
+        fakePlayers.push({
+            name: names[Math.floor(Math.random()*names.length)],
+            bet: Math.floor(Math.random() * 100 + 1) * 100, // Mise entre 100 et 10000
+            cashoutAt: (Math.random() * 4 + 1.1).toFixed(2), // Faux retrait entre 1.1 et 5.1
+            status: "playing"
+        });
+    }
+    renderFakePlayers();
+}
+
+function updateFakePlayers(currentMult) {
+    let updated = false;
+    fakePlayers.forEach(p => {
+        if (p.status === "playing" && currentMult >= parseFloat(p.cashoutAt)) {
+            p.status = "cashed";
+            updated = true;
+        }
+    });
+    if(updated) renderFakePlayers();
+}
+
+function renderFakePlayers() {
+    const list = document.getElementById("livePlayersList");
+    list.innerHTML = fakePlayers.map(p => {
+        if (p.status === "cashed") {
+            let win = Math.floor(p.bet * p.cashoutAt);
+            return `<div class="player-row"><div class="p-name">${p.name}</div><div class="p-bet">${p.bet} F</div><div class="p-cashout p-win">${p.cashoutAt}x (+${win}F)</div></div>`;
+        } else {
+            return `<div class="player-row"><div class="p-name">${p.name}</div><div class="p-bet">${p.bet} F</div><div class="p-cashout">En cours...</div></div>`;
+        }
+    }).join("");
+}
+
+</script>
+</body>
+</html>

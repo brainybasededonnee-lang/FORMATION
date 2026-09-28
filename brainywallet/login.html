@@ -1,0 +1,329 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW - Connexion</title>
+<style>
+body{ font-family: Arial,sans-serif; background:#f0f6ff; margin:0; }
+.container{ width:90%; max-width:700px; margin:50px auto; background:white; padding:25px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+.hidden{display:none;}
+h2{text-align:center;color:#007bff;}
+input, button{ width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing: border-box; }
+button{ background:#007bff; color:white; font-weight:bold; cursor:pointer; }
+.message{text-align:center;font-weight:bold;margin-top:10px;}
+
+/* --- Styles pour les Popups --- */
+.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+.popup-overlay.show { opacity: 1; visibility: visible; }
+.popup-content { background: white; padding: 25px; border-radius: 12px; text-align: center; max-width: 320px; width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3); transform: translateY(-20px); transition: transform 0.3s ease; }
+.popup-overlay.show .popup-content { transform: translateY(0); }
+.popup-content h3 { margin-top: 0; margin-bottom: 15px; }
+.popup-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px; font-size: 14px; width: 100%; }
+
+/* --- Nouveaux Styles (Conditions, Boutons secondaires, Responsive) --- */
+.flex-row { display: flex; gap: 10px; }
+.btn-secondary { background: #6c757d; margin-top: 5px; margin-bottom: 15px; }
+.btn-secondary:hover { background: #5a6268; }
+.terms-container { display: flex; align-items: center; gap: 10px; margin: 15px 0 5px 0; text-align: left; }
+.terms-container input[type="checkbox"] { width: auto; margin: 0; transform: scale(1.3); cursor: pointer; }
+.terms-container label { font-size: 14px; cursor: pointer; color: #333; }
+
+.terms-popup .popup-content { max-width: 500px; width: 90%; }
+.terms-scroll-area { max-height: 50vh; overflow-y: auto; text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; font-size: 14px; color: #444; border: 1px solid #ddd; margin-bottom: 15px; line-height: 1.5; }
+
+/* --- Responsive pour petits écrans --- */
+@media (max-width: 600px) {
+    .flex-row { flex-direction: column; gap: 0; }
+    .container { margin: 20px auto; padding: 20px; }
+    .popup-content { padding: 20px; width: 90%; }
+}
+</style>
+</head>
+<body>
+
+<!-- Popup Générique (Notifications, Erreurs) -->
+<div id="customPopup" class="popup-overlay">
+  <div class="popup-content">
+      <h3 id="popupTitle">Notification</h3>
+      <p id="popupMessage">Message</p>
+      <button class="popup-btn" onclick="closePopup()">OK</button>
+  </div>
+</div>
+
+<!-- Popup des Conditions d'utilisation -->
+<div id="termsPopup" class="popup-overlay terms-popup">
+    <div class="popup-content">
+        <h3 id="termsTitle">Conditions d'utilisation</h3>
+        <div id="termsContentDiv" class="terms-scroll-area">
+            Chargement des conditions...
+        </div>
+        <button class="popup-btn" onclick="closeTermsPopup()">Fermer</button>
+    </div>
+</div>
+
+<div class="container" id="register-section">
+    <h2>Inscription</h2>
+    
+    <div class="flex-row">
+        <input id="lastName" placeholder="Nom">
+        <input id="firstName" placeholder="Prénom">
+    </div>
+    <input id="phone" placeholder="Téléphone">
+    <input id="email" type="email" placeholder="Email">
+    <input id="address" placeholder="Adresse">
+    <input id="paymentNumber" placeholder="Numéro Flooz ou Mixx">
+    <input id="inviteCode" placeholder="Code d'invitation">
+    <input id="password" type="password" placeholder="Mot de passe">
+    <input id="confirmPassword" type="password" placeholder="Confirmer le mot de passe">
+    
+    <!-- Zone des Conditions d'utilisation -->
+    <div class="terms-container">
+        <input type="checkbox" id="acceptTerms">
+        <label for="acceptTerms">J'accepte les conditions d'utilisation</label>
+    </div>
+    <button type="button" class="btn-secondary" onclick="openTermsPopup()">Lire les conditions d'utilisation</button>
+    
+    <button onclick="register()">S'inscrire</button>
+    <p class="message" id="register-message"></p>
+    <p style="text-align:center">
+        Déjà membre ? <a href="#" onclick="showLogin()">Se connecter</a>
+    </p>
+</div>
+
+<div class="container hidden" id="login-section">
+    <h2>Connexion</h2>
+    <input id="login-email" placeholder="Email">
+    <input id="login-password" type="password" placeholder="Mot de passe">
+    <button onclick="login()">Se connecter</button>
+    <p class="message" id="login-message"></p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, updateDoc, collection, getDocs, query, where, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Gestion des Popups
+window.showPopup = (title, message, isError = false) => {
+    const popup = document.getElementById("customPopup");
+    const titleEl = document.getElementById("popupTitle");
+    titleEl.textContent = title; titleEl.style.color = isError ? "#dc3545" : "#28a745"; 
+    document.getElementById("popupMessage").textContent = message; popup.classList.add("show");
+};
+window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
+
+// Gestion du Popup des Conditions d'utilisation
+window.openTermsPopup = async () => {
+    const popup = document.getElementById("termsPopup");
+    const contentDiv = document.getElementById("termsContentDiv");
+    const titleEl = document.getElementById("termsTitle");
+    
+    try {
+        const termsDoc = await getDoc(doc(db, "settings", "terms"));
+        if (termsDoc.exists()) {
+            const data = termsDoc.data();
+            
+            // CORRECTION ICI : On vérifie la nouvelle structure 'isActive' (depuis l'Admin) 
+            // tout en gardant l'ancienne compatibilité 'status === Publié' si besoin.
+            if (data.isActive === true || data.status === "Publié") {
+                titleEl.textContent = data.title || "Conditions d'utilisation";
+                // Remplacement des sauts de ligne réels par des balises <br> pour un affichage propre
+                contentDiv.innerHTML = data.content ? data.content.replace(/\n/g, '<br>') : "Contenu indisponible.";
+            } else {
+                titleEl.textContent = "Conditions d'utilisation";
+                contentDiv.innerHTML = "Les conditions d'utilisation sont en cours de mise à jour.";
+            }
+        } else {
+            // Contenu par défaut si le document n'existe pas encore
+            titleEl.textContent = "Conditions d'utilisation";
+            contentDiv.innerHTML = `
+                <p>Bienvenue sur notre plateforme. En créant un compte, vous acceptez les termes suivants :</p>
+                <ol>
+                    <li>Vous vous engagez à fournir des informations exactes (téléphone, e-mail).</li>
+                    <li>L'utilisation de systèmes automatisés ou l'exploitation de failles (fraude) entraînera un bannissement immédiat.</li>
+                    <li>Votre compte est personnel et ne doit pas être partagé.</li>
+                    <li>Nous nous réservons le droit de suspendre tout compte présentant des activités suspectes en attendant vérification.</li>
+                </ol>
+            `;
+        }
+    } catch (error) {
+        console.error("Erreur de chargement des conditions:", error);
+        titleEl.textContent = "Conditions d'utilisation";
+        contentDiv.innerHTML = "Impossible de charger les conditions pour le moment. Vous pouvez tout de même continuer.";
+    }
+    
+    popup.classList.add("show");
+};
+window.closeTermsPopup = () => document.getElementById("termsPopup").classList.remove("show");
+
+
+const translateFirebaseError = (error) => {
+    switch(error.code) {
+        case 'auth/email-already-in-use': return "Cette adresse e-mail est déjà utilisée par un autre compte.";
+        case 'auth/invalid-email': return "L'adresse e-mail n'est pas valide.";
+        case 'auth/weak-password': return "Le mot de passe est trop faible (6 caractères minimum).";
+        case 'auth/user-not-found': return "Aucun compte trouvé avec cette adresse e-mail.";
+        case 'auth/wrong-password': return "Le mot de passe est incorrect.";
+        case 'auth/invalid-credential': return "L'e-mail ou le mot de passe est incorrect.";
+        case 'auth/network-request-failed': return "Problème de connexion internet. Vérifiez votre réseau.";
+        case 'auth/too-many-requests': return "Trop de tentatives échouées. Veuillez patienter et réessayer.";
+        case 'auth/missing-password': return "Veuillez entrer un mot de passe.";
+        case 'auth/missing-email': return "Veuillez entrer une adresse e-mail.";
+        default: return "Une erreur s'est produite. Veuillez réessayer."; 
+    }
+};
+
+window.showLogin = () => {
+  document.getElementById("register-section").classList.add("hidden");
+  document.getElementById("login-section").classList.remove("hidden");
+};
+
+window.register = async () => {
+    const msg = document.getElementById("register-message"); msg.textContent = "Vérification...";
+    try {
+        const email = document.getElementById("email").value.trim(), 
+              password = document.getElementById("password").value, 
+              confirmPassword = document.getElementById("confirmPassword").value, 
+              inviteCodeInput = document.getElementById("inviteCode").value.trim(), 
+              phone = document.getElementById("phone").value.trim(), 
+              firstName = document.getElementById("firstName").value.trim(), 
+              lastName = document.getElementById("lastName").value.trim();
+        
+        // Vérifications de base
+        if (!firstName || !lastName) { msg.textContent=""; return showPopup("Erreur", "Veuillez renseigner votre nom et votre prénom.", true); }
+        if (!phone) { msg.textContent=""; return showPopup("Erreur", "Veuillez renseigner un numéro de téléphone.", true); }
+        if (!email || !password) { msg.textContent=""; throw {code: "auth/missing-email"}; }
+        if (password !== confirmPassword) { msg.textContent=""; return showPopup("Erreur", "Les mots de passe ne correspondent pas.", true); }
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) { msg.textContent=""; return showPopup("Erreur d'email", "Veuillez entrer une adresse e-mail valide.", true); }
+        
+        // Vérification des conditions d'utilisation
+        if (!document.getElementById("acceptTerms").checked) {
+            msg.textContent = ""; 
+            return showPopup("Erreur", "Vous devez accepter les conditions d'utilisation pour créer un compte.", true);
+        }
+
+        // Vérification des doublons (Téléphone)
+        const phoneQuery = query(collection(db, "users"), where("phone", "==", phone));
+        const phoneSnap = await getDocs(phoneQuery);
+        if (!phoneSnap.empty) {
+            msg.textContent = "";
+            return showPopup("Erreur d'inscription", "Ce numéro de téléphone est déjà associé à un compte existant.", true);
+        }
+
+        // Vérification des doublons (E-mail - avant l'auth pour un retour propre)
+        const emailQuery = query(collection(db, "users"), where("email", "==", email));
+        const emailSnap = await getDocs(emailQuery);
+        if (!emailSnap.empty) {
+            msg.textContent = "";
+            return showPopup("Erreur d'inscription", "Cette adresse e-mail est déjà utilisée par un autre compte.", true);
+        }
+
+        msg.textContent = "Création du compte...";
+
+        const fullName = `${firstName} ${lastName}`;
+        let baseLetters = fullName.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase(); if(baseLetters.length < 2) baseLetters = "BW";
+        let baseNumbers = phone.replace(/[^0-9]/g, '').substring(0, 2); if(baseNumbers.length < 2) baseNumbers = "00";
+        
+        let finalCode = baseLetters + baseNumbers, isUnique = false, counter = 0;
+        while(!isUnique) {
+            let querySnapshot = await getDocs(query(collection(db, "users"), where("myAffiliateCode", "==", finalCode)));
+            if(querySnapshot.empty) isUnique = true; else { counter++; let newNum = (parseInt(baseNumbers) + counter) % 100; finalCode = baseLetters + (newNum < 10 ? "0" + newNum : newNum.toString()); }
+        }
+
+        const userCred = await createUserWithEmailAndPassword(auth,email,password);
+        
+        // Enregistrement avec statut "Actif" par défaut pour être pris en compte par la page analyse
+        await setDoc(doc(db,"users",userCred.user.uid), { 
+            fullName: fullName, phone: phone, email: email, 
+            address: document.getElementById("address").value, 
+            paymentNumber: document.getElementById("paymentNumber").value, 
+            inviteCode: inviteCodeInput, myAffiliateCode: finalCode, 
+            referredBy: inviteCodeInput, affiliatesCount: 0, 
+            totalAffiliateBonus: 0, hasMadeFirstDeposit: false, 
+            balance: 0, totalGenerated: 0, totalWithdrawn: 0, 
+            withdrawRequests: [], actions: [], history: [], notifications: [], 
+            status: "Actif", // Statut initial
+            createdAt: new Date() 
+        });
+
+        if (inviteCodeInput) {
+            let qSnap = await getDocs(query(collection(db, "users"), where("myAffiliateCode", "==", inviteCodeInput)));
+            if (!qSnap.empty) await updateDoc(doc(db, "users", qSnap.docs[0].id), { affiliatesCount: (qSnap.docs[0].data().affiliatesCount || 0) + 1 });
+        }
+        msg.textContent=""; showPopup("Succès !", "Votre compte a été créé avec succès.", false); showLogin();
+    } catch(e) { msg.textContent=""; showPopup("Erreur d'inscription", translateFirebaseError(e), true); }
+};
+
+window.login = async () => {
+    const msg = document.getElementById("login-message"), 
+          email = document.getElementById("login-email").value, 
+          password = document.getElementById("login-password").value, 
+          now = new Date().getTime();
+          
+    let lockoutUntil = localStorage.getItem('bw_lockout_until');
+    if (lockoutUntil && now < parseInt(lockoutUntil)) {
+        return showPopup("Accès bloqué", `Trop de tentatives échouées. Veuillez réessayer dans ${Math.ceil((parseInt(lockoutUntil) - now) / 60000)} minute(s).`, true);
+    }
+    
+    msg.textContent = "Vérification des identifiants...";
+    try {
+        if (!email || !password) throw {code: "auth/missing-email"};
+        
+        // 1. Authentification Firebase
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        
+        // 2. Vérification du Statut dans Firestore (Lien avec la page Analyse)
+        msg.textContent = "Vérification du statut du compte...";
+        const userDocRef = doc(db, "users", userCred.user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const userStatus = userData.status || "Actif"; // Défaut à Actif si non défini
+            
+            if (userStatus === "Désactivé") {
+                await signOut(auth); // Déconnecte l'utilisateur immédiatement
+                msg.textContent = "";
+                return showPopup("Accès Refusé", "Nous avons détecté certaines activités suspectes sur votre compte. Votre compte est actuellement en cours d'analyse. Veuillez réessayer plus tard.", true);
+            }
+            
+            if (userStatus === "Banni") {
+                await signOut(auth); // Déconnecte l'utilisateur immédiatement
+                msg.textContent = "";
+                return showPopup("Compte Banni", "Votre compte est banni et fait actuellement l'objet d'une analyse approfondie en raison d'activités frauduleuses.", true);
+            }
+        }
+
+        // Si Actif, on poursuit normalement
+        localStorage.removeItem('bw_failed_attempts'); 
+        localStorage.removeItem('bw_lockout_until'); 
+        msg.textContent = "";
+        
+        // Redirection vers l'accueil.
+        window.location.href = "accueil.html";
+        
+    } catch(e) { 
+        msg.textContent = "";
+        if (['auth/wrong-password', 'auth/user-not-found', 'auth/invalid-credential'].includes(e.code)) {
+            let attempts = parseInt(localStorage.getItem('bw_failed_attempts') || '0') + 1;
+            localStorage.setItem('bw_failed_attempts', attempts);
+            if (attempts >= 5) { 
+                localStorage.setItem('bw_lockout_until', now + (5 * 60 * 1000)); 
+                showPopup("Accès bloqué", "5 tentatives échouées. Votre interface est bloquée pour 5 minutes.", true); 
+            } else {
+                showPopup("Erreur", `Identifiants incorrects ou compte n'existe pas. Tentatives restantes : ${5 - attempts}`, true);
+            }
+        } else { 
+            showPopup("Erreur de connexion", translateFirebaseError(e), true); 
+        }
+    }
+};
+</script>
+</body>
+</html>

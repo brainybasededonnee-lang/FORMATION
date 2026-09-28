@@ -1,0 +1,539 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW - Acheter des Actions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* --- VARIABLES ET RESET --- */
+:root {
+    --primary: #0056b3;
+    --primary-light: #007bff;
+    --secondary: #6c757d;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --background: #f4f7fb;
+    --surface: #ffffff;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+body { background: var(--background); color: var(--text-main); padding-bottom: 40px; }
+.hidden { display: none !important; }
+
+/* --- NAVIGATION --- */
+.nav-bar {
+    background: var(--surface);
+    display: flex; justify-content: space-around; padding: 15px; margin-bottom: 25px;
+    box-shadow: var(--shadow-sm); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.nav-bar a {
+    text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 15px;
+    padding-bottom: 8px; transition: 0.3s;
+}
+.nav-bar a.active { color: var(--primary-light); border-bottom: 3px solid var(--primary-light); }
+
+/* --- CONTENEUR PRINCIPAL --- */
+.container {
+    width: 92%; max-width: 800px; margin: 0 auto;
+}
+
+/* --- CARTE WALLET (SOLDE) --- */
+.wallet-card {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white; border-radius: var(--radius-lg); padding: 30px 20px;
+    text-align: center; box-shadow: var(--shadow-md); margin-bottom: 30px;
+    position: relative; overflow: hidden;
+}
+.wallet-card::after {
+    content: ''; position: absolute; top: -50%; right: -20%; width: 200px; height: 200px;
+    background: rgba(255,255,255,0.1); border-radius: 50%;
+}
+.wallet-label { font-size: 15px; opacity: 0.9; margin-bottom: 8px; font-weight: 500; letter-spacing: 0.5px; }
+.wallet-amount { font-size: 38px; font-weight: 700; }
+
+/* --- SECTIONS TITRES --- */
+.section-title {
+    font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 15px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+
+/* --- GRILLE ACTIONS DYNAMIQUES --- */
+.actions-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 40px;
+}
+.action-card {
+    background: var(--surface); border-radius: var(--radius-md); padding: 20px;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer; display: flex; flex-direction: column;
+}
+.action-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--primary-light); }
+.action-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.action-title { font-size: 16px; font-weight: 700; color: var(--text-main); }
+.action-badge { background: #e0e7ff; color: var(--primary-light); padding: 5px 10px; border-radius: 20px; font-weight: 700; font-size: 13px; }
+.action-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4; flex-grow: 1; }
+.action-limits { font-size: 13px; background: var(--background); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+.action-limits div { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.action-limits div:last-child { margin-bottom: 0; }
+.action-btn-trigger {
+    background: var(--primary-light); color: white; border: none; padding: 10px;
+    border-radius: 8px; font-weight: 600; width: 100%; transition: 0.2s;
+}
+.action-card:hover .action-btn-trigger { background: var(--primary); }
+
+/* --- LISTE MES ACTIONS EN COURS --- */
+.my-actions-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
+.my-action-item {
+    background: var(--surface); padding: 18px; border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary-light); box-shadow: var(--shadow-sm);
+}
+.my-action-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.my-action-name { font-weight: 700; font-size: 15px; }
+.status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.status-validé { background: #d1fae5; color: #065f46; }
+.status-attente { background: #fef3c7; color: #92400e; }
+.status-terminé { background: #e0e7ff; color: #3730a3; }
+.status-rejeté { background: #fee2e2; color: #991b1b; }
+.my-action-details { font-size: 13px; color: var(--text-muted); display: flex; gap: 15px; margin-bottom: 10px; }
+.my-action-details strong { color: var(--text-main); }
+.timer-container {
+    background: var(--background); border-radius: 6px; padding: 10px; font-size: 13px;
+    font-weight: 600; color: var(--primary-light); text-align: center;
+}
+
+/* --- BOUTONS --- */
+.btn-logout {
+    background: white; color: var(--danger); border: 1px solid var(--danger); padding: 14px;
+    border-radius: var(--radius-md); width: 100%; font-weight: 700; cursor: pointer; transition: 0.2s;
+}
+.btn-logout:hover { background: #fef2f2; }
+
+/* --- POPUPS & MODALS --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000; opacity: 0; visibility: hidden; transition: 0.3s ease;
+}
+.modal-overlay.show { opacity: 1; visibility: visible; }
+.modal-content {
+    background: var(--surface); padding: 25px; border-radius: var(--radius-lg);
+    width: 90%; max-width: 400px; box-shadow: var(--shadow-md);
+    transform: translateY(20px) scale(0.95); transition: 0.3s ease;
+}
+.modal-overlay.show .modal-content { transform: translateY(0) scale(1); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-header h3 { font-size: 18px; color: var(--text-main); }
+.close-btn { background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer; }
+.modal-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+.form-group { margin-bottom: 15px; text-align: left; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+.form-group input {
+    width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    font-size: 15px; background: var(--background); transition: 0.2s; outline: none;
+}
+.form-group input:focus { border-color: var(--primary-light); background: white; box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
+.btn-primary {
+    background: var(--primary-light); color: white; border: none; padding: 15px; font-size: 15px;
+    border-radius: var(--radius-md); width: 100%; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s;
+}
+.btn-primary:hover { background: var(--primary); }
+
+/* Popup Notifications Spécifiques */
+#customPopup .modal-content { text-align: center; }
+#customPopup .icon-circle {
+    width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 15px; font-size: 30px;
+}
+.icon-success { background: #d1fae5; color: var(--success); }
+.icon-error { background: #fee2e2; color: var(--danger); }
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+    <a href="boutique.html">Boutique</a>
+    <a href="actions.html" class="active">Acheter des actions</a>
+</div>
+
+<!-- Notification Popup -->
+<div id="customPopup" class="modal-overlay">
+  <div class="modal-content">
+      <div id="popupIcon" class="icon-circle icon-success">✓</div>
+      <h3 id="popupTitle" style="margin-bottom: 10px;">Notification</h3>
+      <p id="popupMessage" style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Message</p>
+      <button class="btn-primary" onclick="closePopup()">OK, compris</button>
+  </div>
+</div>
+
+<!-- Modal d'Achat d'Action -->
+<div id="buyActionModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalPlanName">Nom du Plan</h3>
+            <button class="close-btn" onclick="closeBuyModal()">&times;</button>
+        </div>
+        <div class="modal-desc" id="modalPlanDetails">Détails du plan sélectionné...</div>
+        
+        <div class="form-group">
+            <label>Donnez un nom à votre action</label>
+            <input type="text" id="actionName" placeholder="Ex: Épargne Projet Voiture">
+        </div>
+        
+        <div class="form-group">
+            <label>Montant de votre mise (FCFA)</label>
+            <input type="number" id="actionStake" placeholder="Saisissez le montant">
+        </div>
+        
+        <button class="btn-primary" onclick="buyAction()">Lancer l'investissement</button>
+    </div>
+</div>
+
+<div class="container hidden" id="actions-page-section">
+    <!-- Solde Utilisateur -->
+    <div class="wallet-card">
+        <div class="wallet-label">Solde disponible</div>
+        <div class="wallet-amount" id="balanceAmount">0 FCFA</div>
+    </div>
+
+    <!-- Actions Disponibles Dynamiques -->
+    <div class="section-title">Investissements disponibles</div>
+    <div id="loader-actions" style="text-align:center; padding:20px; color:var(--text-muted); font-size: 14px;">Chargement des plans d'investissement...</div>
+    <div class="actions-grid" id="available-actions-grid">
+        <!-- Rempli dynamiquement -->
+    </div>
+
+    <!-- Historique des actions -->
+    <div class="section-title" style="margin-top: 20px;">Mes actions en cours</div>
+    <div id="clientActionsList" class="my-actions-list">
+        <!-- Rempli dynamiquement -->
+    </div>
+
+    <button class="btn-logout" onclick="logout()">Se déconnecter</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+// Configuration Firebase
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let timersIntervals = [];
+
+// Variables pour le système dynamique
+window.loadedActions = [];
+window.selectedSystemAction = null;
+
+onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = "principal.html"; return; }
+    currentUser = user;
+    const snap = await getDoc(doc(db, "users", currentUser.uid));
+    const userData = snap.data();
+    
+    // Si Admin -> Redirection
+    if (userData && userData.isAdmin === true) { window.location.href = "dashboard.html"; return; }
+
+    document.getElementById("actions-page-section").classList.remove("hidden");
+    document.getElementById("balanceAmount").textContent = (userData.balance || 0).toLocaleString('fr-FR') + " FCFA";
+    
+    // Charger les actions de l'utilisateur
+    renderClientActions(userData.actions || []);
+
+    // Charger les actions dynamiques depuis l'administration
+    await fetchSystemActions();
+
+    // Traitement automatique des gains à terme
+    window.processAutoPayout();
+});
+
+// NOUVEAU : Récupération dynamique des actions avec Fallback (Rétrocompatibilité)
+async function fetchSystemActions() {
+    try {
+        const q = query(collection(db, "system_actions"), where("status", "==", "active"));
+        const snap = await getDocs(q);
+        let actions = [];
+        snap.forEach(doc => actions.push({id: doc.id, ...doc.data()}));
+        
+        // Si aucune action créée par l'admin, on charge les anciennes par défaut pour ne rien casser !
+        if (actions.length === 0) {
+            actions = [
+                { id: 'def1', name: 'Plan 7 Jours', durationStr: '7 Jours', profitPct: 5, minAmount: 1000, maxAmount: 5000, description: 'Idéal pour un rendement très rapide.' },
+                { id: 'def2', name: 'Plan 30 Jours', durationStr: '30 Jours', profitPct: 10, minAmount: 1000, maxAmount: 15000, description: 'Rentabilité mensuelle standard.' },
+                { id: 'def3', name: 'Plan 2 Mois', durationStr: '2 Mois', profitPct: 20, minAmount: 1000, maxAmount: 25000, description: 'Investissement à court/moyen terme.' },
+                { id: 'def4', name: 'Plan 4 Mois', durationStr: '4 Mois', profitPct: 25, minAmount: 1000, maxAmount: 35000, description: 'Sécurisez des gains confortables.' },
+                { id: 'def5', name: 'Plan 6 Mois', durationStr: '6 Mois', profitPct: 35, minAmount: 1000, maxAmount: 40000, description: 'Investissement moyen terme très rentable.' },
+                { id: 'def6', name: 'Plan 7 Mois', durationStr: '7 Mois', profitPct: 40, minAmount: 1000, maxAmount: 50000, description: 'Rendement supérieur pour gros portefeuilles.' },
+                { id: 'def7', name: 'Plan 9 Mois', durationStr: '9 Mois', profitPct: 45, minAmount: 1000, maxAmount: 55000, description: 'La rentabilité maximale de la plateforme.' }
+            ];
+        }
+
+        window.loadedActions = actions;
+        renderAvailableActions(actions);
+    } catch (error) {
+        console.error("Erreur lors du chargement des actions", error);
+        document.getElementById("loader-actions").innerHTML = "Impossible de charger les plans d'investissement.";
+    }
+}
+
+// Rendu des cartes d'actions dynamiques
+function renderAvailableActions(actions) {
+    const grid = document.getElementById("available-actions-grid");
+    document.getElementById("loader-actions").style.display = "none";
+    
+    grid.innerHTML = actions.map(act => `
+        <div class="action-card" onclick="openBuyModal('${act.id}')">
+            <div class="action-header">
+                <div class="action-title">${act.name}</div>
+                <div class="action-badge">+${act.profitPct}%</div>
+            </div>
+            <div class="action-desc">${act.description || 'Générez des profits de manière sécurisée avec ce plan d\'investissement.'}</div>
+            <div class="action-limits">
+                <div><span>⏳ Durée :</span> <strong>${act.durationStr}</strong></div>
+                <div><span>💰 Min :</span> <strong>${act.minAmount.toLocaleString('fr-FR')} F</strong></div>
+                <div><span>💎 Max :</span> <strong>${act.maxAmount.toLocaleString('fr-FR')} F</strong></div>
+            </div>
+            <button class="action-btn-trigger">Choisir ce plan</button>
+        </div>
+    `).join("");
+}
+
+// Gestion de la modale d'achat
+window.openBuyModal = (actionId) => {
+    const act = window.loadedActions.find(a => a.id === actionId);
+    if(!act) return;
+    window.selectedSystemAction = act;
+    
+    document.getElementById("modalPlanName").textContent = act.name;
+    document.getElementById("modalPlanDetails").innerHTML = `
+        <strong>Durée :</strong> ${act.durationStr} <br>
+        <strong>Bénéfice :</strong> +${act.profitPct}% <br>
+        <strong>Mise autorisée :</strong> de ${act.minAmount.toLocaleString('fr-FR')} à ${act.maxAmount.toLocaleString('fr-FR')} FCFA
+    `;
+    
+    document.getElementById("actionName").value = "";
+    document.getElementById("actionStake").value = "";
+    document.getElementById("buyActionModal").classList.add("show");
+};
+
+window.closeBuyModal = () => {
+    document.getElementById("buyActionModal").classList.remove("show");
+    window.selectedSystemAction = null;
+};
+
+// Fonctions de Popups Modernes
+window.showPopup = (title, message, isError = false) => {
+    const popup = document.getElementById("customPopup");
+    const iconEl = document.getElementById("popupIcon");
+    const titleEl = document.getElementById("popupTitle");
+    
+    iconEl.className = isError ? "icon-circle icon-error" : "icon-circle icon-success";
+    iconEl.innerHTML = isError ? "!" : "✓";
+    
+    titleEl.textContent = title;
+    document.getElementById("popupMessage").textContent = message;
+    popup.classList.add("show");
+};
+window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
+
+// NOUVEAU : Fonction d'Achat Dynamique
+window.buyAction = async () => {
+    if(!currentUser || !window.selectedSystemAction) return;
+    
+    const actDef = window.selectedSystemAction;
+    const stake = parseInt(document.getElementById("actionStake").value);
+    const name = document.getElementById("actionName").value;
+
+    if (!name.trim()) return showPopup("Attention", "Veuillez donner un nom à votre action", true);
+    if (isNaN(stake) || stake < actDef.minAmount || stake > actDef.maxAmount) {
+        return showPopup("Attention", `Le montant de la mise doit être compris entre ${actDef.minAmount.toLocaleString('fr-FR')} F et ${actDef.maxAmount.toLocaleString('fr-FR')} F.`, true);
+    }
+
+    const snap = await getDoc(doc(db,"users",currentUser.uid));
+    if ((snap.data().balance || 0) < stake) return showPopup("Attention", "Votre solde est insuffisant pour effectuer cet investissement.", true);
+
+    // Création de l'objet Action (Structure Rétrocompatible garantie)
+    const newAction = { 
+        name: name, 
+        stake: stake, 
+        time: actDef.durationStr, // Rétrocompatibilité avec l'ancien dashboard admin !
+        profitPct: actDef.profitPct, // Nouvelle variable utilisée prioritairement par processAutoPayout
+        status: "en attente", 
+        date: new Date().toISOString(), 
+        expiryDate: null 
+    };
+    
+    await updateDoc(doc(db,"users",currentUser.uid), { 
+        actions: arrayUnion(newAction),
+        history: arrayUnion({date: new Date().toISOString(), type: 'Achat Action', amount: 0, desc: `Attente: ${name}`})
+    });
+    
+    window.closeBuyModal();
+    showPopup("Succès", "Investissement enregistré avec succès. En attente de validation par l'administration.", false);
+    setTimeout(() => location.reload(), 2000);
+};
+
+// NOUVEAU : Rendu moderne des actions de l'utilisateur
+window.renderClientActions = (actionsArray) => {
+    const list = document.getElementById("clientActionsList");
+    timersIntervals.forEach(clearInterval); 
+    
+    if(actionsArray.length === 0){ 
+        list.innerHTML = "<div style='text-align:center; color:var(--text-muted); font-size:14px; padding:20px;'>Vous n'avez aucune action en cours.</div>"; 
+        return; 
+    }
+    
+    // Inverser l'ordre pour voir les plus récentes en premier
+    const reversedActions = [...actionsArray].reverse();
+    
+    list.innerHTML = reversedActions.map((act, rIndex) => {
+        const originalIndex = actionsArray.length - 1 - rIndex; // Trouver l'index original pour le timer
+        
+        let badgeClass = "status-attente";
+        let statusText = "En attente";
+        if (act.status === "validé") { badgeClass = "status-validé"; statusText = "En cours"; }
+        else if (act.status === "rejeté") { badgeClass = "status-rejeté"; statusText = "Rejeté"; }
+        else if (act.status === "terminé") { badgeClass = "status-terminé"; statusText = "Payé & Terminé"; }
+        
+        // Calcul du profit pour l'affichage (rétrocompatible)
+        let pct = act.profitPct;
+        if(pct === undefined) {
+            if(act.time === "7 Jours") pct = 5; else if(act.time === "30 Jours") pct = 10; else if(act.time === "2 Mois") pct = 20;
+            else if(act.time === "4 Mois") pct = 25; else if(act.time === "6 Mois") pct = 35; else if(act.time === "7 Mois") pct = 40; else if(act.time === "9 Mois") pct = 45; else pct = 0;
+        }
+        let expectedGain = (act.stake * pct) / 100;
+
+        return `
+        <div class="my-action-item">
+            <div class="my-action-header">
+                <div class="my-action-name">${act.name}</div>
+                <div class="status-badge ${badgeClass}">${statusText}</div>
+            </div>
+            <div class="my-action-details">
+                <div>Mise : <strong>${act.stake.toLocaleString('fr-FR')} F</strong></div>
+                <div>Durée : <strong>${act.time}</strong></div>
+                <div>Gain prévu : <strong style="color:var(--success);">+${expectedGain.toLocaleString('fr-FR')} F</strong></div>
+            </div>
+            ${act.status === "validé" ? `<div class="timer-container" id="timer-${originalIndex}">Calcul du temps...</div>` : ''}
+        </div>`;
+    }).join("");
+
+    actionsArray.forEach((act, index) => { if(act.status === "validé" && act.expiryDate) startTimer(act.expiryDate, `timer-${index}`); });
+};
+
+// Fonction Timer Optimisée
+function startTimer(expiryDateStr, elementId) {
+    const target = new Date(expiryDateStr).getTime();
+    const timerFunc = setInterval(() => {
+        const el = document.getElementById(elementId);
+        if(!el) return clearInterval(timerFunc);
+        
+        const diff = target - new Date().getTime();
+        if (diff <= 0) { 
+            el.innerHTML = "Validation des gains en cours..."; 
+            el.style.color = "var(--success)"; 
+            clearInterval(timerFunc); 
+            window.processAutoPayout(); 
+        } else {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            el.innerHTML = `⏳ Temps restant : <strong>${days}j ${hours}h ${mins}m ${secs}s</strong>`;
+        }
+    }, 1000);
+    timersIntervals.push(timerFunc);
+}
+
+// RÉTROCOMPATIBILITÉ : Paiement Automatique Renforcé (Gère les anciennes et les nouvelles actions)
+window.processAutoPayout = async () => {
+    if (!currentUser) return;
+    const userRef = doc(db, "users", currentUser.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return;
+
+    let userData = snap.data();
+    let actions = userData.actions || [];
+    let balance = Number(userData.balance) || 0;
+    let totalGenerated = Number(userData.totalGenerated) || 0;
+    let history = userData.history || [];
+    let notifications = userData.notifications || [];
+    let hasChanges = false;
+    const now = new Date().getTime();
+
+    actions.forEach(act => {
+        if (act.status === "validé" && !act.isPaid && act.expiryDate) {
+            let expTime = new Date(act.expiryDate).getTime();
+            if (now >= expTime) {
+                
+                // NOUVEAU : Priorité au profit personnalisé si action dynamique, sinon fallback sur l'ancien système strict
+                let pct = act.profitPct; 
+                if (pct === undefined) { 
+                    if(act.time === "7 Jours") pct = 5;
+                    else if(act.time === "30 Jours") pct = 10;
+                    else if(act.time === "2 Mois") pct = 20;
+                    else if(act.time === "4 Mois") pct = 25;
+                    else if(act.time === "6 Mois") pct = 35;
+                    else if(act.time === "7 Mois") pct = 40;
+                    else if(act.time === "9 Mois") pct = 45;
+                    else pct = 0;
+                }
+                
+                let stake = Number(act.stake) || 0;
+                let profit = (stake * pct) / 100;
+                let totalPayout = stake + profit; 
+
+                balance += totalPayout;
+                totalGenerated += profit;
+                act.isPaid = true;
+                act.status = "terminé";
+
+                history.push({
+                    date: new Date().toISOString(),
+                    type: 'Action Terminée',
+                    amount: totalPayout,
+                    desc: `Gain Automatique : ${act.name} (+${pct}%)`
+                });
+
+                notifications.push({
+                    date: new Date().toISOString(),
+                    message: `🎉 Félicitations ! Votre investissement "${act.name}" est arrivé à terme. Votre mise de ${stake}F et votre bénéfice de ${profit}F (Total : ${totalPayout} FCFA) ont été crédités.`,
+                    type: 'success'
+                });
+
+                hasChanges = true;
+            }
+        }
+    });
+
+     if (hasChanges) {
+        await updateDoc(userRef, {
+            balance: balance,
+            totalGenerated: totalGenerated,
+            actions: actions,
+            history: history,
+            notifications: notifications
+        });
+        
+        document.getElementById("balanceAmount").textContent = balance.toLocaleString('fr-FR') + " FCFA";
+        window.renderClientActions(actions);
+    }
+};
+
+window.logout = async () => { await signOut(auth); window.location.href = "principal.html"; };
+</script>
+</body>
+</html>

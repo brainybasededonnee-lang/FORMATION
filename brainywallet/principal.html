@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brainy Wallet — Portefeuille Numérique Simple, Sécurisé & Intelligent</title>
+  <meta name="description" content="Gérez vos opérations, vos transactions et vos services numériques en toute sécurité avec Brainy Wallet." />
+  
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Style CSS Principal -->
+  <style>
+    :root {
+      --bg-dark: #090D16;
+      --bg-card: rgba(18, 24, 38, 0.7);
+      --bg-card-hover: rgba(28, 36, 56, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(99, 102, 241, 0.3);
+      --primary: #6366F1;
+      --primary-hover: #4F46E5;
+      --secondary: #10B981;
+      --accent-cyan: #06B6D4;
+      --text-main: #F9FAFB;
+      --text-muted: #9CA3AF;
+      --glow-purple: rgba(99, 102, 241, 0.15);
+      --glow-emerald: rgba(16, 185, 129, 0.12);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Loader de Session */
+    #auth-loader {
+      position: fixed;
+      inset: 0;
+      background-color: var(--bg-dark);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(99, 102, 241, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none !important;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Effets de Fond Arrière-Plan */
+    .bg-glow-1 {
+      position: absolute;
+      top: -10%;
+      left: 15%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--glow-purple) 0%, rgba(0,0,0,0) 70%);
+      filter: blur(80px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .bg-glow-2 {
+      position: absolute;
+      top: 40%;
+      right: 5%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--glow-emerald) 0%, rgba(0,0,0,0) 70%);
+      filter: blur(100px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Navbar */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 1.25rem 2rem;
+      background: rgba(9, 13, 22, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-main);
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--text-main);
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Boutons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border-color: var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #4338CA);
+      color: white;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, var(--secondary), #059669);
+      color: white;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-emerald:hover {
+      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-main);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* Structure Générale */
+    container {
+      width: 100%;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    section {
+      padding: 6rem 0;
+      position: relative;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 4rem auto;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: #818CF8;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .section-subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding-top: 10rem;
+      padding-bottom: 6rem;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 3.5rem;
+      align-items: center;
+    }
+
+    .hero-title {
+      font-size: 3.25rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.2px;
+      margin-bottom: 1.25rem;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #818CF8 0%, #34D399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-description {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      margin-bottom: 2.25rem;
+      max-width: 540px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* Carte Interface Hero Animée */
+    .hero-visual {
+      position: relative;
+      perspective: 1000px;
+    }
+
+    .mockup-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 2rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transform: rotateY(-6deg) rotateX(4deg);
+      transition: transform 0.5s ease;
+    }
+
+    .mockup-card:hover {
+      transform: rotateY(0deg) rotateX(0deg);
+    }
+
+    .mockup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .wallet-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .mockup-balance {
+      margin-bottom: 2rem;
+      padding: 1.25rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .balance-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .balance-amount {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #FFF;
+      letter-spacing: -0.5px;
+    }
+
+    .floating-badge {
+      position: absolute;
+      padding: 0.85rem 1.25rem;
+      background: rgba(18, 24, 38, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      animation: float 4s ease-in-out infinite alternate;
+    }
+
+    .badge-top {
+      top: -20px;
+      right: -10px;
+      animation-delay: 0s;
+    }
+
+    .badge-bottom {
+      bottom: -20px;
+      left: -20px;
+      animation-delay: 2s;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-12px); }
+    }
+
+    /* Grilles de cartes */
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-6px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      margin-bottom: 1.25rem;
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .feature-card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Section Etapes (Comment ça marche) */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+      position: relative;
+    }
+
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .step-num {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .step-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-desc {
+      color: var(--text-muted);
+      font-size: 0.925rem;
+    }
+
+    /* Banner Interactive / Jeux & Support */
+    .split-banner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      padding: 3.5rem;
+      overflow: hidden;
+    }
+
+    .gaming-tags {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    .tag-item {
+      padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Mockup Assistant Chat */
+    .chat-mockup {
+      background: rgba(10, 14, 23, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.5rem;
+    }
+
+    .chat-msg {
+      padding: 0.85rem 1.1rem;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      margin-bottom: 0.85rem;
+      max-width: 85%;
+    }
+
+    .chat-in {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-main);
+      align-self: flex-start;
+    }
+
+    .chat-out {
+      background: var(--primary);
+      color: white;
+      margin-left: auto;
+    }
+
+    /* Call To Action Final */
+    .cta-box {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 32px;
+      padding: 4.5rem 2rem;
+      position: relative;
+    }
+
+    .cta-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+
+    /* Footer */
+    footer {
+      background: rgba(5, 8, 15, 0.95);
+      border-top: 1px solid var(--border-color);
+      padding: 4rem 0 2rem 0;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr repeat(3, 1fr);
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .footer-about p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 1rem;
+      max-width: 320px;
+    }
+
+    .footer-col h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--text-main);
+    }
+
+    .footer-bottom {
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    /* Animations d'Apparition au Scroll */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Media Queries & Responsive Mobile */
+    @media (max-width: 992px) {
+      .hero-section {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding-top: 8rem;
+      }
+
+      .hero-description {
+        margin: 0 auto 2rem auto;
+      }
+
+      .hero-actions {
+        justify-content: center;
+      }
+
+      .split-banner {
+        grid-template-columns: 1fr;
+        padding: 2rem;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links, .nav-buttons {
+        display: none;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .hero-title {
+        font-size: 2.4rem;
+      }
+
+      .section-title {
+        font-size: 1.85rem;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mockup-card {
+        transform: none;
+      }
+      
+      .mockup-card:hover {
+        transform: none;
+      }
+    }
+
+    /* Mode Réduction de Mouvement pour Accessibilité */
+    @media (prefers-reduced-motion: reduce) {
+      .floating-badge, .mockup-card, .reveal {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADER DE VERIFICATION DE SESSION AUTH -->
+  <div id="auth-loader">
+    <div class="spinner"></div>
+    <p style="margin-top: 1.25rem; color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">
+      Chargement de Brainy Wallet...
+    </p>
+  </div>
+
+  <!-- CONTENU PRINCIPAL DE LA LANDING PAGE -->
+  <div id="landing-content" class="hidden">
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <a href="#" class="brand-logo">
+        <div class="brand-icon">
+          <i class="fa-solid me-0 fa-wallet"></i>
+        </div>
+        <span>Brainy Wallet</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#about" class="nav-link">Présentation</a></li>
+        <li><a href="#actions" class="nav-link">Actions</a></li>
+        <li><a href="#features" class="nav-link">Fonctionnalités</a></li>
+        <li><a href="#security" class="nav-link">Sécurité</a></li>
+        <li><a href="#how-it-works" class="nav-link">Guide</a></li>
+        <li><a href="#support" class="nav-link">Assistance</a></li>
+      </ul>
+
+      <div class="nav-buttons">
+        <a href="login.html" class="btn btn-secondary">
+          <i class="fa-solid fa-right-to-bracket"></i> Se connecter
+        </a>
+        <a href="login.html" class="btn btn-primary">
+          <i class="fa-solid fa-user-plus"></i> Créer un compte
+        </a>
+      </div>
+
+      <button class="mobile-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="container hero-section">
+      <div class="hero-text reveal">
+        <div class="badge-pill">
+          <i class="fa-solid fa-shield-halved"></i> Plateforme Financière & Wallet Centralisé
+        </div>
+        <h1 class="hero-title">
+          Votre portefeuille numérique. <br>
+          <span class="gradient-text">Simple, sécurisé & intelligent.</span>
+        </h1>
+        <p class="hero-description">
+          Brainy Wallet centralise vos transactions, le suivi de votre solde et l'accès à vos services en temps réel dans une interface moderne et ultra-sécurisée.
+        </p>
+        <div class="hero-actions">
+          <a href="login.html" class="btn btn-emerald btn-lg">
+            <i class="fa-solid fa-arrow-right"></i> Créer mon compte
+          </a>
+          <a href="login.html" class="btn btn-secondary btn-lg">
+            Se connecter
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal">
+        <!-- Mockup Interface Portefeuille -->
+        <div class="mockup-card">
+          <div class="mockup-header">
+            <div class="wallet-chip">
+              <i class="fa-solid fa-building-columns" style="color: var(--primary);"></i>
+              <span>Brainy Balance</span>
+            </div>
+            <span style="color: var(--secondary); font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.1); padding: 0.25rem 0.75rem; border-radius: 20px;">
+              <i class="fa-solid fa-circle" style="font-size: 0.5rem; vertical-align: middle;"></i> Actif
+            </span>
+          </div>
+
+          <div class="mockup-balance">
+            <div class="balance-label">Solde disponible</div>
+            <div class="balance-amount" id="public-balance-display">790 000 XAF</div>
+            <div style="font-size: 0.8rem; color: var(--secondary); margin-top: 0.5rem;">
+              <i class="fa-solid fa-lock"></i> Données chiffrées & synchronisées
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div style="background: rgba(255,255,255,0.03); padding: 0.85rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+              <i class="fa-solid fa-arrow-down" style="color: var(--secondary);"></i>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.2rem;">Dépôt rapide</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); padding: 0.85rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+              <i class="fa-solid fa-arrow-up-right-from-square" style="color: var(--primary);"></i>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.2rem;">Transfert instantané</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Badges Flottants -->
+        <div class="floating-badge badge-top">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16,185,129,0.2); color: var(--secondary); display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.85rem; font-weight: 700;">Transaction Sécurisée</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Protocole SSL 256-bit</div>
+          </div>
+        </div>
+
+        <div class="floating-badge badge-bottom">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(99,102,241,0.2); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.85rem; font-weight: 700;">Temps Réel</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Mises à jour instantanées</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- PRESENTATION DE BRAINY WALLET -->
+    <section id="about" class="container">
+      <div class="section-header reveal">
+        <div class="badge-pill"><i class="fa-solid fa-circle-info"></i> À Propos</div>
+        <h2 class="section-title">Qu'est-ce que Brainy Wallet ?</h2>
+        <p class="section-subtitle">
+          Brainy Wallet est une plateforme numérique conçue pour vous permettre de gérer vos opérations et vos activités financières depuis une interface moderne, fluide et centralisée.
+        </p>
+      </div>
+    </section>
+
+    <!-- PRESENTATION DU SYSTEME ACTION -->
+    <section id="actions" class="container">
+      <div class="section-header reveal">
+        <div class="badge-pill"><i class="fa-solid fa-chart-line"></i> Système Action</div>
+        <h2 class="section-title">Découvrez nos Actions</h2>
+        <p class="section-subtitle">
+          Le système d'Action vous permet de choisir une opportunité, de définir un montant misé et de percevoir une commission attribuée une fois l'Action complétée selon les règles du système.
+        </p>
+      </div>
+
+      <!-- Étapes de fonctionnement des Actions -->
+      <div class="steps-grid reveal" style="margin-bottom: 3.5rem;">
+        <div class="step-card">
+          <div class="step-num" style="font-size: 1.8rem;"><i class="fa-solid fa-hand-pointer"></i></div>
+          <h3 class="step-title">1. Choisissez une Action</h3>
+          <p class="step-desc">Sélectionnez l'Action adaptée à vos objectifs parmi les options disponibles sur la plateforme.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="font-size: 1.8rem;"><i class="fa-solid fa-coins"></i></div>
+          <h3 class="step-title">2. Définissez le montant</h3>
+          <p class="step-desc">Choisissez votre montant misé. Le montant de la commission dépend du montant investi.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="font-size: 1.8rem;"><i class="fa-solid fa-hourglass-half"></i></div>
+          <h3 class="step-title">3. Validez la durée</h3>
+          <p class="step-desc">La durée de l'Action influence le taux de commission. Suivez l'évolution jusqu'à son échéance.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="font-size: 1.8rem;"><i class="fa-solid fa-circle-check"></i></div>
+          <h3 class="step-title">4. Recevez la commission</h3>
+          <p class="step-desc">Lorsque l'Action est terminée selon les règles du système, la commission correspondante est automatiquement attribuée.</p>
+        </div>
+      </div>
+
+      <!-- Exemples de cartes d'Actions -->
+      <div class="grid-cards">
+        <div class="feature-card reveal" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span class="badge-pill" style="margin-bottom: 0;"><i class="fa-solid fa-bolt"></i> Action Flash</span>
+              <span style="font-size: 0.8rem; color: var(--secondary); background: rgba(16,185,129,0.1); padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600;">Disponible</span>
+            </div>
+            <h3 style="margin-bottom: 0.75rem;">Action Starter</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+              <div><i class="fa-regular fa-clock" style="color: var(--primary); width: 20px;"></i> Durée : <strong style="color: var(--text-main);">1 semaine</strong></div>
+              <div><i class="fa-solid fa-wallet" style="color: var(--primary); width: 20px;"></i> Montant misé : <strong style="color: var(--text-main);">5 000 XAF</strong></div>
+              <div><i class="fa-solid fa-chart-pie" style="color: var(--secondary); width: 20px;"></i> Commission estimée : <strong style="color: var(--secondary);">+5% (250 XAF)</strong></div>
+            </div>
+          </div>
+          <a href="login.html" class="btn btn-secondary" style="width: 100%;">
+            Découvrir l'Action <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="feature-card reveal" style="display: flex; flex-direction: column; justify-content: space-between; border-color: var(--border-accent);">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span class="badge-pill" style="margin-bottom: 0; background: rgba(16,185,129,0.1); color: var(--secondary); border-color: rgba(16,185,129,0.25);"><i class="fa-solid fa-star"></i> Populaire</span>
+              <span style="font-size: 0.8rem; color: var(--secondary); background: rgba(16,185,129,0.1); padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600;">Disponible</span>
+            </div>
+            <h3 style="margin-bottom: 0.75rem;">Action Smart</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+              <div><i class="fa-regular fa-clock" style="color: var(--primary); width: 20px;"></i> Durée : <strong style="color: var(--text-main);">1 mois</strong></div>
+              <div><i class="fa-solid fa-wallet" style="color: var(--primary); width: 20px;"></i> Montant misé : <strong style="color: var(--text-main);">20 000 XAF</strong></div>
+              <div><i class="fa-solid fa-chart-pie" style="color: var(--secondary); width: 20px;"></i> Commission estimée : <strong style="color: var(--secondary);">+15% (3 000 XAF)</strong></div>
+            </div>
+          </div>
+          <a href="login.html" class="btn btn-primary" style="width: 100%;">
+            Découvrir l'Action <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="feature-card reveal" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span class="badge-pill" style="margin-bottom: 0;"><i class="fa-solid fa-crown"></i> Premium</span>
+              <span style="font-size: 0.8rem; color: var(--secondary); background: rgba(16,185,129,0.1); padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600;">Disponible</span>
+            </div>
+            <h3 style="margin-bottom: 0.75rem;">Action Pro</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+              <div><i class="fa-regular fa-clock" style="color: var(--primary); width: 20px;"></i> Durée : <strong style="color: var(--text-main);">2 mois</strong></div>
+              <div><i class="fa-solid fa-wallet" style="color: var(--primary); width: 20px;"></i> Montant misé : <strong style="color: var(--text-main);">50 000 XAF</strong></div>
+              <div><i class="fa-solid fa-chart-pie" style="color: var(--secondary); width: 20px;"></i> Commission estimée : <strong style="color: var(--secondary);">+20% (10 000 XAF)</strong></div>
+            </div>
+          </div>
+          <a href="login.html" class="btn btn-secondary" style="width: 100%;">
+            Découvrir l'Action <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FONCTIONNALITES -->
+    <section id="features" class="container">
+      <div class="section-header reveal">
+        <div class="badge-pill"><i class="fa-solid fa-cubes"></i> Services Inclus</div>
+        <h2 class="section-title">Tout ce dont vous avez besoin au même endroit</h2>
+        <p class="section-subtitle">Des outils puissants développés pour simplifier chaque aspect de votre expérience en ligne.</p>
+      </div>
+
+      <div class="grid-cards">
+        <div class="feature-card reveal">
+          <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
+          <h3>Portefeuille & Solde</h3>
+          <p>Consultez votre solde en temps réel et gérez votre capital disponible en toute transparence.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="card-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+          <h3>Opérations & Transactions</h3>
+          <p>Effectuez vos dépôts, retraits et transferts d'argent via des parcours fluides et vérifiés.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="card-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+          <h3>Historique Détaillé</h3>
+          <p>Accédez à un registre complet de toutes vos activités passées avec statuts précis et horodatage.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="card-icon"><i class="fa-solid fa-gamepad"></i></div>
+          <h3>Jeux & Participations</h3>
+          <p>Accédez aux modules interactifs et de prédictions intégrés directement dans votre compte.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="card-icon"><i class="fa-solid fa-bell"></i></div>
+          <h3>Notifications Instantanées</h3>
+          <p>Soyez averti immédiatement par alertes visuelles et sonores pour chaque mouvement important.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="card-icon"><i class="fa-solid fa-headset"></i></div>
+          <h3>Assistant & Support</h3>
+          <p>Échangez directement avec notre équipe via le tchat d'assistance dédié à vos questions.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+          <h3>Sécurité du Compte</h3>
+          <p>Protection renforcée de votre profil et contrôle des droits d'accès pour chaque session.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="card-icon"><i class="fa-solid fa-user-gear"></i></div>
+          <h3>Gestion du Profil</h3>
+          <p>Personnalisez vos informations personnelles et vos préférences d'utilisation à tout moment.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION SECURITE -->
+    <section id="security" class="container">
+      <div class="section-header reveal">
+        <div class="badge-pill" style="color: var(--secondary); background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3);">
+          <i class="fa-solid fa-lock"></i> Engagement
+        </div>
+        <h2 class="section-title">Votre sécurité est notre priorité</h2>
+        <p class="section-subtitle">Chaque fonctionnalité de Brainy Wallet intègre des contrôles rigoureux pour garantir la confidentialité de vos données.</p>
+      </div>
+
+      <div class="grid-cards">
+        <div class="feature-card reveal" style="border-top: 3px solid var(--secondary);">
+          <i class="fa-solid fa-user-shield" style="font-size: 1.8rem; color: var(--secondary); margin-bottom: 1rem;"></i>
+          <h3>Authentification Protégée</h3>
+          <p>Accès sécurisé à votre espace grâce à notre infrastructure Firebase d'authentification.</p>
+        </div>
+
+        <div class="feature-card reveal" style="border-top: 3px solid var(--secondary);">
+          <i class="fa-solid fa-eye" style="font-size: 1.8rem; color: var(--secondary); margin-bottom: 1rem;"></i>
+          <h3>Surveillance des Activités</h3>
+          <p>Détection et contrôle systématique des statuts de compte pour prévenir toute tentative anormale.</p>
+        </div>
+
+        <div class="feature-card reveal" style="border-top: 3px solid var(--secondary);">
+          <i class="fa-solid fa-file-invoice" style="font-size: 1.8rem; color: var(--secondary); margin-bottom: 1rem;"></i>
+          <h3>Historique Inaltérable</h3>
+          <p>Chaque opération génère une trace claire et traçable consultable depuis votre tableau de bord.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMENT CA MARCHE -->
+    <section id="how-it-works" class="container">
+      <div class="section-header reveal">
+        <div class="badge-pill"><i class="fa-solid fa-list-check"></i> Étapes Simples</div>
+        <h2 class="section-title">Comment ça fonctionne ?</h2>
+        <p class="section-subtitle">Commencez à utiliser votre portefeuille en moins de 2 minutes.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card reveal">
+          <div class="step-num">01</div>
+          <h3 class="step-title">Créez votre compte</h3>
+          <p class="step-desc">Inscrivez-vous rapidement en fournissant vos informations de base.</p>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-num">02</div>
+          <h3 class="step-title">Configurez votre compte</h3>
+          <p class="step-desc">Accédez directement à votre espace personnel sécurisé.</p>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-num">03</div>
+          <h3 class="step-title">Utilisez les services</h3>
+          <p class="step-desc">Gérez votre solde, vos transactions et vos activités disponibles.</p>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-num">04</div>
+          <h3 class="step-title">Suivez vos activités</h3>
+          <p class="step-desc">Consultez vos historiques et recevez vos alertes instantanées.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION JEUX -->
+    <section class="container">
+      <div class="split-banner reveal">
+        <div>
+          <div class="badge-pill"><i class="fa-solid fa-dice"></i> Divertissement</div>
+          <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">
+            Découvrez nos expériences de jeux et de participation
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+            Accédez à un espace de divertissement directement intégré à votre portefeuille. Participez à nos événements interactifs en toute transparence selon les règles propres à chaque activité.
+          </p>
+          <div class="gaming-tags">
+            <span class="tag-item"><i class="fa-solid fa-bullseye" style="color: var(--primary);"></i> Jeux</span>
+            <span class="tag-item"><i class="fa-solid fa-chart-line" style="color: var(--secondary);"></i> Prédictions</span>
+            <span class="tag-item"><i class="fa-solid fa-trophy" style="color: #F59E0B;"></i> Résultats</span>
+            <span class="tag-item"><i class="fa-solid fa-users" style="color: var(--accent-cyan);"></i> Participations</span>
+          </div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.3); padding: 2rem; border-radius: 20px; border: 1px solid var(--border-color); text-align: center;">
+          <i class="fa-solid fa-gamepad" style="font-size: 4rem; color: var(--primary); margin-bottom: 1rem;"></i>
+          <h3 style="font-size: 1.25rem; font-weight: 700;">Espace de Jeu Intégré</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+            Règles et conditions détaillées disponibles pour chaque jeu sur la plateforme.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION ASSISTANT -->
+    <section id="support" class="container">
+      <div class="split-banner reveal" style="background: linear-gradient(135deg, rgba(18,24,38,0.8), rgba(99,102,241,0.05));">
+        <div class="chat-mockup">
+          <div style="display: flex; align-items: center; gap: 0.75rem; padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--secondary);"></div>
+            <span style="font-weight: 700; font-size: 0.9rem;">Assistant Brainy Support</span>
+          </div>
+          <div class="chat-msg chat-in">
+            Bonjour ! Comment puis-je vous aider aujourd'hui concernant vos opérations ?
+          </div>
+          <div class="chat-msg chat-out">
+            J'aimerais vérifier le statut de mon dernier dépôt.
+          </div>
+          <div class="chat-msg chat-in">
+            Votre opération est validée. Vous pouvez consulter les détails dans votre historique.
+          </div>
+        </div>
+
+        <div>
+          <div class="badge-pill"><i class="fa-solid fa-headset"></i> Support Client</div>
+          <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">
+            Besoin d'aide ? Notre assistant vous accompagne
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
+            Un doute sur une transaction ou une question technique ? Le service d'assistance Brainy Wallet est accessible directement depuis votre compte pour répondre à toutes vos demandes.
+          </p>
+          <a href="login.html" class="btn btn-secondary">
+            Accéder au Support
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONFIANCE -->
+    <section class="container">
+      <div class="section-header reveal">
+        <div class="badge-pill"><i class="fa-solid fa-thumbs-up"></i> Pourquoi Nous Choisir</div>
+        <h2 class="section-title">Pourquoi choisir Brainy Wallet ?</h2>
+      </div>
+
+      <div class="grid-cards">
+        <div class="feature-card reveal" style="text-align: center;">
+          <i class="fa-solid fa-desktop" style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
+          <h4>Interface Modernisée</h4>
+          <p style="font-size: 0.875rem; margin-top: 0.5rem;">Ergonomie claire pensée pour mobile, tablette et ordinateur.</p>
+        </div>
+
+        <div class="feature-card reveal" style="text-align: center;">
+          <i class="fa-solid fa-bolt" style="font-size: 2rem; color: var(--secondary); margin-bottom: 1rem;"></i>
+          <h4>Suivi Immédiat</h4>
+          <p style="font-size: 0.875rem; margin-top: 0.5rem;">Visualisation directe des mises à jour de vos opérations.</p>
+        </div>
+
+        <div class="feature-card reveal" style="text-align: center;">
+          <i class="fa-solid fa-shield" style="font-size: 2rem; color: var(--accent-cyan); margin-bottom: 1rem;"></i>
+          <h4>Sécurité Renforcée</h4>
+          <p style="font-size: 0.875rem; margin-top: 0.5rem;">Infrastructures éprouvées pour la protection de vos accès.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- APPEL A L'ACTION -->
+    <section class="container">
+      <div class="cta-box reveal">
+        <h2 class="cta-title">Prêt à découvrir Brainy Wallet ?</h2>
+        <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 580px; margin: 0 auto 2.5rem auto;">
+          Rejoignez la plateforme dès aujourd'hui et prenez le contrôle de vos opérations numériques.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="login.html" class="btn btn-emerald btn-lg">
+            Créer mon compte
+          </a>
+          <a href="login.html" class="btn btn-secondary btn-lg">
+            Se connecter
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-about">
+            <a href="#" class="brand-logo">
+              <div class="brand-icon"><i class="fa-solid fa-wallet"></i></div>
+              <span>Brainy Wallet</span>
+            </a>
+            <p>
+              Votre portefeuille numérique simple, sécurisé et intelligent pour la gestion de vos opérations au quotidien.
+            </p>
+          </div>
+
+          <div class="footer-col">
+            <h4>Navigation</h4>
+            <ul class="footer-links">
+              <li><a href="#about">Présentation</a></li>
+              <li><a href="#actions">Actions</a></li>
+              <li><a href="#features">Fonctionnalités</a></li>
+              <li><a href="#security">Sécurité</a></li>
+              <li><a href="#how-it-works">Guide d'utilisation</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Accès Compte</h4>
+            <ul class="footer-links">
+              <li><a href="login.html">Se connecter</a></li>
+              <li><a href="login.html">Créer un compte</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Légal</h4>
+            <ul class="footer-links">
+              <li><a href="terms.html">Conditions d'utilisation</a></li>
+              <li><a href="#">Politique de confidentialité</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          &copy; 2026 Brainy Wallet. Tous droits réservés.
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- SCRIPT FIREBASE SDK (COMPATIBILITE EXISTANTE) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <!-- JS LOGIQUE LANDING PAGE & SESSION -->
+  <script>
+    // Variable locale pour le solde public de démonstration (indépendant du portefeuille réel)
+    const publicPlatformBalance = "790 000 XAF";
+
+    // Mettre à jour l'élément de solde public de démonstration
+    document.addEventListener("DOMContentLoaded", () => {
+      const balanceEl = document.getElementById("public-balance-display");
+      if (balanceEl) {
+        balanceEl.textContent = publicPlatformBalance;
+      }
+    });
+
+    // 1. Initialisation de Firebase s'il n'est pas déjà initialisé dans un script externe
+    if (!firebase.apps.length) {
+      // Les identifiants sont automatiquement pris en charge par le système existant du projet
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const auth = firebase.auth();
+
+    // 2. Vérification automatique de session avant affichage
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        // Redirection immédiate si l'utilisateur possède déjà une session active
+        window.location.href = "dashboard.html";
+      } else {
+        // Masquer le loader et afficher la landing page
+        document.getElementById("auth-loader").classList.add("hidden");
+        document.getElementById("landing-content").classList.remove("hidden");
+        
+        // Déclencher les animations au scroll une fois affiché
+        initScrollAnimations();
+      }
+    });
+
+    // 3. Animation d'apparition progressive au scroll (Intersection Observer)
+    function initScrollAnimations() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll(".reveal").forEach((el) => {
+        observer.observe(el);
+      });
+    }
+
+    // 4. Menu mobile
+    function toggleMobileMenu() {
+      const navLinks = document.querySelector(".nav-links");
+      const navButtons = document.querySelector(".nav-buttons");
+      
+      if (navLinks.style.display === "flex") {
+        navLinks.style.display = "none";
+        navButtons.style.display = "none";
+      } else {
+        navLinks.style.display = "flex";
+        navLinks.style.flexDirection = "column";
+        navLinks.style.position = "absolute";
+        navLinks.style.top = "100%";
+        navLinks.style.left = "0";
+        navLinks.style.right = "0";
+        navLinks.style.background = "rgba(9, 13, 22, 0.95)";
+        navLinks.style.padding = "1.5rem";
+        navLinks.style.borderBottom = "1px solid var(--border-color)";
+        
+        navButtons.style.display = "flex";
+        navButtons.style.flexDirection = "column";
+        navButtons.style.padding = "0 1.5rem 1.5rem 1.5rem";
+        navButtons.style.background = "rgba(9, 13, 22, 0.95)";
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,898 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW - Lobby Jeux Multijoueurs</title>
+<style>
+/* --- RESPONSIVE & TYPOGRAPHY --- */
+:root {
+  /* Nouvelle identité Bleue Professionnelle */
+  --primary: #0d6efd;
+  --primary-dark: #0b5ed7;
+  --primary-light: #eff6ff;
+  --success: #198754;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --info: #0dcaf0;
+  --bg-color: #f4f7f6;
+  --card-bg: #ffffff;
+  --text-main: #212529;
+  --text-muted: #6c757d;
+  --border-color: #dee2e6;
+}
+
+body { 
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+    background: var(--bg-color); 
+    margin: 0; 
+    box-sizing: border-box; 
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+}
+
+.container { 
+    width: 96%; 
+    max-width: 900px; 
+    margin: clamp(10px, 4vw, 30px) auto; 
+    padding: clamp(15px, 4vw, 25px); 
+    border-radius: 16px; 
+    box-sizing: border-box; 
+}
+
+/* Inputs & Buttons */
+input, button, select { 
+    width: 100%; 
+    padding: clamp(10px, 3vw, 12px); 
+    margin: 8px 0; 
+    border-radius: 10px; 
+    border: 1px solid var(--border-color); 
+    box-sizing: border-box; 
+    font-size: clamp(14px, 3.5vw, 15px);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+button { 
+    background: var(--primary); 
+    color: white; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s; 
+    border: none;
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
+}
+button:hover:not(:disabled) { 
+    background: var(--primary-dark); 
+    box-shadow: 0 6px 14px rgba(13, 110, 253, 0.3);
+}
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { background: #adb5bd; cursor: not-allowed; box-shadow: none; }
+
+/* Wallet Card (Nouveau design Bleu Professionnel) */
+.wallet-card { 
+    background: linear-gradient(135deg, #0d47a1, #1976d2); 
+    color: white; 
+    border-radius: 20px; 
+    padding: clamp(15px, 5vw, 24px); 
+    box-shadow: 0 8px 20px rgba(13, 71, 161, 0.25);
+    margin-bottom: 25px;
+    position: relative;
+    overflow: hidden;
+}
+.wallet-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+}
+.wallet-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; flex-wrap: wrap; gap: 10px; position: relative; z-index: 2;}
+.wallet-main { margin: 20px 0; position: relative; z-index: 2;}
+.amount { font-size: clamp(24px, 7vw, 32px); font-weight: 700; letter-spacing: -0.5px; }
+.label { font-size: clamp(12px, 3.5vw, 14px); opacity: 0.85; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;}
+
+/* --- GAME LOBBY DESIGN --- */
+.section-title {
+    font-size: clamp(20px, 5vw, 24px);
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centre l'icône et le texte horizontalement */
+    text-align: center;
+    gap: 8px;
+    color: var(--text-main);
+}
+
+.lobby-desc {
+    font-size: clamp(13px, 3.5vw, 14px);
+    color: var(--text-muted);
+    margin-top: 0;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    text-align: center; /* Centre la phrase explicative */
+
+}
+
+/* GRILLE STRICTEMENT DEUX COLONNES (Mobile first) */
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(10px, 3vw, 20px);
+}
+
+.game-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: clamp(12px, 3vw, 20px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #f1f3f5;
+}
+.game-card:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
+
+.game-icon { font-size: clamp(32px, 7vw, 42px); margin-bottom: 8px; text-align: center; }
+.game-title { font-size: clamp(14px, 3.5vw, 17px); font-weight: 700; text-align: center; margin-bottom: 12px; color: var(--text-main); line-height: 1.2; }
+
+.game-stats {
+    background: var(--bg-color);
+    border-radius: 12px;
+    padding: clamp(8px, 2vw, 12px);
+    margin-bottom: 12px;
+    font-size: clamp(11px, 2.8vw, 13px);
+    flex-grow: 1;
+}
+.stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 2px;}
+.stat-row:last-child { margin-bottom: 0; }
+.stat-label { color: var(--text-muted); }
+.stat-value { font-weight: 600; color: var(--text-main); }
+.stat-value.highlight { color: var(--primary); font-weight: 700; }
+.stat-value.timer { color: var(--danger); font-family: monospace; font-size: clamp(12px, 3.5vw, 15px); font-weight: 700;}
+
+.game-card button {
+    font-size: clamp(11px, 2.8vw, 14px);
+    padding: clamp(8px, 2vw, 12px);
+    border-radius: 10px;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.2;
+}
+
+.badge-status {
+    position: absolute;
+    top: clamp(8px, 2vw, 12px);
+    right: clamp(8px, 2vw, 12px);
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: clamp(9px, 2.2vw, 11px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 1;
+}
+.status-open { background: #d1e7dd; color: #0f5132; }
+.status-resolving { background: #fff3cd; color: #856404; }
+.status-waiting { background: #e9ecef; color: #495057; }
+
+/* Popups & Modals */
+.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; backdrop-filter: blur(4px); }
+.popup-overlay.show { opacity: 1; visibility: visible; }
+.popup-content { background: white; padding: clamp(20px, 5vw, 25px); border-radius: 20px; width: 90%; max-width: 420px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); transform: translateY(-20px) scale(0.95); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh; overflow-y: auto;}
+.popup-overlay.show .popup-content { transform: translateY(0) scale(1); }
+.close-btn { position: absolute; top: 15px; right: 15px; background: #f8f9fa; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: none;}
+.close-btn:hover { background: #e9ecef; color: var(--danger); transform: rotate(90deg); }
+
+.choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+.choice-btn { background: var(--bg-color); border: 2px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-align: center; }
+.choice-btn.selected { background: var(--primary-light); border-color: var(--primary); color: var(--primary); box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15); transform: translateY(-2px); }
+.choice-btn:hover:not(.selected) { background: #e9ecef; }
+
+.participants-list { max-height: 120px; overflow-y: auto; background: var(--bg-color); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+.participant-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #ced4da; }
+.participant-item:last-child { border-bottom: none; }
+
+/* Animations Container */
+#animationContainer { text-align: center; padding: 20px 0; display: none; }
+.anim-graphic { font-size: 64px; margin: 20px 0; animation: pulse 1s infinite alternate; }
+@keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
+.anim-text { font-size: 18px; font-weight: 700; color: var(--primary); }
+
+/* Ancien style des notifications adapté à la nouvelle palette */
+.notif-item { padding: 12px; margin-bottom: 10px; border-radius: 10px; font-size: 13px; line-height:1.4; }
+.notif-success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; } 
+.notif-error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; } 
+.notif-info { background: #cff4fc; color: #055160; border: 1px solid #b6effb; }
+.hist-item { border-bottom: 1px dashed #ced4da; padding: 10px 0; display:flex; justify-content: space-between; align-items: center;}
+.hist-positive { color: var(--success); font-weight: 700; } 
+.hist-negative { color: var(--danger); font-weight: 700; } 
+.hist-neutral { color: var(--text-muted); font-weight: 700; }
+
+@media (max-width: 480px) {
+    .choices-grid { grid-template-columns: 1fr; }
+    .wallet-header div { width: 100%; display: flex; justify-content: space-between; margin-top: 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Notification Popups (Anciennes structures préservées, design adapté) -->
+<div id="customPopup" class="popup-overlay"><div class="popup-content"><h3 id="popupTitle" style="margin-top:0;">Notification</h3><p id="popupMessage" style="white-space: pre-line; margin-top: 10px; line-height: 1.5; font-size: 15px; color:var(--text-main);"></p><button class="popup-btn" onclick="closePopup()" style="background:var(--primary); color:white; padding:12px; border-radius:10px; width:100%; margin-top:20px;">OK</button></div></div>
+<div id="notifPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:420px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:var(--warning); color:#000; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:16px 16px 0 0;"><strong style="font-size:16px;">🔔 Notifications Récentes</strong><button onclick="closeNotifPopup()" style="background:rgba(0,0,0,0.1); border:none; color:#000; font-size:18px; cursor:pointer; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; margin:0; box-shadow:none;">✕</button></div><div id="notifPopupList" style="overflow-y:auto; padding:15px; flex:1; background:white; border-radius:0 0 16px 16px; min-height:200px; font-size:13px;"></div></div></div>
+<div id="histPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:460px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:var(--primary); color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:16px 16px 0 0;"><strong style="font-size:16px;">📜 Historique des Transactions</strong><button onclick="closeHistoryPopup()" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; margin:0; box-shadow:none;">✕</button></div><div id="histPopupList" style="overflow-y:auto; padding:15px; flex:1; background:white; border-radius:0 0 16px 16px; min-height:200px; font-size:13px;"></div></div></div>
+
+<!-- Modals LOBBY JEUX -->
+<div id="createGameModal" class="popup-overlay">
+    <div class="popup-content" style="position: relative;">
+        <button class="close-btn" onclick="closeCreateModal()">✕</button>
+        <h3 id="createGameTitle" style="margin-top:0; margin-bottom:5px; color:var(--text-main);">Créer une Manche</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Vous êtes le premier joueur ! Définissez les règles de cette manche.</p>
+        
+        <label style="font-size: 13px; font-weight: 600; color:var(--text-main);">Mise obligatoire (FCFA) :</label>
+        <input type="number" id="createStake" placeholder="Ex: 500" min="100" step="100">
+        
+        <label style="font-size: 13px; font-weight: 600; margin-top: 10px; display:block; color:var(--text-main);">Durée de la manche :</label>
+        <!-- Nouvelles options ajoutées sans supprimer les anciennes -->
+        <select id="createDuration" onchange="window.toggleCustomDuration()">
+            <option value="1">1 minute</option>
+            <option value="3">3 minutes</option>
+            <option value="5" selected>5 minutes</option>
+            <option value="10">10 minutes</option>
+            <option value="30">30 minutes</option>
+            <option value="60">1 heure</option>
+            <option value="180">3 heures</option>
+            <option value="300">5 heures</option>
+            <option value="1440">1 journée</option>
+            <option value="4320">3 jours</option>
+            <option value="custom">Durée personnalisée ▼</option>
+        </select>
+
+        <!-- Formulaire de durée personnalisée (caché par défaut) -->
+        <div id="customDurationContainer" style="display: none; margin-top: 8px; background: var(--bg-color); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+            <label style="font-size: 12px; font-weight: 600; display:block; margin-bottom: 8px; color:var(--text-main);">Définir votre durée :</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="number" id="customDurationValue" placeholder="Ex: 12" min="1" style="flex: 1; margin: 0;">
+                <select id="customDurationUnit" style="flex: 1; margin: 0;">
+                    <option value="minutes">Minutes</option>
+                    <option value="hours">Heures</option>
+                    <option value="days">Jours</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="createChoicesContainer" class="choices-grid"></div>
+        <button onclick="submitCreateGame()" id="btnSubmitCreate" style="margin-top:10px;">CRÉER & PARTICIPER</button>
+    </div>
+</div>
+
+<div id="joinGameModal" class="popup-overlay">
+    <div class="popup-content" style="position: relative;">
+        <button class="close-btn" onclick="closeJoinModal()">✕</button>
+        <h3 id="joinGameTitle" style="margin-top:0; color:var(--text-main);">Participer</h3>
+        
+        <div class="game-stats" style="margin-top: 15px; border: 1px solid var(--border-color);">
+            <div class="stat-row"><span class="stat-label">Mise obligatoire:</span><span class="stat-value highlight" id="joinStakeDisplay">0 F</span></div>
+            <div class="stat-row"><span class="stat-label">Cagnotte actuelle:</span><span class="stat-value" id="joinPoolDisplay">0 F</span></div>
+            <div class="stat-row"><span class="stat-label">Temps restant:</span><span class="stat-value timer" id="joinTimeDisplay">--:--</span></div>
+        </div>
+
+        <label style="font-size: 13px; font-weight: 600; display:block; margin-bottom: 8px; color:var(--text-main);">Participants (<span id="joinCountDisplay">0</span>) :</label>
+        <div class="participants-list" id="joinParticipantsList"></div>
+
+        <label style="font-size: 13px; font-weight: 600; display:block; color:var(--text-main);">Votre prédiction :</label>
+        <div id="joinChoicesContainer" class="choices-grid"></div>
+        
+        <button onclick="submitJoinGame()" id="btnSubmitJoin" style="margin-top:10px;">CONFIRMER MA PARTICIPATION</button>
+    </div>
+</div>
+
+<div id="animationModal" class="popup-overlay">
+    <div class="popup-content" style="text-align: center; max-width: 320px;">
+        <h3 style="margin-top:0;">Résultat en cours...</h3>
+        <div class="anim-graphic" id="animIcon">⏳</div>
+        <div class="anim-text" id="animText">Détermination du résultat...</div>
+    </div>
+</div>
+
+<!-- Contenu Principal -->
+<div class="container hidden" id="dashboard-section">
+
+  <!-- WALLET CARD (Modernisé avec palette Bleue) -->
+  <div class="wallet-card">
+    <div class="wallet-header">
+      <span id="clientName">Chargement...</span>
+      <div style="display:flex; gap:8px;">
+        <button onclick="openNotifPopup()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:8px 14px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative; box-shadow:none;">
+          🔔 <span id="notifBadge" style="display:none; position:absolute; top:-4px; right:-4px; background:var(--danger); color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+        </button>
+        <button onclick="openHistoryPopup()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:8px 14px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative; box-shadow:none;">
+          📜 <span id="histBadge" style="display:none; position:absolute; top:-4px; right:-4px; background:var(--danger); color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+        </button>
+      </div>
+    </div>
+    <div class="wallet-main"><div class="amount" id="balanceAmount">0 FCFA</div><div class="label">Solde disponible</div></div>
+  </div>
+
+  <!-- GAMES LOBBY -->
+  <div class="section-title">LOBBY  MULTIJOUEUR</div>
+  <!-- Ajout de la petite explication en haut demandée -->
+  <p class="lobby-desc">Choisissez une manche en cours pour participer, ou lancez votre propre manche en définissant la mise, la durée et votre prédiction.</p>
+  
+  <div class="games-grid" id="gamesGridContainer">
+      <!-- Les cartes des jeux seront générées ici par JS -->
+  </div>
+
+</div>
+
+<script type="module">
+// Importations exactes Firebase (Version fournie 12.7.0) conservées à 100%
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, onSnapshot, runTransaction, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig); 
+const auth = getAuth(app); 
+const db = getFirestore(app);
+
+// Variables Globales conservées à 100%
+let currentUser = null;
+let currentUserName = "";
+window._clientNotifications = []; 
+window._clientHistory = [];
+
+// MOTEUR DE JEUX : Configuration Architecturale
+const GAME_DICTIONARY = {
+    'qna': { 
+        id: 'qna', name: 'Question / Réponse', icon: '🧠', 
+        desc: 'Quelle sera la prochaine tendance du marché ?', 
+        choices: ['Hausse', 'Stable', 'Baisse'] 
+    },
+    'curve': { 
+        id: 'curve', name: 'Courbe', icon: '📈', 
+        desc: 'Prédisez l\'évolution finale de la courbe.', 
+        choices: ['📈 Hausse', '➖ Stable', '📉 Baisse'] 
+    },
+    'dice': { 
+        id: 'dice', name: 'Dé', icon: '🎲', 
+        desc: 'Trouvez la face gagnante du dé.', 
+        choices: ['1', '2', '3', '4', '5', '6'] 
+    },
+    'color': { 
+        id: 'color', name: 'Couleur mystère', icon: '🎨', 
+        desc: 'Quelle sera la couleur tirée au sort ?', 
+        choices: ['🔴 Rouge', '🔵 Bleu', '🟢 Vert', '🟡 Jaune'] 
+    },
+    'number': { 
+        id: 'number', name: 'Nombre mystère', icon: '🔢', 
+        desc: 'Devinez le nombre gagnant (1 à 10).', 
+        choices: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] 
+    }
+};
+
+let activeGamesState = {}; // Stocke l'état en temps réel des parties
+let selectedChoice = null; // Choix temporaire dans les modales
+let actionGameType = null; // Type de jeu en cours d'action
+let actionGameId = null; // ID de la partie en cours d'action
+
+// --- FONCTIONS SYSTÈME DE BASE (Conservées) ---
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        const userRef = doc(db, "users", user.uid);
+        
+        // Utilisation de onSnapshot pour écouter les modifications du profil (solde, historique, notifications) en temps réel
+        onSnapshot(userRef, (snap) => {
+            if(snap.exists()) {
+                const userData = snap.data();
+                if (userData.isAdmin) { window.location.href = "admin.html"; return; }
+                
+                currentUserName = userData.fullName || "Utilisateur";
+                document.getElementById("dashboard-section").classList.remove("hidden");
+                document.getElementById("clientName").textContent = currentUserName;
+                
+                // Le solde se mettra à jour tout seul instantanément ici dès qu'il change dans Firestore
+                document.getElementById("balanceAmount").textContent = userData.balance + " FCFA";
+                
+                window._clientNotifications = userData.notifications || []; 
+                window._clientHistory = userData.history || [];
+                window.updateBadges();
+            }
+        });
+        
+        // Initialiser l'écoute en temps réel des jeux
+        initGamesListener();
+    } else {
+        window.location.href = "principal.html";
+    }
+});
+
+window.showPopup = (title, msg, err=false) => { 
+    document.getElementById("popupTitle").textContent=title; 
+    document.getElementById("popupTitle").style.color=err?"var(--danger)":"var(--success)"; 
+    document.getElementById("popupMessage").innerText=msg; 
+    document.getElementById("customPopup").classList.add("show"); 
+};
+window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
+
+function getSeenCount(k) { return parseInt(localStorage.getItem(`bw_${currentUser?.uid}_${k}`) || "0"); }
+function setSeenCount(k, c) { localStorage.setItem(`bw_${currentUser?.uid}_${k}`, c); }
+
+window.updateBadges = () => {
+  const uN = Math.max(0, window._clientNotifications.length - getSeenCount("notif")); 
+  const uH = Math.max(0, window._clientHistory.length - getSeenCount("hist"));
+  const nb = document.getElementById("notifBadge"); const hb = document.getElementById("histBadge");
+  if(nb) { nb.textContent = uN; nb.style.display = uN > 0 ? "block" : "none"; }
+  if(hb) { hb.textContent = uH; hb.style.display = uH > 0 ? "block" : "none"; }
+};
+
+window.openNotifPopup = () => {
+  const l = document.getElementById("notifPopupList");
+  l.innerHTML = window._clientNotifications.length === 0 ? "<i>Aucune notification.</i>" : [...window._clientNotifications].reverse().map(n => `<div class="notif-item ${n.type==='success'?'notif-success':(n.type==='error'?'notif-error':'notif-info')}"><div style="font-size:11px; margin-bottom:4px; opacity:0.8; font-weight:600;">${new Date(n.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}</div><div>${n.message}</div></div>`).join("");
+  document.getElementById("notifPopup").classList.add("show"); setSeenCount("notif", window._clientNotifications.length); window.updateBadges();
+};
+window.closeNotifPopup = () => document.getElementById("notifPopup").classList.remove("show");
+
+window.openHistoryPopup = () => {
+  const l = document.getElementById("histPopupList");
+  l.innerHTML = window._clientHistory.length === 0 ? "<i>Aucune transaction.</i>" : [...window._clientHistory].reverse().map(h => `<div class="hist-item"><div><strong>${h.type}</strong><br><span style="font-size:11px; color:var(--text-muted);">${new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})} | ${h.desc}</span></div><div class="${h.amount>0?'hist-positive':(h.amount<0?'hist-negative':'hist-neutral')}">${h.amount>0?'+':''}${h.amount} FCFA</div></div>`).join("");
+  document.getElementById("histPopup").classList.add("show"); setSeenCount("hist", window._clientHistory.length); window.updateBadges();
+};
+window.closeHistoryPopup = () => document.getElementById("histPopup").classList.remove("show");
+
+// --- MOTEUR MULTIJOUEUR : ECOUTE & AFFICHAGE ---
+
+function initGamesListener() {
+    const gamesRef = collection(db, "games");
+    // Écouter toutes les manches non payées pour mise à jour en temps réel
+    onSnapshot(gamesRef, (snapshot) => {
+        let newActiveState = {};
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            // Garder en mémoire uniquement les parties actives ou en résolution
+            if(data.status === 'open' || data.status === 'resolving') {
+                if(!newActiveState[data.gameType] || data.endTime > newActiveState[data.gameType].endTime) {
+                    newActiveState[data.gameType] = { id: doc.id, ...data };
+                }
+            }
+        });
+        activeGamesState = newActiveState;
+        renderLobby();
+    });
+
+    // Boucle locale pour le compte à rebours et le déclenchement de résolution
+    setInterval(updateTimersAndCheckResolutions, 1000);
+}
+
+function renderLobby() {
+    const container = document.getElementById('gamesGridContainer');
+    container.innerHTML = '';
+
+    Object.values(GAME_DICTIONARY).forEach(game => {
+        const activeGame = activeGamesState[game.id];
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        
+        let statusBadge = '';
+        let statsHtml = '';
+        let buttonHtml = '';
+
+        if (activeGame) {
+            const isParticipating = activeGame.participants && activeGame.participants.some(p => p.uid === currentUser.uid);
+            const partCount = activeGame.participants ? activeGame.participants.length : 0;
+            
+            if (activeGame.status === 'open') {
+                statusBadge = `<div class="badge-status status-open">● Ouvert</div>`;
+                statsHtml = `
+                    <div class="game-stats">
+                        <div class="stat-row"><span class="stat-label">Mise:</span><span class="stat-value highlight">${activeGame.stake} F</span></div>
+                        <div class="stat-row"><span class="stat-label">Joueurs:</span><span class="stat-value">${partCount}</span></div>
+                        <div class="stat-row"><span class="stat-label">Total:</span><span class="stat-value">${activeGame.pool} F</span></div>
+                        <div class="stat-row"><span class="stat-label">Temps:</span><span class="stat-value timer" id="timer_${activeGame.id}">...</span></div>
+                    </div>
+                `;
+                if(isParticipating) {
+                    buttonHtml = `<button disabled style="background:#e9ecef; color:var(--text-muted); box-shadow:none;">PARTICIPATION ENREGISTRÉE</button>`;
+                } else {
+                    buttonHtml = `<button onclick="openJoinModal('${game.id}')">PARTICIPER</button>`;
+                }
+            } else if (activeGame.status === 'resolving') {
+                statusBadge = `<div class="badge-status status-resolving">⚙️ Résultat...</div>`;
+                statsHtml = `
+                    <div class="game-stats" style="text-align:center; display:flex; flex-direction:column; justify-content:center;">
+                        <strong>🔒 Résultat masqué</strong>
+                        <span style="font-size:11px; color:var(--text-muted); margin-top:4px;">Détermination du gagnant en cours...</span>
+                    </div>
+                `;
+                buttonHtml = `<button disabled style="box-shadow:none;">CLÔTURÉ</button>`;
+            }
+        } else {
+            statusBadge = `<div class="badge-status status-waiting">En attente</div>`;
+            statsHtml = `
+                <div class="game-stats" style="text-align:center; display:flex; flex-direction:column; justify-content:center;">
+                    <span style="color:var(--text-muted);">Aucune manche en cours.</span>
+                    <strong style="margin-top:4px;">Soyez le premier à lancer !</strong>
+                </div>
+            `;
+            buttonHtml = `<button onclick="openCreateModal('${game.id}')" style="background:var(--primary);">LANCER UNE MANCHE</button>`;
+        }
+
+        card.innerHTML = `
+            ${statusBadge}
+            <div class="game-icon">${game.icon}</div>
+            <div class="game-title">${game.name}</div>
+            ${statsHtml}
+            ${buttonHtml}
+        `;
+        container.appendChild(card);
+    });
+}
+
+// --- BOUCLE TEMPS RÉEL (COMPTE A REBOURS & RESOLUTION) ---
+function updateTimersAndCheckResolutions() {
+    const now = Date.now();
+    Object.values(activeGamesState).forEach(game => {
+        if(game.status === 'open') {
+            const timeLeft = game.endTime - now;
+            const timerEl = document.getElementById(`timer_${game.id}`);
+            
+            if(timeLeft <= 0) {
+                if(timerEl) timerEl.textContent = "00:00";
+                // Lancer la transaction de résolution de manière décentralisée sécurisée
+                // Le premier client qui l'exécute valide, les autres échouent silencieusement
+                triggerSecureResolution(game.id, game.gameType);
+            } else {
+                if(timerEl) {
+                    const m = Math.floor(timeLeft / 60000);
+                    const s = Math.floor((timeLeft % 60000) / 1000);
+                    timerEl.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                }
+            }
+        }
+    });
+}
+
+// --- GESTION DES MODALES ET CHOIX ---
+function buildChoicesHtml(gameType) {
+    return GAME_DICTIONARY[gameType].choices.map(choice => 
+        `<div class="choice-btn" onclick="selectChoice(this, '${choice}')">${choice}</div>`
+    ).join('');
+}
+
+window.selectChoice = (element, choice) => {
+    document.querySelectorAll('.choice-btn').forEach(btn => btn.classList.remove('selected'));
+    element.classList.add('selected');
+    selectedChoice = choice;
+};
+
+// --- GESTION DE LA DURÉE PERSONNALISÉE ---
+window.toggleCustomDuration = () => {
+    const val = document.getElementById('createDuration').value;
+    const container = document.getElementById('customDurationContainer');
+    if (val === 'custom') {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+};
+
+// --- CRÉATION DE MANCHE ---
+window.openCreateModal = (gameType) => {
+    actionGameType = gameType;
+    selectedChoice = null;
+    document.getElementById('createGameTitle').textContent = `Créer : ${GAME_DICTIONARY[gameType].name}`;
+    document.getElementById('createChoicesContainer').innerHTML = buildChoicesHtml(gameType);
+    document.getElementById('createStake').value = '';
+    
+    // Reset inputs de durée personnalisée lors de l'ouverture
+    document.getElementById('createDuration').value = '5';
+    window.toggleCustomDuration();
+    document.getElementById('customDurationValue').value = '';
+    
+    document.getElementById('createGameModal').classList.add('show');
+};
+
+window.closeCreateModal = () => document.getElementById('createGameModal').classList.remove('show');
+
+window.submitCreateGame = async () => {
+    const stake = parseInt(document.getElementById('createStake').value);
+    
+    // Logique mise à jour pour calculer "duration" selon le choix (Classique ou Personnalisé)
+    let durationRaw = document.getElementById('createDuration').value;
+    let duration = parseInt(durationRaw);
+
+    if (durationRaw === 'custom') {
+        const customVal = parseInt(document.getElementById('customDurationValue').value);
+        const customUnit = document.getElementById('customDurationUnit').value;
+        
+        if (!customVal || customVal <= 0) return showPopup("Erreur", "Veuillez entrer une durée personnalisée valide supérieure à 0.", true);
+        
+        // Conversion de la durée personnalisée en minutes
+        if (customUnit === 'hours') {
+            duration = customVal * 60;
+        } else if (customUnit === 'days') {
+            duration = customVal * 1440;
+        } else {
+            duration = customVal; // minutes
+        }
+    }
+    
+    if(!stake || stake < 100) return showPopup("Erreur", "La mise minimum est de 100 FCFA.", true);
+    if(!selectedChoice) return showPopup("Erreur", "Veuillez faire un choix (votre prédiction).", true);
+    
+    const btn = document.getElementById('btnSubmitCreate');
+    btn.disabled = true; btn.textContent = "Création...";
+
+    try {
+        const gameRef = doc(collection(db, "games")); // Générer ID auto
+        
+        // Transaction pour créer le jeu ET débiter l'utilisateur atomiquement
+        await runTransaction(db, async (transaction) => {
+            const userRef = doc(db, "users", currentUser.uid);
+            const userDoc = await transaction.get(userRef);
+            
+            if(userDoc.data().balance < stake) {
+                throw new Error("Solde insuffisant pour créer cette manche.");
+            }
+
+            const now = Date.now();
+            // L'ancienne logique reste identique : conversion en millisecondes conservée
+            const endTime = now + (duration * 60000);
+            
+            // Nouveau solde et historique
+            const newBalance = userDoc.data().balance - stake;
+            const historyEntry = {
+                date: new Date().toISOString(), type: 'Jeu - Création Manche',
+                amount: -stake, desc: `Mise (${GAME_DICTIONARY[actionGameType].name})`
+            };
+
+            // Création du document Jeu (Structure de données stricte)
+            transaction.set(gameRef, {
+                gameType: actionGameType,
+                status: 'open',
+                stake: stake,
+                createdAt: now,
+                endTime: endTime,
+                pool: stake,
+                participants: [{
+                    uid: currentUser.uid,
+                    name: currentUserName, // Prénom uniquement, pas d'UID côté public
+                    choice: selectedChoice,
+                    stake: stake
+                }]
+            });
+
+            // Mise à jour Utilisateur
+            transaction.update(userRef, {
+                balance: newBalance,
+                history: arrayUnion(historyEntry)
+            });
+        });
+
+        closeCreateModal();
+        showPopup("Succès", "La manche a été créée avec succès. En attente d'autres joueurs !");
+    } catch(error) {
+        showPopup("Erreur", error.message, true);
+    } finally {
+        btn.disabled = false; btn.textContent = "CRÉER & PARTICIPER";
+    }
+};
+
+// --- REJOINDRE UNE MANCHE ---
+window.openJoinModal = (gameType) => {
+    const game = activeGamesState[gameType];
+    if(!game) return;
+    
+    actionGameId = game.id;
+    selectedChoice = null;
+    
+    document.getElementById('joinGameTitle').textContent = `Rejoindre : ${GAME_DICTIONARY[gameType].name}`;
+    document.getElementById('joinStakeDisplay').textContent = `${game.stake} F`;
+    document.getElementById('joinPoolDisplay').textContent = `${game.pool} F`;
+    document.getElementById('joinCountDisplay').textContent = game.participants ? game.participants.length : 0;
+    
+    const partsHtml = (game.participants || []).map(p => 
+        `<div class="participant-item"><span>👤 ${p.name}</span><strong>${p.stake} F</strong></div>`
+    ).join('');
+    document.getElementById('joinParticipantsList').innerHTML = partsHtml || '<i>Aucun participant</i>';
+    
+    document.getElementById('joinChoicesContainer').innerHTML = buildChoicesHtml(gameType);
+    
+    document.getElementById('joinGameModal').classList.add('show');
+};
+
+window.closeJoinModal = () => document.getElementById('joinGameModal').classList.remove('show');
+
+window.submitJoinGame = async () => {
+    if(!selectedChoice) return showPopup("Erreur", "Veuillez choisir votre prédiction.", true);
+    
+    const btn = document.getElementById('btnSubmitJoin');
+    btn.disabled = true; btn.textContent = "Validation...";
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const userRef = doc(db, "users", currentUser.uid);
+            const gameRef = doc(db, "games", actionGameId);
+            
+            const userDoc = await transaction.get(userRef);
+            const gameDoc = await transaction.get(gameRef);
+            
+            if(!gameDoc.exists() || gameDoc.data().status !== 'open') {
+                throw new Error("Cette manche est fermée ou n'existe plus.");
+            }
+            if(gameDoc.data().endTime <= Date.now()) {
+                throw new Error("Le temps est écoulé pour cette manche.");
+            }
+            
+            const stakeRequired = gameDoc.data().stake;
+            if(userDoc.data().balance < stakeRequired) {
+                throw new Error("Solde insuffisant pour la mise requise.");
+            }
+            
+            const participants = gameDoc.data().participants || [];
+            if(participants.some(p => p.uid === currentUser.uid)) {
+                throw new Error("Vous participez déjà à cette manche.");
+            }
+
+            const newBalance = userDoc.data().balance - stakeRequired;
+            const newPool = gameDoc.data().pool + stakeRequired;
+            
+            participants.push({
+                uid: currentUser.uid,
+                name: currentUserName,
+                choice: selectedChoice,
+                stake: stakeRequired
+            });
+
+            const historyEntry = {
+                date: new Date().toISOString(), type: 'Jeu - Participation',
+                amount: -stakeRequired, desc: `Mise (${GAME_DICTIONARY[gameDoc.data().gameType].name})`
+            };
+
+            transaction.update(userRef, {
+                balance: newBalance,
+                history: arrayUnion(historyEntry)
+            });
+            
+            transaction.update(gameRef, {
+                pool: newPool,
+                participants: participants
+            });
+        });
+
+        closeJoinModal();
+        showPopup("Succès", "Votre participation est enregistrée. Résultat à la fin du chrono !");
+    } catch(error) {
+        showPopup("Erreur", error.message, true);
+    } finally {
+        btn.disabled = false; btn.textContent = "CONFIRMER MA PARTICIPATION";
+    }
+};
+
+// --- MOTEUR DE RÉSOLUTION SÉCURISÉ (Transaction Atomique) ---
+// Note: Exécuté côté client pour la démo fonctionnelle. La transaction garantit 
+// qu'un seul client peut clôturer la manche, empêchant les doubles paiements.
+async function triggerSecureResolution(gameId, gameType) {
+    const gameRef = doc(db, "games", gameId);
+    
+    try {
+        // ETAPE 1 : Verrouiller la partie (Empêcher d'autres clients d'essayer)
+        const locked = await runTransaction(db, async (transaction) => {
+            const docSnap = await transaction.get(gameRef);
+            if(docSnap.data().status === 'open') {
+                transaction.update(gameRef, { status: 'resolving' });
+                return docSnap.data();
+            }
+            return null; // Déjà traité par un autre
+        });
+
+        if(!locked) return; // Un autre utilisateur a déjà verrouillé la manche.
+        
+        // --- ANIMATION VISUELLE ---
+        showAnimation(gameType);
+
+        // --- GÉNÉRATION DU RÉSULTAT ---
+        const choices = GAME_DICTIONARY[gameType].choices;
+        // Génération stricte du résultat final
+        const finalResult = choices[Math.floor(Math.random() * choices.length)];
+        
+        // --- DÉTERMINATION DES GAGNANTS & COMMISSION ---
+        const participants = locked.participants || [];
+        const totalPool = locked.pool;
+        const commission = totalPool * 0.10; // 10% pour Brainy Wallet
+        const availableForWinners = totalPool - commission;
+        
+        const winners = participants.filter(p => p.choice === finalResult);
+        const winAmountPerUser = winners.length > 0 ? Math.floor(availableForWinners / winners.length) : 0;
+
+        // ETAPE 2 : PAIEMENT ATOMIQUE (Prévention stricte du double paiement)
+        await runTransaction(db, async (transaction) => {
+            // Lecture de la partie pour vérifier l'état
+            const checkSnap = await transaction.get(gameRef);
+            if(checkSnap.data().status !== 'resolving') throw "Déjà payé.";
+
+            // Si des gagnants existent, mettre à jour leurs portefeuilles
+            if(winners.length > 0) {
+                for(let winner of winners) {
+                    const uRef = doc(db, "users", winner.uid);
+                    const uSnap = await transaction.get(uRef);
+                    if(uSnap.exists()) {
+                        const newBal = uSnap.data().balance + winAmountPerUser;
+                        const notif = {
+                            date: new Date().toISOString(), type: 'success',
+                            message: `🎉 Gagné ! Jeu: ${GAME_DICTIONARY[gameType].name}. Résultat: ${finalResult}. Gain: ${winAmountPerUser} FCFA.`
+                        };
+                        const hist = {
+                            date: new Date().toISOString(), type: 'Jeu - Gain',
+                            amount: winAmountPerUser, desc: `Victoire (${GAME_DICTIONARY[gameType].name})`
+                        };
+                        transaction.update(uRef, {
+                            balance: newBal,
+                            history: arrayUnion(hist),
+                            notifications: arrayUnion(notif)
+                        });
+                    }
+                }
+            }
+
+            // Marquer la partie comme terminée et payée
+            transaction.update(gameRef, {
+                status: 'paid',
+                result: finalResult,
+                commissionBrainyWallet: commission,
+                distributedAmount: winners.length > 0 ? availableForWinners : 0,
+                winnersUids: winners.map(w => w.uid)
+            });
+        });
+
+        // Mettre à jour l'interface locale après 3 secondes d'animation
+        setTimeout(() => {
+            hideAnimation();
+            const amIWinner = winners.some(w => w.uid === currentUser.uid);
+            const amIParticipant = participants.some(p => p.uid === currentUser.uid);
+            
+            if(amIWinner) {
+                showPopup("Fin de la manche !", `🎉 INCROYABLE !\n\nLe résultat était : ${finalResult}.\nVous remportez ${winAmountPerUser} FCFA !`);
+            } else if (amIParticipant) {
+                showPopup("Fin de la manche !", `Dommage...\n\nLe résultat était : ${finalResult}.\nRetentez votre chance !`, true);
+            }
+        }, 3500);
+
+    } catch (e) {
+        console.log("Transaction de résolution ignorée (gérée par un autre client) ou erreur:", e);
+    }
+}
+
+// --- ANIMATIONS ---
+function showAnimation(gameType) {
+    const modal = document.getElementById('animationModal');
+    const icon = document.getElementById('animIcon');
+    const text = document.getElementById('animText');
+    
+    modal.classList.add('show');
+    
+    if(gameType === 'curve') { icon.textContent = '📈📉📈'; text.textContent = "Analyse de la courbe en cours..."; }
+    else if(gameType === 'dice') { icon.textContent = '🎲'; text.textContent = "Lancement du dé..."; }
+    else if(gameType === 'color') { icon.textContent = '🎨'; text.textContent = "Mélange des couleurs..."; }
+    else { icon.textContent = '⏳'; text.textContent = "Calcul du résultat..."; }
+}
+
+function hideAnimation() {
+    document.getElementById('animationModal').classList.remove('show');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,620 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW - Trading</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* --- RESPONSIVE & TYPOGRAPHY --- */
+:root {
+  --primary: #007bff;
+  --success: #28a745;
+  --danger: #dc3545;
+  --info: #17a2b8;
+  --warning: #ffcc00;
+}
+body { 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background: #f0f6ff; 
+    margin: 0; 
+    box-sizing: border-box; 
+}
+.container { 
+    width: 95%; 
+    max-width: 700px; 
+    margin: clamp(15px, 4vw, 30px) auto; 
+    background: white; 
+    padding: clamp(15px, 5vw, 25px); 
+    border-radius: 15px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+    box-sizing: border-box; 
+}
+
+/* Inputs & Buttons */
+input, button, select { 
+    width: 100%; 
+    padding: clamp(10px, 3vw, 12px); 
+    margin: 8px 0; 
+    border-radius: 8px; 
+    border: 1px solid #ccc; 
+    box-sizing: border-box; 
+    font-size: clamp(14px, 3.5vw, 16px); 
+}
+button { 
+    background: var(--primary); 
+    color: white; 
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: background 0.2s, transform 0.1s; 
+}
+button:active { transform: scale(0.98); }
+button:disabled { background: #aaa; cursor: not-allowed; }
+
+.message { text-align: center; font-weight: bold; margin-top: 10px; }
+
+/* Wallet Card */
+.wallet-card { 
+    background: linear-gradient(135deg, #0a7a18, #0f9d2f); 
+    color: white; 
+    border-radius: 18px; 
+    padding: clamp(15px, 5vw, 20px); 
+    box-shadow: 0 4px 12px rgba(10, 122, 24, 0.3);
+}
+.wallet-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    font-weight: bold; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+}
+.wallet-main { margin: 20px 0; }
+.amount { font-size: clamp(22px, 6vw, 28px); font-weight: bold; }
+.label { font-size: clamp(12px, 3vw, 14px); opacity: 0.9; }
+
+/* Affiliates Section */
+.affiliate-stats { 
+    background: rgba(255,255,255,0.15); 
+    border-radius: 8px; 
+    padding: 10px; 
+    margin-top: 15px; 
+    margin-bottom: 5px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+}
+.affiliate-box { flex: 1; text-align: center; min-width: 25%; }
+.affiliate-box:nth-child(2) { border-left: 1px solid rgba(255,255,255,0.2); border-right: 1px solid rgba(255,255,255,0.2); padding: 0 5px; }
+.affiliate-title { font-size: clamp(10px, 2.5vw, 11px); opacity: 0.9; }
+.affiliate-value { font-size: clamp(14px, 4vw, 16px); color: #fff; font-weight: bold; }
+
+/* Wallet Footer Boxes */
+.wallet-footer { display: flex; gap: 10px; flex-wrap: wrap; }
+.box { 
+    flex: 1; 
+    min-width: 45%; 
+    background: rgba(255,255,255,0.15); 
+    border-radius: 12px; 
+    padding: 10px; 
+    text-align: center; 
+}
+.box-title { font-size: clamp(11px, 3vw, 12px); }
+.box-amount { font-size: clamp(14px, 4vw, 16px); font-weight: bold; margin-top: 5px; }
+
+/* LISTES ET POPUPS */
+.scroll-box { max-height: 250px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd; text-align: left; font-size: clamp(12px, 3.5vw, 14px); margin-bottom: 15px; }
+.hist-item { border-bottom: 1px dashed #ccc; padding: 8px 0; display:flex; justify-content: space-between; align-items: center;}
+.hist-positive { color: green; font-weight: bold; } .hist-negative { color: red; font-weight: bold; } .hist-neutral { color: #555; font-weight: bold; }
+.notif-item { padding: 10px; margin-bottom: 8px; border-radius: 5px; font-size: 13px; line-height:1.4; }
+.notif-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.notif-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.notif-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+/* TRADING UI */
+.trading-panel { border: 2px solid var(--info); border-radius: 12px; padding: clamp(10px, 4vw, 20px); margin-top: 20px; background: #f8fbff; }
+.trading-val { font-size: clamp(28px, 8vw, 36px); font-weight: bold; text-align: center; margin: 10px 0; color: var(--primary); }
+.trading-val.up { color: var(--success); }
+.trading-val.down { color: var(--danger); }
+.timer { font-size: clamp(11px, 3vw, 13px); color: var(--danger); font-weight: bold; display: block; margin-top: 5px; }
+.trading-inputs-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+.trading-inputs-grid > div { flex: 1; min-width: 140px; }
+
+/* POPUPS GLOBAUX */
+.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+.popup-overlay.show { opacity: 1; visibility: visible; }
+.popup-content { background: white; padding: clamp(15px, 5vw, 25px); border-radius: 12px; text-align: center; max-width: 320px; width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3); transform: translateY(-20px); transition: transform 0.3s ease; }
+.popup-overlay.show .popup-content { transform: translateY(0); }
+.popup-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px; width: 100%; font-size: 15px; }
+#popupMessage { white-space: pre-line; font-size: clamp(13px, 3.5vw, 15px); line-height: 1.5; margin-top: 10px; }
+
+@media (max-width: 480px) {
+    .wallet-header div { width: 100%; display: flex; justify-content: space-between; margin-top: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div id="customPopup" class="popup-overlay"><div class="popup-content"><h3 id="popupTitle">Notification</h3><p id="popupMessage">Message</p><button class="popup-btn" onclick="closePopup()">OK</button></div></div>
+<div id="notifPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:420px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#e0a800; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">🔔 Notifications Récentes</strong><button onclick="closeNotifPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="notifPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div></div></div>
+<div id="histPopup" class="popup-overlay" style="align-items:flex-start; padding-top:40px;"><div class="popup-content" style="max-width:460px; width:92%; max-height:80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;"><div style="background:#17a2b8; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;"><strong style="font-size:16px;">📜 Historique des Transactions</strong><button onclick="closeHistoryPopup()" style="background:rgba(0,0,0,0.2); border:none; color:white; font-size:18px; cursor:pointer; border-radius:50%; width:30px; height:30px; line-height:30px; padding:0; margin:0;">✕</button></div><div id="histPopupList" style="overflow-y:auto; padding:12px; flex:1; background:white; border-radius:0 0 12px 12px; min-height:200px; font-size:13px;"></div></div></div>
+
+<div class="container hidden" id="dashboard-section">
+
+  <div class="wallet-card">
+    <div class="wallet-header">
+      <span id="clientName">Chargement...</span>
+      <div style="display:flex; gap:8px;">
+        <button onclick="openNotifPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:6px 12px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
+          🔔 Notifs <span id="notifBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+        </button>
+        <button onclick="openHistoryPopup()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:6px 12px; border-radius:20px; font-size:13px; cursor:pointer; width:auto; margin:0; position:relative;">
+          📜 Historique <span id="histBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center;"></span>
+        </button>
+      </div>
+    </div>
+    <div class="affiliate-stats">
+      <div class="affiliate-box" style="text-align:left;"><div class="affiliate-title">Code Affilié</div><strong id="myAffiliateCodeDisplay" class="affiliate-value" style="letter-spacing: 1px;">---</strong></div>
+      <div class="affiliate-box"><div class="affiliate-title">Gains Parrainage (3%)</div><strong id="myAffiliateBonusDisplay" class="affiliate-value">0 FCFA</strong></div>
+      <div class="affiliate-box" style="text-align:right;"><div class="affiliate-title">Total Affiliés</div><strong id="myAffiliatesCountDisplay" class="affiliate-value">0</strong></div>
+    </div>
+    <div class="wallet-main"><div class="amount" id="balanceAmount">0 FCFA</div><div class="label">Solde disponible</div></div>
+    <div class="wallet-footer">
+      <div class="box"><div class="box-title">Solde total généré</div><div class="box-amount" id="totalGenerated">0 FCFA</div></div>
+      <div class="box"><div class="box-title">Payé</div><div class="box-amount" id="totalWithdrawn">0 FCFA</div></div>
+    </div>
+  </div>
+
+  <div class="trading-panel">
+    <h3 style="color:#007bff; margin-top:0; border-bottom:1px solid #ccc; padding-bottom:5px;">Trading en Temps Réel</h3>
+    
+    <canvas id="tradingChart" height="100"></canvas>
+    <div id="currentValueDisplay" class="trading-val">0</div>
+
+    <div class="trading-inputs-grid">
+        <div>
+            <label style="font-size:clamp(11px, 3vw, 12px); font-weight:bold; color:#555;">Votre nombre cible (-20 à +20)</label>
+            <input type="number" id="tradeTarget" placeholder="Ex: 5" min="-20" max="20">
+        </div>
+        <div>
+            <label style="font-size:clamp(11px, 3vw, 12px); font-weight:bold; color:#555;">Durée de l'investissement</label>
+            <select id="tradeDuration">
+                <option value="1">1 Minute</option>
+                <option value="3">3 Minutes</option>
+                <option value="5">5 Minutes</option>
+                <option value="30">30 Minutes</option>
+                <option value="60">1 Heure</option>
+                <option value="300">5 Heures</option>
+                <option value="1440">1 Journée</option>
+            </select>
+        </div>
+    </div>
+
+    <label style="font-size:clamp(11px, 3vw, 12px); font-weight:bold; color:#555; display:block; margin-top:5px;">Prédiction de la courbe (à la fin de la durée)</label>
+    <select id="tradePrediction">
+        <option value="above">Au-dessus de mon nombre</option>
+        <option value="equal">Égal à mon nombre</option>
+        <option value="below">En dessous de mon nombre</option>
+    </select>
+
+    <label style="font-size:clamp(11px, 3vw, 12px); font-weight:bold; color:#555; display:block; margin-top:5px;">Montant de la mise (FCFA)</label>
+    <input type="number" id="tradeStake" placeholder="Montant à investir">
+
+    <button id="btnPlaceTrade" onclick="placeTrade()" style="background:#17a2b8; margin-top:10px;">Investir et Valider (Gain +30%)</button>
+  </div>
+
+  <h4 style="text-align:left; color:#17a2b8; border-bottom:1px solid #ddd; padding-bottom:5px; margin-top:20px;">Mes Trades en cours</h4>
+  <div id="activeTradesList" class="scroll-box"><i>Aucun trade en cours...</i></div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+
+let currentUser = null;
+let currentChartValue = 0;
+let tradeTimers = [];
+window._clientNotifications = []; window._clientHistory = [];
+
+// Phrases de motivation aléatoires
+const motivations = [
+    "Continue, la prochaine sera peut-être la bonne !",
+    "Tu peux encore gagner gros !",
+    "Ne baisse pas les bras, tente encore ta chance !",
+    "Les meilleurs gains arrivent parfois au bon moment !",
+    "Garde le cap, ton instinct de trader va payer !",
+    "Chaque trade est une nouvelle opportunité de succès !"
+];
+
+// ==========================================
+// 1. GESTION DU GRAPHIQUE ALEATOIRE
+// ==========================================
+const ctx = document.getElementById('tradingChart').getContext('2d');
+let chartData = Array(30).fill(0);
+let chartLabels = Array(30).fill('');
+
+let tradingChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: chartLabels,
+        datasets: [{
+            label: 'Valeur du Marché',
+            data: chartData,
+            borderColor: '#17a2b8',
+            backgroundColor: 'rgba(23, 162, 184, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0
+        }]
+    },
+    options: {
+        animation: false,
+        plugins: { legend: { display: false } },
+        scales: { 
+            y: { min: -50, max: 50 },
+            x: { display: false }
+        }
+    }
+});
+
+setInterval(() => {
+    let change = Math.floor(Math.random() * 11) - 5;
+    currentChartValue += change;
+    if (currentChartValue > 45) currentChartValue = 45;
+    if (currentChartValue < -45) currentChartValue = -45;
+    
+    if(Math.random() > 0.5) currentChartValue = Math.floor(Math.random() * 91) - 45;
+
+    chartData.push(currentChartValue);
+    chartData.shift();
+    tradingChart.update();
+
+    const display = document.getElementById("currentValueDisplay");
+    display.textContent = currentChartValue;
+    if(currentChartValue > 0) { display.classList.add('up'); display.classList.remove('down'); }
+    else if(currentChartValue < 0) { display.classList.add('down'); display.classList.remove('up'); }
+    else { display.classList.remove('up'); display.classList.remove('down'); }
+
+}, 1000);
+
+// ==========================================
+// 2. INITIALISATION ET SÉCURITÉ DE SESSION
+// ==========================================
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if(snap.exists()) {
+            const userData = snap.data();
+            if (userData.isAdmin) { window.location.href = "admin.html"; return; }
+            
+            document.getElementById("dashboard-section").classList.remove("hidden");
+            document.getElementById("clientName").textContent = userData.fullName;
+            document.getElementById("myAffiliateCodeDisplay").textContent = userData.myAffiliateCode || "---";
+            document.getElementById("myAffiliatesCountDisplay").textContent = userData.affiliatesCount || 0;
+            document.getElementById("myAffiliateBonusDisplay").textContent = (userData.totalAffiliateBonus || 0) + " FCFA";
+            document.getElementById("balanceAmount").textContent = userData.balance + " FCFA";
+            document.getElementById("totalGenerated").textContent = (userData.totalGenerated || 0) + " FCFA";
+            document.getElementById("totalWithdrawn").textContent = (userData.totalWithdrawn || 0) + " FCFA";
+
+            // RÉSOLUTION AUTOMATIQUE DES TRADES HORS LIGNE
+            let trades = userData.trades || [];
+            let hasExpired = false;
+            let offlineResolves = [];
+            let now = Date.now();
+
+            for (let i = 0; i < trades.length; i++) {
+                if (trades[i].status === "en cours" && new Date(trades[i].expiryDate).getTime() <= now) {
+                    // Simulation de la valeur au moment de l'expiration hors-ligne
+                    let finalValue = Math.floor(Math.random() * 41) - 20; 
+                    let isWin = false;
+                    
+                    if (trades[i].prediction === 'above' && finalValue > trades[i].target) isWin = true;
+                    else if (trades[i].prediction === 'below' && finalValue < trades[i].target) isWin = true;
+                    else if (trades[i].prediction === 'equal' && finalValue === trades[i].target) isWin = true;
+
+                    trades[i].status = isWin ? "gagné" : "perdu";
+                    trades[i].closeValue = finalValue;
+
+                    let profit = isWin ? Math.floor(trades[i].stake * 1.3) : 0;
+                    userData.balance += profit;
+                    
+                    let histDesc = `Fin de période (Hors ligne). Courbe: ${finalValue}. ${isWin ? 'Prédiction correcte.' : 'Prédiction incorrecte. Mise perdue.'}`;
+                    let notifMessage = `Fin de période ! La courbe s'est arrêtée à ${finalValue}. Votre prédiction était ${isWin ? 'correcte. Vous gagnez '+profit+' FCFA.' : 'fausse. Vous perdez votre mise de '+trades[i].stake+' FCFA.'}`;
+                    
+                    // Ajout du message de motivation aléatoire
+                    let randomQuote = motivations[Math.floor(Math.random() * motivations.length)];
+                    notifMessage += `\n\n💡 ${randomQuote}`;
+
+                    let newHistory = {date: new Date().toISOString(), type: isWin?'Gain Trading':'Perte Trading', amount: isWin ? profit : 0, desc: histDesc};
+                    let newNotif = {date: new Date().toISOString(), message: notifMessage, type: isWin?'success':'error'};
+                    
+                    userData.history = userData.history || [];
+                    userData.notifications = userData.notifications || [];
+                    
+                    userData.history.push(newHistory);
+                    userData.notifications.push(newNotif);
+                    offlineResolves.push({ isWin, notifMessage });
+                    hasExpired = true;
+                }
+            }
+
+            if (hasExpired) {
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    balance: userData.balance,
+                    trades: trades,
+                    history: userData.history,
+                    notifications: userData.notifications
+                });
+                document.getElementById("balanceAmount").textContent = userData.balance + " FCFA";
+                
+                if (offlineResolves.length > 0) {
+                    let finalTitle = offlineResolves.length > 1 ? "Résultats de vos trades en attente" : (offlineResolves[0].isWin ? "Résultat du Trading : GAGNÉ 🎉" : "Résultat du Trading : PERDU ❌");
+                    let finalMsg = offlineResolves.map(o => o.notifMessage).join('\n\n---\n\n');
+                    showPopup(finalTitle, finalMsg, offlineResolves.every(o => !o.isWin));
+                }
+            }
+            
+            window._clientHistory = userData.history || [];
+            window._clientNotifications = userData.notifications || [];
+            window.updateBadges();
+            
+            checkAndRenderTrades(userData);
+        }
+    } else {
+        window.location.href = "principal.html";
+    }
+});
+
+// POPUPS ET UTILS GLOBAUX
+// Modification pour utiliser innerText afin de supporter les retours à la ligne
+window.showPopup = (title, msg, err=false) => { document.getElementById("popupTitle").textContent=title; document.getElementById("popupTitle").style.color=err?"#dc3545":"#28a745"; document.getElementById("popupMessage").innerText=msg; document.getElementById("customPopup").classList.add("show"); };
+window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
+
+function getSeenCount(k) { return parseInt(localStorage.getItem(`bw_${currentUser.uid}_${k}`) || "0"); }
+function setSeenCount(k, c) { localStorage.setItem(`bw_${currentUser.uid}_${k}`, c); }
+
+window.updateBadges = () => {
+  const uN = Math.max(0, window._clientNotifications.length - getSeenCount("notif"));
+  const uH = Math.max(0, window._clientHistory.length - getSeenCount("hist"));
+  const nb = document.getElementById("notifBadge"); const hb = document.getElementById("histBadge");
+  if(nb) { nb.textContent = uN; nb.style.display = uN > 0 ? "block" : "none"; }
+  if(hb) { hb.textContent = uH; hb.style.display = uH > 0 ? "block" : "none"; }
+};
+
+window.openNotifPopup = () => {
+  const l = document.getElementById("notifPopupList");
+  l.innerHTML = window._clientNotifications.length === 0 ? "<i>Aucune notification.</i>" : [...window._clientNotifications].reverse().map(n => `<div class="notif-item ${n.type==='success'?'notif-success':(n.type==='error'?'notif-error':'notif-info')}"><div style="font-size:11px; margin-bottom:3px; opacity:0.8;">${new Date(n.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}</div><div>${n.message}</div></div>`).join("");
+  document.getElementById("notifPopup").classList.add("show"); setSeenCount("notif", window._clientNotifications.length); window.updateBadges();
+};
+window.closeNotifPopup = () => document.getElementById("notifPopup").classList.remove("show");
+
+window.openHistoryPopup = () => {
+  const l = document.getElementById("histPopupList");
+  l.innerHTML = window._clientHistory.length === 0 ? "<i>Aucune transaction.</i>" : [...window._clientHistory].reverse().map(h => `<div class="hist-item"><div><strong>${h.type}</strong><br><span style="font-size:11px; color:#666;">${new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})} | ${h.desc}</span></div><div class="${h.amount>0?'hist-positive':(h.amount<0?'hist-negative':'hist-neutral')}">${h.amount>0?'+':''}${h.amount} FCFA</div></div>`).join("");
+  document.getElementById("histPopup").classList.add("show"); setSeenCount("hist", window._clientHistory.length); window.updateBadges();
+};
+window.closeHistoryPopup = () => document.getElementById("histPopup").classList.remove("show");
+
+// ==========================================
+// 3. LOGIQUE METIER DU TRADING
+// ==========================================
+
+window.placeTrade = async () => {
+    if(!currentUser) return;
+    const target = parseInt(document.getElementById("tradeTarget").value);
+    const duration = parseInt(document.getElementById("tradeDuration").value);
+    const prediction = document.getElementById("tradePrediction").value;
+    const stake = parseInt(document.getElementById("tradeStake").value);
+
+    if (isNaN(target) || target < -20 || target > 20) return showPopup("Attention", "Le nombre cible doit être entre -20 et 20.", true);
+    if (isNaN(stake) || stake <= 0) return showPopup("Attention", "Mise invalide.", true);
+
+    const btn = document.getElementById("btnPlaceTrade");
+    btn.disabled = true;
+
+    try {
+        const userRef = doc(db, "users", currentUser.uid);
+        const snap = await getDoc(userRef);
+        let userData = snap.data();
+
+        if (userData.balance < stake) {
+            btn.disabled = false;
+            return showPopup("Attention", "Votre solde est insuffisant pour miser cette somme.", true);
+        }
+
+        let expiry = new Date();
+        expiry.setMinutes(expiry.getMinutes() + duration);
+
+        let tradeId = "TRD_" + Date.now();
+        let predictionText = prediction === 'above' ? 'Au-dessus de' : (prediction === 'below' ? 'En dessous de' : 'Égal à');
+
+        const newTrade = {
+            id: tradeId,
+            stake: stake,
+            target: target,
+            prediction: prediction,
+            expiryDate: expiry.toISOString(),
+            status: "en cours",
+            date: new Date().toISOString()
+        };
+
+        let updatedBalance = userData.balance - stake;
+        
+        let newHistory = {date: new Date().toISOString(), type: 'Investissement Trading', amount: -stake, desc: `Mise: ${stake}F, Cible: ${predictionText} ${target}`};
+        let newNotif = {date: new Date().toISOString(), message: `Votre investissement de ${stake} FCFA a été validé avec succès. Fin prévue dans ${duration > 60 ? (duration/60)+' heure(s)' : duration + ' minute(s)'}.`, type: 'info'};
+
+        await updateDoc(userRef, {
+            balance: updatedBalance,
+            trades: arrayUnion(newTrade),
+            history: arrayUnion(newHistory),
+            notifications: arrayUnion(newNotif)
+        });
+
+        showPopup("Trade Validé", "La mise a été déduite de votre solde. Le système analysera automatiquement les résultats à la fin du chrono, même si vous quittez la page !", false);
+        
+        document.getElementById("balanceAmount").textContent = updatedBalance + " FCFA";
+        userData.balance = updatedBalance;
+        userData.trades = userData.trades || [];
+        userData.trades.push(newTrade);
+        userData.history.push(newHistory);
+        userData.notifications.push(newNotif);
+        
+        window._clientHistory = userData.history;
+        window._clientNotifications = userData.notifications;
+        updateBadges();
+        
+        checkAndRenderTrades(userData);
+
+    } catch (e) {
+        showPopup("Erreur", "Impossible de valider le trade.", true);
+    }
+    
+    btn.disabled = false;
+    document.getElementById("tradeStake").value = "";
+};
+
+async function checkAndRenderTrades(userData) {
+    const list = document.getElementById("activeTradesList");
+    tradeTimers.forEach(clearInterval); 
+    
+    let trades = userData.trades || [];
+    let activeTrades = trades.filter(t => t.status === "en cours");
+
+    if(activeTrades.length === 0) {
+        list.innerHTML = "<i>Aucun investissement en cours.</i>";
+        return;
+    }
+
+    list.innerHTML = activeTrades.map((t, index) => {
+        let predictionText = t.prediction === 'above' ? 'Au-dessus de' : (t.prediction === 'below' ? 'En dessous de' : 'Égal à');
+        return `<div style="padding: 10px; border-bottom: 1px dashed #ccc; background: white; border-radius:5px; margin-bottom:5px; border-left: 3px solid #17a2b8;">
+            <strong style="color:#007bff;">Mise : ${t.stake} FCFA</strong><br>
+            <span style="font-size:12px; color:#555;">Prédiction : <b>${predictionText} ${t.target}</b></span>
+            <span class="timer" id="trade-timer-${index}">Calcul du temps...</span>
+        </div>`;
+    }).join("");
+
+    activeTrades.forEach((t, index) => {
+        startTradeTimer(t, index, userData);
+    });
+}
+
+function startTradeTimer(trade, index, userData) {
+    const targetTime = new Date(trade.expiryDate).getTime();
+    
+    const timerFunc = setInterval(async () => {
+        const now = new Date().getTime();
+        const diff = targetTime - now;
+        const el = document.getElementById(`trade-timer-${index}`);
+        
+        if(!el) return clearInterval(timerFunc);
+
+        if (diff <= 0) {
+            clearInterval(timerFunc);
+            el.textContent = "Analyse des résultats...";
+            el.style.color = "orange";
+            await resolveTrade(trade, userData);
+        } else {
+            const hrs = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            let timeString = "";
+            if(hrs > 0) timeString += `${hrs}h `;
+            timeString += `${mins}m ${secs}s`;
+            
+            el.textContent = `Temps restant : ${timeString}`;
+        }
+    }, 1000);
+    
+    tradeTimers.push(timerFunc);
+}
+
+// RÉSOUDRE LE RÉSULTAT DU TRADE
+async function resolveTrade(trade, userData) {
+    const userRef = doc(db, "users", currentUser.uid);
+    const snap = await getDoc(userRef);
+    let freshData = snap.data();
+    
+    let trades = freshData.trades || [];
+    let tradeIndex = trades.findIndex(t => t.id === trade.id && t.status === "en cours");
+    
+    if(tradeIndex === -1) return;
+
+    let finalValue = currentChartValue;
+    let isWin = false;
+
+    if (trade.prediction === 'above' && finalValue > trade.target) isWin = true;
+    else if (trade.prediction === 'below' && finalValue < trade.target) isWin = true;
+    else if (trade.prediction === 'equal' && finalValue === trade.target) isWin = true;
+
+    trades[tradeIndex].status = isWin ? "gagné" : "perdu";
+    trades[tradeIndex].closeValue = finalValue;
+
+    let newBalance = freshData.balance;
+    let profit = 0;
+    
+    let histDesc = `Fin de période. Courbe finale: ${finalValue}. `;
+    let histType = '';
+    let histAmount = 0;
+    let notifMessage = '';
+    let notifType = '';
+
+    if (isWin) {
+        profit = Math.floor(trade.stake * 1.3);
+        newBalance += profit;
+        histDesc += `Prédiction correcte.`;
+        histType = 'Gain Trading';
+        histAmount = profit;
+        notifMessage = `Fin de période ! La courbe est à ${finalValue}. Votre prédiction était correcte. Vous gagnez ${profit} FCFA (Mise + 30%).`;
+        notifType = 'success';
+    } else {
+        histDesc += `Prédiction incorrecte. Mise perdue.`;
+        histType = 'Perte Trading';
+        histAmount = 0; // La mise a déjà été retirée au début
+        notifMessage = `Fin de période ! La courbe est à ${finalValue}. Votre prédiction était fausse. Vous perdez votre mise de ${trade.stake} FCFA.`;
+        notifType = 'error';
+    }
+
+    // Ajout d'une citation aléatoire
+    let randomQuote = motivations[Math.floor(Math.random() * motivations.length)];
+    notifMessage += `\n\n💡 ${randomQuote}`;
+
+    let newHistory = {date: new Date().toISOString(), type: histType, amount: histAmount, desc: histDesc};
+    let newNotif = {date: new Date().toISOString(), message: notifMessage, type: notifType};
+
+    await updateDoc(userRef, {
+        balance: newBalance,
+        trades: trades,
+        history: arrayUnion(newHistory),
+        notifications: arrayUnion(newNotif)
+    });
+
+    document.getElementById("balanceAmount").textContent = newBalance + " FCFA";
+    if(isWin) showPopup("Résultat du Trading : GAGNÉ 🎉", notifMessage, false);
+    else showPopup("Résultat du Trading : PERDU ❌", notifMessage, true);
+
+    freshData.balance = newBalance;
+    freshData.trades = trades;
+    freshData.history.push(newHistory);
+    freshData.notifications.push(newNotif);
+    
+    window._clientHistory = freshData.history;
+    window._clientNotifications = freshData.notifications;
+    updateBadges();
+
+    checkAndRenderTrades(freshData);
+}
+</script>
+</body>
+</html>

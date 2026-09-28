@@ -1,0 +1,1078 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BW - Accueil</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ========================================================================= */
+/* --- VARIABLES & RESET --- */
+/* ========================================================================= */
+:root {
+    --bg-color: #f3f6f9;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --primary: #0f172a;
+    --primary-light: #1e293b;
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-yellow: #f59e0b;
+    --accent-red: #ef4444;
+    --card-bg: #ffffff;
+    --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
+    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.08);
+    --shadow-lg: 0 20px 40px -5px rgba(0,0,0,0.12);
+    --border-radius-lg: 24px;
+    --border-radius-md: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+body { background: var(--bg-color); color: var(--text-main); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+
+.container { width: 92%; max-width: 600px; margin: 40px auto; display: flex; flex-direction: column; gap: 24px; animation: slideUp 0.6s ease-out; }
+.hidden { display: none !important; }
+
+.wallet-card {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border-radius: var(--border-radius-lg);
+    padding: 22px 30px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+.wallet-card::before {
+    content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none;
+}
+
+.wallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.user-greeting { font-size: 18px; font-weight: 500; opacity: 0.9; display: flex; align-items: center; gap: 10px; }
+.user-greeting img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); }
+
+.header-badges { display: flex; gap: 8px; }
+.badge-btn {
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    cursor: pointer; position: relative; transition: var(--transition);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.badge-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+.badge-indicator {
+    position: absolute; top: -4px; right: -4px; background: var(--accent-red); color: white;
+    font-size: 10px; font-weight: bold; border-radius: 50%; width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.balance-section { margin-bottom: 20px; }
+.label { font-size: 14px; opacity: 0.8; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.amount { font-size: 42px; font-weight: 700; letter-spacing: -1px; }
+
+/* Glassmorphism Affiliate Box */
+.affiliate-stats {
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-md); padding: 12px; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.aff-box { flex: 1; text-align: center; }
+.aff-box:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.1); }
+.aff-title { font-size: 11px; opacity: 0.7; text-transform: uppercase; margin-bottom: 4px; }
+.aff-val { font-size: 16px; font-weight: 600; }
+
+/* Grid des actions principales */
+.actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.action-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    padding: 15px 10px; border-radius: var(--border-radius-md); border: none;
+    font-weight: 600; font-size: 13px; color: white; cursor: pointer; transition: var(--transition);
+}
+.action-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
+.btn-deposit { background: var(--accent-green); }
+.btn-transfer { background: var(--accent-blue); }
+.btn-withdraw { background: var(--accent-yellow); color: #78350f; }
+.action-icon { font-size: 22px; }
+
+/* Statistiques du bas */
+.wallet-footer { display: flex; gap: 15px; }
+.stat-box {
+    flex: 1; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; text-align: center;
+}
+.stat-box .box-title { font-size: 12px; opacity: 0.7; margin-bottom: 5px; }
+.stat-box .box-amount { font-size: 18px; font-weight: 700; }
+
+/* ========================================================================= */
+/* --- SECTIONS (Annonces) --- */
+/* ========================================================================= */
+.announcements-section {
+    background: var(--card-bg); border-radius: var(--border-radius-lg); padding: 25px;
+    box-shadow: var(--shadow-sm); transition: var(--transition);
+}
+.announcements-section:hover { box-shadow: var(--shadow-md); }
+.section-title { color: var(--primary); font-size: 18px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+
+/* ========================================================================= */
+/* --- ELEMENTS DE FORMULAIRE & BOUTONS --- */
+/* ========================================================================= */
+input, select {
+    width: 100%; padding: 14px 16px; margin: 8px 0 16px; border-radius: 12px;
+    border: 1px solid #e2e8f0; background: #f8fafc; font-size: 15px;
+    transition: var(--transition); outline: none; box-sizing: border-box; color: var(--text-main);
+}
+input:focus, select:focus { border-color: var(--accent-blue); background: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+
+.btn-primary {
+    background: var(--accent-blue); color: white; width: 100%; padding: 14px;
+    border-radius: 12px; border: none; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: var(--transition); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+.btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4); }
+.btn-success { background: var(--accent-green); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+.btn-success:hover { background: #059669; }
+.btn-danger { background: white; color: var(--accent-red); border: 2px solid #fee2e2; box-shadow: none; }
+.btn-danger:hover { background: #fee2e2; transform: translateY(-2px); }
+
+/* ========================================================================= */
+/* --- POPUPS MODERNS --- */
+/* ========================================================================= */
+.popup-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; z-index: 2000;
+    opacity: 0; visibility: hidden; transition: var(--transition);
+}
+.popup-overlay.show { opacity: 1; visibility: visible; }
+.popup-content {
+    background: var(--card-bg); border-radius: var(--border-radius-lg); width: 90%; max-width: 420px;
+    max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: var(--shadow-lg); transform: scale(0.95) translateY(20px); transition: var(--transition);
+}
+.popup-overlay.show .popup-content { transform: scale(1) translateY(0); }
+
+.popup-header {
+    padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; color: white;
+}
+.popup-header h3 { font-size: 18px; font-weight: 600; margin: 0; }
+.close-btn {
+    background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px;
+    border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: var(--transition);
+}
+.close-btn:hover { background: rgba(255,255,255,0.3); transform: rotate(90deg); }
+
+.popup-body { padding: 24px; overflow-y: auto; flex: 1; font-size: 14px; }
+.popup-body.no-pad { padding: 0; }
+
+/* Couleurs des en-têtes de popup */
+.header-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.header-green { background: linear-gradient(135deg, #10b981, #059669); }
+.header-yellow { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.header-dark { background: linear-gradient(135deg, var(--primary), var(--primary-light)); }
+
+/* Listes d'historique et notifs */
+.list-container { padding: 15px; background: #fafafa; }
+.hist-item {
+    background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px;
+    margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: var(--transition);
+}
+.hist-item:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.hist-positive { color: var(--accent-green); font-weight: 700; font-size: 16px; }
+.hist-negative { color: var(--text-main); font-weight: 700; font-size: 16px; }
+.hist-neutral { color: var(--text-muted); font-weight: 700; font-size: 16px; }
+
+.notif-item { padding: 15px; margin-bottom: 12px; border-radius: 12px; font-size: 14px; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.notif-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.notif-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.notif-info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+
+/* ========================================================================= */
+/* --- ASSISTANT FLOTTANT (Temps réel) --- */
+/* ========================================================================= */
+.support-fab {
+    position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px;
+    background: linear-gradient(135deg, var(--accent-blue), #2563eb); border-radius: 50%;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); display: flex; align-items: center; justify-content: center;
+    color: white; border: none; cursor: pointer; z-index: 1000; transition: var(--transition);
+    animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.support-fab::after {
+    content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%;
+    border: 2px solid var(--accent-blue); animation: pulseRipple 2s infinite; opacity: 0;
+}
+.support-fab:hover { transform: scale(1.08) rotate(-5deg); }
+.support-fab svg { width: 28px; height: 28px; fill: currentColor; }
+
+.support-window {
+    position: fixed; bottom: 100px; right: 24px; width: 340px; max-width: 90vw;
+    background: white; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg);
+    display: flex; flex-direction: column; z-index: 1000; overflow: hidden;
+    opacity: 0; visibility: hidden; transform: translateY(20px) scale(0.95);
+    transition: var(--transition); transform-origin: bottom right; border: 1px solid rgba(0,0,0,0.05);
+}
+.support-window.active { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+
+.support-header {
+    background: var(--primary); padding: 20px; display: flex; justify-content: space-between; align-items: center; color: white;
+}
+.support-agent { display: flex; align-items: center; gap: 12px; }
+.support-avatar { position: relative; width: 40px; height: 40px; }
+.support-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); }
+.status-dot {
+    position: absolute; bottom: 0; right: 0; width: 12px; height: 12px;
+    background: var(--accent-green); border: 2px solid var(--primary); border-radius: 50%;
+}
+.support-info h4 { margin: 0; font-size: 15px; font-weight: 600; }
+.support-info p { margin: 0; font-size: 12px; opacity: 0.8; }
+
+.support-body { height: 350px; overflow-y: auto; padding: 20px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+.msg-bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; position: relative; word-wrap: break-word; }
+.msg-bot { background: white; color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: var(--shadow-sm); }
+.msg-user { background: var(--accent-blue); color: white; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 10px rgba(59,130,246,0.2); }
+.msg-time { font-size: 10px; opacity: 0.7; margin-top: 5px; display: block; text-align: right; }
+
+.support-footer { padding: 15px; background: white; border-top: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px; }
+.support-input {
+    flex: 1; padding: 12px 16px; background: #f1f5f9; border: none; border-radius: 20px;
+    font-size: 14px; outline: none; margin: 0;
+}
+.support-send {
+    background: var(--accent-blue); color: white; border: none; width: 40px; height: 40px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: var(--transition); flex-shrink: 0;
+}
+.support-send:hover { background: #2563eb; transform: scale(1.1); }
+
+/* ========================================================================= */
+/* --- ANIMATIONS & RESPONSIVE --- */
+/* ========================================================================= */
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+@keyframes pulseRipple { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.5); opacity: 0; } }
+
+@media (max-width: 600px) {
+    .container { width: 95%; margin: 20px auto; }
+    .wallet-card { padding: 18px 20px; }
+    .amount { font-size: 36px; }
+    .wallet-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+    .header-badges { flex-wrap: wrap; }
+    .actions-grid { gap: 8px; }
+    .action-btn { padding: 12px 5px; font-size: 12px; }
+    .support-window { right: 10px; bottom: 90px; width: calc(100vw - 20px); }
+    .support-fab { bottom: 15px; right: 15px; }
+}
+</style>
+</head>
+<body>
+
+<!-- POPUPS (Design Modernisé, IDs Conservés) -->
+
+<!-- Popup Custom (Alertes générales) -->
+<div id="customPopup" class="popup-overlay">
+    <div class="popup-content" style="max-width: 340px; align-items: center; padding: 30px 20px; text-align: center;">
+        <div style="background:#f1f5f9; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:15px;">
+            <svg fill="currentColor" viewBox="0 0 20 20" width="30" height="30" style="color:var(--text-main)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+        </div>
+        <h3 id="popupTitle" style="margin-bottom:10px; font-size:20px; font-weight:700;">Notification</h3>
+        <p id="popupMessage" style="color:var(--text-muted); font-size:15px; margin-bottom:25px;">Message</p>
+        <button class="btn-primary" onclick="closePopup()" style="width:100%;">Compris</button>
+    </div>
+</div>
+
+<!-- Popup Notifications -->
+<div id="notifPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-yellow">
+            <h3>🔔 Notifications</h3>
+            <button onclick="closeNotifPopup()" class="close-btn">✕</button>
+        </div>
+        <div class="popup-body no-pad">
+            <div id="notifPopupList" class="list-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Historique Transactions -->
+<div id="histPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-blue">
+            <h3>📜 Historique Général</h3>
+            <button onclick="closeHistoryPopup()" class="close-btn">✕</button>
+        </div>
+        <div class="popup-body no-pad">
+            <div id="histPopupList" class="list-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Historique Retraits -->
+<div id="withdrawHistPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-green">
+            <h3>💸 Historique des Retraits</h3>
+            <button onclick="closeWithdrawHistPopup()" class="close-btn">✕</button>
+        </div>
+        <div class="popup-body no-pad">
+            <div id="withdrawHistPopupList" class="list-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Demande de Retrait -->
+<div id="withdrawRequestPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-dark">
+            <h3>Faire un Retrait</h3>
+            <button onclick="closeWithdrawPopup()" class="close-btn">✕</button>
+        </div>
+        <div class="popup-body">
+            <label style="font-weight:600; display:block; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Moyen de retrait</label>
+            <select id="withdrawMethod" onchange="updateWithdrawForm()">
+                <option value="direct">Mobile Money (Direct)</option>
+                <option value="brainy">BRAINY AGENCY (Togo)</option>
+                <option value="moneyfusion">MoneyFusion (Bénin)</option>
+            </select>
+            
+            <div id="withdrawFormFields"></div>
+            
+            <label style="font-weight:600; display:block; margin-top:15px; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Montant (FCFA)</label>
+            <input type="number" id="newWithdrawAmount" placeholder="Ex: 5000">
+            
+            <button onclick="submitWithdrawal()" class="btn-primary" style="margin-top:15px;">Confirmer le retrait</button>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Popup Transfert 
+<div id="transferPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-blue">
+            <h3>🔄 Transférer des fonds</h3>
+            <button onclick="closeTransferPopup()" class="close-btn">✕</button>
+        </div>
+        <div class="popup-body">
+            <label style="font-weight:600; display:block; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Email du destinataire</label>
+            <input type="email" id="transferEmail" oninput="searchRecipient()" placeholder="utilisateur@email.com">
+            <div id="transferRecipientName" style="color:var(--accent-green); font-weight:600; font-size:13px; margin-bottom:20px; min-height:18px;"></div>
+            
+            <label style="font-weight:600; display:block; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Montant (FCFA)</label>
+            <input type="number" id="transferAmount" placeholder="Ex: 1000">
+            
+            <button onclick="submitTransfer()" class="btn-primary" style="margin-top:15px;">Envoyer les fonds</button>
+        </div>
+    </div>
+</div> 
+-->
+
+
+
+
+<!-- Popup Dépôt -->
+<div id="depositPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-green">
+            <h3>💳 Recharger le compte</h3>
+            <button onclick="closeDepositPopup()" class="close-btn">✕</button>
+        </div>
+        <div class="popup-body">
+            <div style="background:#fff7ed; border-left:4px solid var(--accent-yellow); padding:15px; border-radius:8px; margin-bottom:20px;">
+                <p style="margin:0; font-size:13px; color:#9a3412; line-height:1.6;">
+                    <strong>Important :</strong> Lors du paiement, utilisez obligatoirement le <b>même nom, email et téléphone</b> que ceux de votre compte BrainyWallet.
+                </p>
+            </div>
+            <button onclick="window.open('https://www.pay.moneyfusion.net/dont_1754810612121/', '_blank')" class="btn-primary btn-success">Procéder au paiement</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Popup Annonce (Dernière annonce active non encore consultée) -->
+<div id="announcementPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header header-blue">
+            <h3 id="annPopupTitle">📢 Annonce</h3>
+        </div>
+        <div class="popup-body">
+            <div id="annPopupDate" style="font-size:12px; color:var(--text-muted); margin-bottom:12px;"></div>
+            <div id="annPopupMessage" style="font-size:14px; color:var(--text-main); white-space:pre-wrap; line-height:1.6;"></div>
+            <button onclick="closeAnnouncementPopup()" class="btn-primary" style="margin-top:20px;">OK</button>
+        </div>
+    </div>
+</div>
+
+<div class="container hidden" id="dashboard-section">
+
+    <div class="wallet-card">
+        <!-- En-tête de la carte -->
+        <div class="wallet-header">
+            <div class="user-greeting">
+                <img src="https://ui-avatars.com/api/?name=U&background=ffffff&color=0f172a" alt="Avatar">
+                <span id="clientName">Chargement...</span>
+            </div>
+            <div class="header-badges">
+                <button onclick="openNotifPopup()" class="badge-btn">
+                    🔔 <span id="notifBadge" class="badge-indicator" style="display:none;"></span>
+                </button>
+                <button onclick="openHistoryPopup()" class="badge-btn">
+                    📜 <span id="histBadge" class="badge-indicator" style="display:none;"></span>
+                </button>
+                <button onclick="openWithdrawHistPopup()" class="badge-btn">
+                    💸
+                </button>
+            </div>
+        </div>
+        
+        <!-- Solde Principal -->
+        <div class="balance-section">
+            <div class="label">Solde Disponible</div>
+            <div class="amount" id="balanceAmount">0 FCFA</div>
+        </div>
+
+        <!-- Boutons d'Action (Grille 3 colonnes) -->
+        <div class="actions-grid">
+            <button onclick="openDepositPopup()" class="action-btn btn-deposit">
+                <div class="action-icon">💳</div> Dépôt
+            </button>
+            <button onclick="openTransferPopup()" class="action-btn btn-transfer">
+                <div class="action-icon">🔄</div> Transférer
+            </button>
+            <button onclick="openWithdrawPopup()" class="action-btn btn-withdraw">
+                <div class="action-icon">🏧</div> Retrait
+            </button>
+        </div>
+        
+        <!-- Infos Parrainage Glassmorphism -->
+        <div class="affiliate-stats">
+            <div class="aff-box">
+                <div class="aff-title">Code Affilié</div>
+                <div class="aff-val" id="myAffiliateCodeDisplay" style="letter-spacing:1px;">---</div>
+            </div>
+            <div class="aff-box">
+                <div class="aff-title">Gains (3%)</div>
+                <div class="aff-val" id="myAffiliateBonusDisplay" style="color:var(--accent-green);">0 FCFA</div>
+            </div>
+            <div class="aff-box">
+                <div class="aff-title">Affiliés</div>
+                <div class="aff-val" id="myAffiliatesCountDisplay">0</div>
+            </div>
+        </div>
+        
+        <!-- Totaux Footer -->
+        <div class="wallet-footer">
+            <div class="stat-box">
+                <div class="box-title">Total Généré</div>
+                <div class="box-amount" id="totalGenerated">0 FCFA</div>
+            </div>
+            <div class="stat-box">
+                <div class="box-title">Total Retiré</div>
+                <div class="box-amount" id="totalWithdrawn">0 FCFA</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Annonces -->
+    <div class="announcements-section">
+        <div class="section-title">
+            <svg fill="currentColor" viewBox="0 0 20 20" width="22" height="22"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
+            Annonces Récentes
+        </div>
+        <div id="announcementsDisplay" style="font-size: 14px; color: var(--text-muted);">
+            <i>Chargement des annonces de l'administration...</i>
+        </div>
+    </div>
+
+    <button onclick="logout()" class="btn-primary btn-danger">Se déconnecter de BrainyWallet</button>
+</div>
+
+
+<!-- Assistant Chat Flottant (Connecté à Firestore) -->
+<button class="support-fab" onclick="toggleSupportChat()" aria-label="Assistance">
+    <svg viewBox="0 0 24 24">
+        <path d="M12 2C6.477 2 2 6.477 2 12c0 1.848.5 3.582 1.383 5.093L2 22l4.907-1.383A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.636 0-3.18-.396-4.52-1.096l-.326-.17-3.16.892.892-3.16-.17-.326A7.954 7.954 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"></path>
+    </svg>
+    <span id="supportBadge" class="badge-indicator" style="display:none;"></span>
+</button>
+
+<div class="support-window" id="supportChatWindow">
+    <div class="support-header">
+        <div class="support-agent">
+            <div class="support-avatar">
+                <img src="https://ui-avatars.com/api/?name=Assistant&background=ffffff&color=0f172a" alt="Assistant">
+                <span class="status-dot"></span>
+            </div>
+            <div class="support-info">
+                <h4>Assistance BW</h4>
+                <p>En ligne</p>
+            </div>
+        </div>
+        <button class="close-btn" onclick="toggleSupportChat()">✕</button>
+    </div>
+    <div class="support-body" id="supportChatBody">
+        <!-- Les messages s'afficheront ici en temps réel -->
+        <div style="text-align:center; color:#64748b; font-size:12px; margin-top:20px;">Chargement de la discussion...</div>
+    </div>
+    <div class="support-footer">
+        <input type="text" class="support-input" id="supportInput" placeholder="Écrivez votre message..." onkeypress="handleSupportEnter(event)">
+        <button class="support-send" onclick="sendSupportMessage()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+        </button>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion, collection, query, orderBy, onSnapshot, getDocs, where, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig); 
+const auth = getAuth(app); 
+const db = getFirestore(app);
+
+let currentUser = null;
+window._clientNotifications = []; 
+window._clientHistory = [];
+window._clientWithdrawRequests = [];
+window._clientSupportMessagesCount = 0; // nb de messages Assistant (pour la badge, même système que notif/hist)
+
+let recipientId = null;
+let recipientDataTemp = null;
+let searchTimeout = null;
+let chatUnsubscribe = null; // Pour le nettoyage si besoin
+
+// --- Suivi du statut utilisateur (léger, réutilise le champ "status" de login.html) ---
+let statusCheckIntervalId = null;
+let lastStatusCheckTime = 0;
+const STATUS_CHECK_INTERVAL_MS = 60000; // vérification périodique toutes les 60s
+const STATUS_CHECK_MIN_GAP_MS = 15000;  // évite de re-vérifier trop souvent au retour au premier plan
+
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if(snap.exists()) {
+            const userData = snap.data();
+            if (userData.isAdmin) { window.location.href = "admin.html"; return; }
+
+            // --- Vérification du statut au chargement (mêmes valeurs que login.html) ---
+            const initialStatus = userData.status || "Actif";
+            lastStatusCheckTime = Date.now();
+            if (initialStatus === "Désactivé" || initialStatus === "Banni") {
+                await window.handleForcedLogout();
+                return;
+            }
+            // Démarre la vérification périodique + au retour au premier plan
+            window.startStatusWatcher();
+            
+            document.getElementById("dashboard-section").classList.remove("hidden");
+            document.getElementById("clientName").textContent = userData.fullName;
+            document.getElementById("myAffiliateCodeDisplay").textContent = userData.myAffiliateCode || "---";
+            document.getElementById("myAffiliatesCountDisplay").textContent = userData.affiliatesCount || 0;
+            document.getElementById("myAffiliateBonusDisplay").textContent = (userData.totalAffiliateBonus || 0) + " FCFA";
+            document.getElementById("balanceAmount").textContent = userData.balance + " FCFA";
+            document.getElementById("totalGenerated").textContent = (userData.totalGenerated || 0) + " FCFA";
+            document.getElementById("totalWithdrawn").textContent = (userData.totalWithdrawn || 0) + " FCFA";
+
+            window._clientNotifications = userData.notifications || [];
+            window._clientHistory = userData.history || [];
+            window._clientWithdrawRequests = userData.withdrawRequests || [];
+            window.updateBadges();
+
+            window.loadAnnouncements();
+            
+            // --- INITIALISATION DU CHAT TEMPS REEL ---
+            initSupportChat(user.uid);
+        }
+    } else {
+        window.location.href = "principal.html";
+    }
+});
+
+/* ========================================================================= */
+/* --- VERIFICATION DU STATUT UTILISATEUR (Actif / Désactivé / Banni) --- */
+/* Réutilise exactement le champ "status" et les valeurs définies dans      */
+/* login.html. Vérification légère : simple lecture ponctuelle du document, */
+/* pas d'écouteur temps réel dédié, pour ne pas alourdir la page.           */
+/* ========================================================================= */
+window.checkUserStatus = async () => {
+    if (!currentUser) return;
+    try {
+        const snap = await getDoc(doc(db, "users", currentUser.uid));
+        lastStatusCheckTime = Date.now();
+        if (!snap.exists()) return;
+        const status = snap.data().status || "Actif";
+        if (status === "Désactivé" || status === "Banni") {
+            await window.handleForcedLogout();
+        }
+    } catch (e) {
+        console.error("Erreur lors de la vérification du statut : ", e);
+    }
+};
+
+window.handleForcedLogout = async () => {
+    if (statusCheckIntervalId) { clearInterval(statusCheckIntervalId); statusCheckIntervalId = null; }
+    document.removeEventListener("visibilitychange", window.handleVisibilityStatusCheck);
+    try { await signOut(auth); } catch (e) { /* déjà déconnecté */ }
+    window.location.href = "principal.html";
+};
+
+window.handleVisibilityStatusCheck = () => {
+    if (document.visibilityState === "visible" && currentUser) {
+        if (Date.now() - lastStatusCheckTime > STATUS_CHECK_MIN_GAP_MS) {
+            window.checkUserStatus();
+        }
+    }
+};
+
+window.startStatusWatcher = () => {
+    if (statusCheckIntervalId) return; // déjà démarré, évite les doublons
+    statusCheckIntervalId = setInterval(window.checkUserStatus, STATUS_CHECK_INTERVAL_MS);
+    document.addEventListener("visibilitychange", window.handleVisibilityStatusCheck);
+};
+
+
+/* ========================================================================= */
+/* --- SYSTEME DE DISCUSSION TEMPS REEL (ASSISTANT) --- */
+/* ========================================================================= */
+function initSupportChat(uid) {
+    if (chatUnsubscribe) return; // écouteur déjà actif, évite un doublon (perf)
+    const q = query(collection(db, "users", uid, "support_messages"), orderBy("date", "asc"));
+    
+    chatUnsubscribe = onSnapshot(q, (snapshot) => {
+        const body = document.getElementById('supportChatBody');
+        
+        if (snapshot.empty) {
+            body.innerHTML = `<div class="msg-bubble msg-bot">
+                Bonjour ! Je suis l'assistant de BrainyWallet. Comment puis-je vous aider avec votre compte aujourd'hui ?
+            </div>`;
+            window._clientSupportMessagesCount = 0;
+            window.updateBadges();
+            return;
+        }
+
+        let html = "";
+        let assistantMsgCount = 0;
+        snapshot.forEach(docSnap => {
+            const msg = docSnap.data();
+            const timeStr = new Date(msg.date).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+            const textEscaped = (msg.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            if (msg.sender === 'user') {
+                html += `<div class="msg-bubble msg-user">${textEscaped} <span class="msg-time" style="color:rgba(255,255,255,0.7)">${timeStr}</span></div>`;
+            } else {
+                html += `<div class="msg-bubble msg-bot">${textEscaped} <span class="msg-time">${timeStr}</span></div>`;
+                assistantMsgCount++;
+            }
+        });
+        
+        body.innerHTML = html;
+        body.scrollTop = body.scrollHeight;
+
+        // --- Badge Assistant : même système que notifBadge / histBadge ---
+        window._clientSupportMessagesCount = assistantMsgCount;
+        const chatWin = document.getElementById('supportChatWindow');
+        if (chatWin && chatWin.classList.contains('active')) {
+            // La discussion est déjà ouverte : les messages sont considérés comme consultés
+            setSeenCount("support", assistantMsgCount);
+        }
+        window.updateBadges();
+    });
+}
+
+window.toggleSupportChat = () => {
+    const win = document.getElementById('supportChatWindow');
+    win.classList.toggle('active');
+    if (win.classList.contains('active')) {
+        // L'utilisateur ouvre la discussion : marquer les messages Assistant comme consultés
+        setSeenCount("support", window._clientSupportMessagesCount || 0);
+        window.updateBadges();
+    }
+    setTimeout(() => {
+        const body = document.getElementById('supportChatBody');
+        body.scrollTop = body.scrollHeight;
+    }, 200);
+};
+
+window.handleSupportEnter = (e) => {
+    if(e.key === 'Enter') window.sendSupportMessage();
+};
+
+window.sendSupportMessage = async () => {
+    if(!currentUser) return;
+    const input = document.getElementById('supportInput');
+    const msg = input.value.trim();
+    if(!msg) return;
+
+    input.value = ''; // Nettoyage visuel immédiat pour une meilleure fluidité
+    
+    try {
+        const msgData = {
+            text: msg,
+            sender: 'user',
+            date: new Date().toISOString()
+        };
+        
+        // 1. Ajout du message dans la collection 'support_messages'
+        await addDoc(collection(db, "users", currentUser.uid, "support_messages"), msgData);
+
+        // 2. Mise à jour des informations de contact pour le tri côté Admin
+        await updateDoc(doc(db, "users", currentUser.uid), {
+            "supportInfo.lastDate": msgData.date,
+            "supportInfo.lastMessage": msg
+        });
+
+    } catch (e) {
+        console.error("Erreur lors de l'envoi du message : ", e);
+        window.showPopup("Erreur", "Impossible d'envoyer votre message. Vérifiez votre connexion.", true);
+    }
+};
+/* ========================================================================= */
+
+
+/* --- SCRIPTS DE GESTION DU DEPOT --- */
+window.openDepositPopup = () => {
+    document.getElementById("depositPopup").classList.add("show");
+};
+
+window.closeDepositPopup = () => {
+    document.getElementById("depositPopup").classList.remove("show");
+};
+/* --- FIN SCRIPTS DEPOT --- */
+
+/* --- SCRIPTS DE TRANSFERT --- */
+window.openTransferPopup = () => {
+    document.getElementById("transferPopup").classList.add("show");
+    document.getElementById("transferEmail").value = "";
+    document.getElementById("transferAmount").value = "";
+    document.getElementById("transferRecipientName").textContent = "";
+    recipientId = null;
+    recipientDataTemp = null;
+};
+
+window.closeTransferPopup = () => {
+    document.getElementById("transferPopup").classList.remove("show");
+};
+
+window.searchRecipient = () => {
+    clearTimeout(searchTimeout);
+    recipientId = null;
+    recipientDataTemp = null;
+    const email = document.getElementById("transferEmail").value.trim().toLowerCase();
+    const nameDisplay = document.getElementById("transferRecipientName");
+    nameDisplay.textContent = "Recherche en cours...";
+    nameDisplay.style.color = "#888";
+
+    if (!email) {
+        nameDisplay.textContent = "";
+        return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+        try {
+            const q = query(collection(db, "users"), where("email", "==", email));
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                nameDisplay.textContent = "Aucun utilisateur trouvé avec cet e-mail.";
+                nameDisplay.style.color = "red";
+            } else {
+                const recDoc = querySnapshot.docs[0];
+                if (recDoc.id === currentUser.uid) {
+                    nameDisplay.textContent = "Vous ne pouvez pas vous transférer à vous-même.";
+                    nameDisplay.style.color = "red";
+                    return;
+                }
+                recipientId = recDoc.id;
+                recipientDataTemp = recDoc.data();
+                nameDisplay.textContent = "Destinataire : " + recipientDataTemp.fullName;
+                nameDisplay.style.color = "green";
+            }
+        } catch (e) {
+            nameDisplay.textContent = "Erreur de recherche.";
+            nameDisplay.style.color = "red";
+        }
+    }, 500);
+};
+
+window.submitTransfer = async () => {
+    if (!currentUser) return;
+    const amount = parseInt(document.getElementById("transferAmount").value);
+    
+    if (!recipientId || !recipientDataTemp) {
+        return window.showPopup("Erreur", "Veuillez renseigner un destinataire valide.", true);
+    }
+    if (isNaN(amount) || amount <= 0) {
+        return window.showPopup("Erreur", "Veuillez entrer un montant valide.", true);
+    }
+
+    const senderRef = doc(db, "users", currentUser.uid);
+    const senderSnap = await getDoc(senderRef);
+    if (!senderSnap.exists()) return;
+    
+    let senderData = senderSnap.data();
+
+    if (amount > senderData.balance) {
+        return window.showPopup("Erreur", "Solde insuffisant pour ce transfert.", true);
+    }
+
+    let newSenderBalance = senderData.balance - amount;
+    let newRecipientBalance = (recipientDataTemp.balance || 0) + amount;
+    const dateIso = new Date().toISOString();
+    const senderName = senderData.fullName || "Un utilisateur";
+
+    const senderHist = {
+        date: dateIso,
+        type: 'Transfert Envoyé',
+        amount: -amount,
+        desc: `Envoyé à ${recipientDataTemp.fullName}`
+    };
+    const senderNotif = {
+        date: dateIso,
+        message: `Vous avez transféré ${amount} FCFA à ${recipientDataTemp.fullName} avec succès.`,
+        type: 'success'
+    };
+
+    const recipientHist = {
+        date: dateIso,
+        type: 'Transfert Reçu',
+        amount: amount,
+        desc: `Reçu de ${senderName}`
+    };
+    const recipientNotif = {
+        date: dateIso,
+        message: `Vous avez reçu un transfert de ${amount} FCFA de la part de ${senderName}.`,
+        type: 'success'
+    };
+
+    try {
+        await updateDoc(senderRef, {
+            balance: newSenderBalance,
+            history: arrayUnion(senderHist),
+            notifications: arrayUnion(senderNotif)
+        });
+        
+        const recipientRef = doc(db, "users", recipientId);
+        await updateDoc(recipientRef, {
+            balance: newRecipientBalance,
+            history: arrayUnion(recipientHist),
+            notifications: arrayUnion(recipientNotif)
+        });
+
+        document.getElementById("balanceAmount").textContent = newSenderBalance + " FCFA";
+        window._clientHistory.push(senderHist);
+        window._clientNotifications.push(senderNotif);
+        window.updateBadges();
+
+        window.showPopup("Succès", `Le transfert de ${amount} FCFA à ${recipientDataTemp.fullName} a été effectué.`, false);
+        window.closeTransferPopup();
+    } catch (e) {
+        window.showPopup("Erreur", "Une erreur est survenue lors du transfert.", true);
+    }
+};
+/* --- FIN SCRIPTS TRANSFERT --- */
+
+/* --- SCRIPTS DE GESTION DES RETRAITS --- */
+window.openWithdrawHistPopup = () => {
+    const l = document.getElementById("withdrawHistPopupList");
+    if (window._clientWithdrawRequests.length === 0) {
+        l.innerHTML = "<div style='padding:20px; text-align:center; color:#64748b;'><i>Aucun retrait n'a été demandé pour le moment.</i></div>";
+    } else {
+        l.innerHTML = [...window._clientWithdrawRequests].reverse().map(r => {
+            let col = r.status === "validé" ? "var(--accent-green)" : (r.status === "rejeté" ? "var(--accent-red)" : "var(--accent-yellow)");
+            let meth = r.method ? r.method : "Non spécifié";
+            return `<div class="hist-item" style="flex-direction:column; align-items:flex-start;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <strong style="font-size:16px;">${r.amount} FCFA</strong>
+                    <span style="color:${col}; font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:0.5px;">${r.status}</span>
+                </div>
+                <div style="font-size:13px; color:var(--text-muted); margin-top:8px; line-height: 1.5;">
+                    <strong>Méthode :</strong> ${meth} <br>
+                    <strong>Date :</strong> ${new Date(r.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}
+                </div>
+            </div>`;
+        }).join("");
+    }
+    document.getElementById("withdrawHistPopup").classList.add("show");
+};
+
+window.closeWithdrawHistPopup = () => document.getElementById("withdrawHistPopup").classList.remove("show");
+
+window.openWithdrawPopup = () => {
+    document.getElementById("withdrawRequestPopup").classList.add("show");
+    window.updateWithdrawForm();
+};
+
+window.closeWithdrawPopup = () => {
+    document.getElementById("withdrawRequestPopup").classList.remove("show");
+    document.getElementById("newWithdrawAmount").value = "";
+};
+
+window.updateWithdrawForm = () => {
+    const method = document.getElementById("withdrawMethod").value;
+    const fieldsDiv = document.getElementById("withdrawFormFields");
+    let html = "";
+    
+    const inputStyle = "width:100%; padding:14px 16px; margin:8px 0 16px; border-radius:12px; border:1px solid #e2e8f0; background:#f8fafc; font-size:15px; outline:none; box-sizing:border-box;";
+    const labelStyle = "font-weight:600; display:block; margin-bottom:6px; font-size:13px; color:#64748b;";
+    
+    if(method === "direct") {
+        html = `<label style="${labelStyle}">Numéro Mobile Money :</label>
+                <input type="text" id="withdrawPhone" placeholder="Ex: 90000000" style="${inputStyle}">`;
+    } else if(method === "brainy") {
+        html = `<label style="${labelStyle}">Nom complet :</label>
+                <input type="text" id="withdrawName" placeholder="Votre nom complet" style="${inputStyle}">
+                <label style="${labelStyle}">Numéro de téléphone :</label>
+                <input type="text" id="withdrawPhone" placeholder="Ex: 90000000" style="${inputStyle}">`;
+    } else if(method === "moneyfusion") {
+        html = `<label style="${labelStyle}">Numéro de téléphone (+229 obligatoire) :</label>
+                <input type="text" id="withdrawPhone" placeholder="Ex: +22900000000" style="${inputStyle}">`;
+    }
+    fieldsDiv.innerHTML = html;
+};
+
+window.submitWithdrawal = async () => {
+    if(!currentUser) return;
+    const method = document.getElementById("withdrawMethod").value;
+    const amount = parseInt(document.getElementById("newWithdrawAmount").value);
+    const phoneEl = document.getElementById("withdrawPhone");
+    const nameEl = document.getElementById("withdrawName");
+    
+    const phone = phoneEl ? phoneEl.value.trim() : "";
+    const fullName = nameEl ? nameEl.value.trim() : "";
+
+    if(isNaN(amount) || amount <= 0) return window.showPopup("Attention", "Montant de retrait invalide.", true);
+    
+    if(method === "direct" && !phone) return window.showPopup("Attention", "Veuillez entrer votre numéro Mobile Money.", true);
+    if(method === "brainy" && (!phone || !fullName)) return window.showPopup("Attention", "Veuillez remplir tous les champs (Nom et Numéro).", true);
+    if(method === "moneyfusion") {
+        if(!phone) return window.showPopup("Attention", "Veuillez entrer votre numéro de téléphone.", true);
+        if(!phone.startsWith("+229")) return window.showPopup("Erreur", "Pour MoneyFusion (Bénin), le numéro doit obligatoirement commencer par l'indicatif +229.", true);
+    }
+
+    const snap = await getDoc(doc(db,"users",currentUser.uid));
+    const userData = snap.data();
+    
+    if(amount > userData.balance) return window.showPopup("Attention", "Votre solde est insuffisant pour effectuer ce retrait.", true);
+    if((userData.balance - amount) < 150) return window.showPopup("Refusé", "Après le retrait, il doit obligatoirement vous rester au minimum 150 FCFA sur votre compte.", true);
+
+    const req = {
+        date: new Date().toISOString(),
+        status: "en attente",
+        amount: amount,
+        method: method === "direct" ? "Mobile Money" : (method === "brainy" ? "BRAINY AGENCY" : "MoneyFusion"),
+        phone: phone,
+        fullName: fullName
+    };
+
+    await updateDoc(doc(db,"users",currentUser.uid), { 
+        withdrawRequests: arrayUnion(req) 
+    });
+    
+    window._clientWithdrawRequests.push(req);
+    window.showPopup("Succès", "Votre demande de retrait a bien été envoyée et est en attente de validation !", false);
+    window.closeWithdrawPopup();
+};
+/* --- FIN SCRIPTS GESTION RETRAITS --- */
+
+window.loadAnnouncements = () => {
+    if (window._announcementsListenerAttached) return; // évite un double listener onSnapshot (perf)
+    window._announcementsListenerAttached = true;
+    const q = query(collection(db, "announcements"), orderBy("date", "desc"));
+    onSnapshot(q, (snapshot) => {
+        const display = document.getElementById("announcementsDisplay");
+        if (snapshot.empty) {
+            display.innerHTML = "<div style='text-align:center; padding:20px;'><i>Aucune annonce n'a été publiée pour le moment.</i></div>";
+            return;
+        }
+        let html = "";
+        let latestActive = null; // la plus récente annonce active (snapshot déjà trié par date desc)
+        snapshot.forEach(docSnap => {
+            const ann = docSnap.data();
+            let dateStr = new Date(ann.date).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+            html += `
+                <div style="background: white; padding: 18px; margin-bottom: 12px; border-radius: 12px; border: 1px solid #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.3s ease;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <strong style="color: var(--text-main); font-size: 15px;">${ann.title}</strong>
+                        <span style="font-size: 11px; color: var(--text-muted); background: #f1f5f9; padding: 4px 8px; border-radius: 20px;">${dateStr}</span>
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-muted); white-space: pre-wrap; line-height:1.6;">${ann.message}</div>
+                </div>
+            `;
+            if (!latestActive && ann.isActive === true) {
+                latestActive = { id: docSnap.id, title: ann.title, message: ann.message, date: ann.date };
+            }
+        });
+        display.innerHTML = html;
+
+        if (latestActive) window.maybeShowAnnouncementPopup(latestActive);
+    });
+};
+
+/* ========================================================================= */
+/* --- POPUP DE LA DERNIERE ANNONCE ACTIVE (non déjà consultée) --- */
+/* Mémorise uniquement l'identifiant de l'annonce déjà vue dans localStorage */
+/* (aucune donnée sensible du compte n'y est stockée).                      */
+/* ========================================================================= */
+window.maybeShowAnnouncementPopup = (ann) => {
+    if (!currentUser || !ann || !ann.id) return;
+    const storageKey = `bw_lastSeenAnnouncement_${currentUser.uid}`;
+    const lastSeenId = localStorage.getItem(storageKey);
+    if (lastSeenId === ann.id) return; // déjà consultée, ne pas ré-afficher
+
+    document.getElementById("annPopupTitle").textContent = "📢 " + (ann.title || "Annonce");
+    document.getElementById("annPopupDate").textContent = new Date(ann.date).toLocaleString('fr-FR', {dateStyle: 'long', timeStyle: 'short'});
+    document.getElementById("annPopupMessage").textContent = ann.message || "";
+    window._pendingAnnouncementId = ann.id;
+    document.getElementById("announcementPopup").classList.add("show");
+};
+
+window.closeAnnouncementPopup = () => {
+    document.getElementById("announcementPopup").classList.remove("show");
+    if (currentUser && window._pendingAnnouncementId) {
+        localStorage.setItem(`bw_lastSeenAnnouncement_${currentUser.uid}`, window._pendingAnnouncementId);
+    }
+};
+
+window.logout = () => signOut(auth).then(()=> window.location.href="principal.html");
+window.showPopup = (title, msg, err=false) => { 
+    document.getElementById("popupTitle").textContent=title; 
+    document.getElementById("popupTitle").style.color=err?"var(--accent-red)":"var(--text-main)"; 
+    document.getElementById("popupMessage").textContent=msg; 
+    document.getElementById("customPopup").classList.add("show"); 
+};
+window.closePopup = () => document.getElementById("customPopup").classList.remove("show");
+
+function getSeenCount(k) { return parseInt(localStorage.getItem(`bw_${currentUser.uid}_${k}`) || "0"); }
+function setSeenCount(k, c) { localStorage.setItem(`bw_${currentUser.uid}_${k}`, c); }
+
+window.updateBadges = () => {
+  const uN = Math.max(0, window._clientNotifications.length - getSeenCount("notif"));
+  const uH = Math.max(0, window._clientHistory.length - getSeenCount("hist"));
+  const uS = Math.max(0, (window._clientSupportMessagesCount || 0) - getSeenCount("support"));
+  const nb = document.getElementById("notifBadge"); const hb = document.getElementById("histBadge"); const sb = document.getElementById("supportBadge");
+  if(nb) { nb.textContent = uN; nb.style.display = uN > 0 ? "flex" : "none"; }
+  if(hb) { hb.textContent = uH; hb.style.display = uH > 0 ? "flex" : "none"; }
+  if(sb) { sb.textContent = uS; sb.style.display = uS > 0 ? "flex" : "none"; }
+};
+
+window.openNotifPopup = () => {
+  const l = document.getElementById("notifPopupList");
+  l.innerHTML = window._clientNotifications.length === 0 ? "<div style='text-align:center; padding:20px; color:#64748b;'><i>Aucune notification.</i></div>" : [...window._clientNotifications].reverse().map(n => `<div class="notif-item ${n.type==='success'?'notif-success':(n.type==='error'?'notif-error':'notif-info')}"><div style="font-size:12px; margin-bottom:5px; opacity:0.8; font-weight:600;">${new Date(n.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})}</div><div>${n.message}</div></div>`).join("");
+  document.getElementById("notifPopup").classList.add("show"); setSeenCount("notif", window._clientNotifications.length); window.updateBadges();
+};
+window.closeNotifPopup = () => document.getElementById("notifPopup").classList.remove("show");
+
+window.openHistoryPopup = () => {
+  const l = document.getElementById("histPopupList");
+  l.innerHTML = window._clientHistory.length === 0 ? "<div style='text-align:center; padding:20px; color:#64748b;'><i>Aucune transaction.</i></div>" : [...window._clientHistory].reverse().map(h => `<div class="hist-item"><div><strong style="font-size:14px;">${h.type}</strong><br><span style="font-size:12px; color:var(--text-muted); display:inline-block; margin-top:4px;">${new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'})} | ${h.desc}</span></div><div class="${h.amount>0?'hist-positive':(h.amount<0?'hist-negative':'hist-neutral')}">${h.amount>0?'+':''}${h.amount} FCFA</div></div>`).join("");
+  document.getElementById("histPopup").classList.add("show"); setSeenCount("hist", window._clientHistory.length); window.updateBadges();
+};
+window.closeHistoryPopup = () => document.getElementById("histPopup").classList.remove("show");
+</script>
+</body>
+</html>

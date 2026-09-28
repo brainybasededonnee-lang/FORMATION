@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW - Administration Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    /* ========================================================================= */
+    /* --- VARIABLES & RESET --- */
+    /* ========================================================================= */
+    :root {
+        --bg-color: #f3f6f9;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --primary: #0f172a;
+        --primary-light: #1e293b;
+        --accent-blue: #3b82f6;
+        --accent-green: #10b981;
+        --accent-yellow: #f59e0b;
+        --accent-red: #ef4444;
+        --card-bg: #ffffff;
+        --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
+        --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.08);
+        --shadow-lg: 0 20px 40px -5px rgba(0,0,0,0.12);
+        --border-radius-lg: 16px;
+        --border-radius-md: 12px;
+        --transition: all 0.3s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg-color); color: var(--text-main); line-height: 1.5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .hidden { display: none !important; }
+
+    /* ========================================================================= */
+    /* --- LAYOUT PRINCIPAL (TABS) --- */
+    /* ========================================================================= */
+    .top-nav {
+        background: var(--primary); color: white; padding: 15px 30px;
+        display: flex; justify-content: space-between; align-items: center;
+        box-shadow: var(--shadow-md); z-index: 10;
+    }
+    .top-nav h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .logout-btn { background: var(--accent-red); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: var(--transition); }
+    .logout-btn:hover { background: #dc2626; }
+
+    .main-container { display: flex; flex: 1; overflow: hidden; }
+    
+    .sidebar { width: 260px; background: var(--card-bg); border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 20px 10px; }
+    .tab-btn {
+        display: flex; align-items: center; gap: 12px; padding: 14px 20px; margin-bottom: 8px;
+        border: none; background: transparent; color: var(--text-muted); font-size: 15px; font-weight: 500;
+        border-radius: var(--border-radius-md); cursor: pointer; transition: var(--transition); text-align: left;
+    }
+    .tab-btn:hover { background: #f1f5f9; color: var(--text-main); }
+    .tab-btn.active { background: #eff6ff; color: var(--accent-blue); font-weight: 600; }
+    .tab-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+    .content-area { flex: 1; padding: 30px; overflow-y: auto; background: var(--bg-color); }
+    .tab-content { display: none; height: 100%; animation: fadeIn 0.4s ease; }
+    .tab-content.active { display: flex; flex-direction: column; }
+
+    /* ========================================================================= */
+    /* --- 1. ASSISTANT / MESSAGERIE --- */
+    /* ========================================================================= */
+    .chat-layout { display: flex; gap: 20px; height: 100%; background: var(--card-bg); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+    
+    .chat-sidebar { width: 320px; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; background: #f8fafc; }
+    .chat-search-box { padding: 15px; border-bottom: 1px solid #e2e8f0; }
+    .chat-search-box input { width: 100%; padding: 10px 15px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 14px; }
+    
+    .chat-user-list { flex: 1; overflow-y: auto; }
+    .chat-user-item { padding: 15px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 12px; }
+    .chat-user-item:hover { background: #f1f5f9; }
+    .chat-user-item.active { background: #eff6ff; border-left: 4px solid var(--accent-blue); }
+    .chat-avatar { width: 40px; height: 40px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
+    .chat-user-info { flex: 1; overflow: hidden; }
+    .chat-user-name { font-weight: 600; font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-user-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    
+    /* === NOUVEAU STYLE DU BADGE ROND SUR AVATAR === */
+    .chat-unread-badge { 
+        position: absolute; 
+        top: -5px; 
+        right: -5px; 
+        background: var(--accent-red); 
+        color: white; 
+        font-size: 10px; 
+        font-weight: 700; 
+        width: 20px; 
+        height: 20px; 
+        border-radius: 50%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        border: 2px solid white; /* Effet de découpe propre */
+        box-sizing: content-box;
+    }
+
+    .chat-main { flex: 1; display: flex; flex-direction: column; background: #ffffff; }
+    .chat-header { padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; }
+    .chat-header h3 { font-size: 16px; font-weight: 600; margin: 0; }
+    .chat-header span { font-size: 12px; color: var(--text-muted); }
+    
+    .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #f1f5f9; }
+    .msg-wrapper { display: flex; flex-direction: column; max-width: 75%; }
+    .msg-wrapper.admin { align-self: flex-end; align-items: flex-end; }
+    .msg-wrapper.user { align-self: flex-start; align-items: flex-start; }
+    .msg-bubble { 
+        padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        white-space: pre-wrap; word-break: break-word; 
+    }
+    .msg-wrapper.admin .msg-bubble { background: var(--accent-blue); color: white; border-bottom-right-radius: 4px; }
+    .msg-wrapper.user .msg-bubble { background: white; color: var(--text-main); border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; }
+    
+    .msg-actions { font-size: 11px; margin-top: 4px; display: flex; gap: 10px; color: var(--text-muted); align-items: center; }
+    .msg-wrapper.admin .msg-actions { justify-content: flex-end; }
+    .msg-action-btn { cursor: pointer; transition: var(--transition); }
+    .msg-action-btn:hover { color: var(--accent-blue); text-decoration: underline; }
+    .msg-action-btn.delete:hover { color: var(--accent-red); }
+
+    .chat-input-area { padding: 15px 20px; border-top: 1px solid #e2e8f0; background: white; display: flex; gap: 10px; align-items: center; }
+    .chat-input-area textarea { flex: 1; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 20px; resize: none; outline: none; font-size: 14px; max-height: 100px; }
+    .btn-send { background: var(--accent-blue); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+    .btn-send:hover { background: #2563eb; transform: scale(1.05); }
+
+    /* ========================================================================= */
+    /* --- 2 & 3. ANNONCES ET CGU (Formulaires & Grilles) --- */
+    /* ========================================================================= */
+    .section-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; color: var(--primary); border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+    
+    .form-card { background: var(--card-bg); padding: 25px; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 25px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; outline: none; transition: var(--transition); }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+    .form-group textarea { min-height: 120px; resize: vertical; font-family: inherit; }
+    
+    .btn-primary { background: var(--accent-blue); color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: var(--transition); }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-success { background: var(--accent-green); } .btn-success:hover { background: #059669; }
+    .btn-danger { background: var(--accent-red); } .btn-danger:hover { background: #dc2626; }
+    .btn-secondary { background: #64748b; color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; }
+    
+    .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+    .data-card { background: white; border: 1px solid #e2e8f0; border-radius: var(--border-radius-md); padding: 20px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
+    .data-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .data-card-title { font-weight: 600; font-size: 16px; color: var(--text-main); }
+    .status-badge { font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 700; }
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-inactive { background: #fee2e2; color: #991b1b; }
+    .data-card-body { font-size: 13px; color: var(--text-muted); flex: 1; margin-bottom: 15px; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .data-card-footer { display: flex; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+    .data-card-footer button { flex: 1; padding: 8px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; color: white; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .main-container { flex-direction: column; }
+        .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; flex-direction: row; overflow-x: auto; padding: 10px; }
+        .tab-btn { margin-bottom: 0; margin-right: 10px; white-space: nowrap; }
+        .chat-layout { flex-direction: column; }
+        .chat-sidebar { width: 100%; height: 250px; border-right: none; border-bottom: 1px solid #e2e8f0; }
+    }
+</style>
+</head>
+<body>
+
+<div id="app" class="hidden" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+    
+    <!-- HEADER -->
+    <header class="top-nav">
+        <h1>
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+            Admin Hub - BrainyWallet
+        </h1>
+        <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </header>
+
+    <div class="main-container">
+        <!-- SIDEBAR MENUS -->
+        <aside class="sidebar">
+            <button class="tab-btn active" onclick="switchTab('assistant')">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.2L4 17.2V4h16v12z"/></svg>
+                Assistant
+            </button>
+            <button class="tab-btn" onclick="switchTab('annonces')">
+                <svg viewBox="0 0 24 24"><path d="M11 20v-3H7v3.67A1.33 1.33 0 008.33 22h.34A1.33 1.33 0 0010 20.67V20h1zm10-7.5c0-4.14-3.36-7.5-7.5-7.5S6 8.36 6 12.5V17h15v-4.5zM12 3a9.49 9.49 0 00-6.73 2.77L6.69 4.34A10.95 10.95 0 0112 1c3.04 0 5.8 1.23 7.81 3.23l-1.42 1.42A8.96 8.96 0 0012 3z"/></svg>
+                Annonces
+            </button>
+            <button class="tab-btn" onclick="switchTab('cgu')">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                Conditions & CGU
+            </button>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <main class="content-area">
+            
+            <!-- SECTION 1: ASSISTANT -->
+            <div id="assistant" class="tab-content active">
+                <div class="chat-layout">
+                    <div class="chat-sidebar">
+                        <div class="chat-search-box">
+                            <input type="text" id="chatSearchInput" placeholder="Rechercher nom, e-mail, tel..." oninput="filterChatUsers()">
+                        </div>
+                        <div class="chat-user-list" id="chatUserList">
+                            <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Chargement des utilisateurs...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-main" id="chatMainArea" style="display: none;">
+                        <div class="chat-header">
+                            <div>
+                                <h3 id="chatActiveUserName">Nom Utilisateur</h3>
+                                <span id="chatActiveUserInfo">ID / Email</span>
+                            </div>
+                        </div>
+                        <div class="chat-messages" id="chatMessagesArea">
+                            <!-- Messages injectés en JS -->
+                        </div>
+                        <div class="chat-input-area">
+                            <textarea id="chatMessageInput" placeholder="Écrivez votre réponse..." onkeypress="handleChatEnter(event)"></textarea>
+                            <button class="btn-send" onclick="sendChatMessage()">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-main" id="chatEmptyState" style="align-items: center; justify-content: center; background: #f8fafc;">
+                        <svg viewBox="0 0 24 24" width="60" height="60" fill="#cbd5e1" style="margin-bottom: 15px;"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                        <p style="color: var(--text-muted); font-weight: 500;">Sélectionnez un utilisateur pour voir la conversation</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: ANNONCES -->
+            <div id="annonces" class="tab-content">
+                <h2 class="section-title">Gestion des Annonces (Page d'accueil)</h2>
+                
+                <div class="form-card">
+                    <input type="hidden" id="annEditId">
+                    <div class="form-group">
+                        <label>Titre de l'annonce</label>
+                        <input type="text" id="annTitle" placeholder="Ex: Grande Mise à jour...">
+                    </div>
+                    <div class="form-group">
+                        <label>Contenu du message</label>
+                        <textarea id="annMessage" placeholder="Détails de l'annonce visibles par les utilisateurs..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Statut d'affichage</label>
+                        <select id="annStatus">
+                            <option value="true">Publié (Visible)</option>
+                            <option value="false">Désactivé (Caché)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-primary" onclick="saveAnnouncement()" id="btnSaveAnn">Publier l'annonce</button>
+                        <button class="btn-secondary hidden" onclick="cancelEditAnn()" id="btnCancelAnn">Annuler</button>
+                    </div>
+                </div>
+
+                <div class="data-grid" id="announcementsList">
+                    <!-- Annonces injectées via JS -->
+                </div>
+            </div>
+
+            <!-- SECTION 3: CGU -->
+            <div id="cgu" class="tab-content">
+                <h2 class="section-title">Conditions d'utilisation (Page Login)</h2>
+                
+                <div class="form-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                            Dernière modification : <strong id="cguLastModif">Chargement...</strong>
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Titre du Popup</label>
+                        <input type="text" id="cguTitle" placeholder="Ex: Conditions Générales d'Utilisation">
+                    </div>
+                    <div class="form-group">
+                        <label>Contenu des Conditions</label>
+                        <textarea id="cguContent" placeholder="Texte complet des conditions..." style="min-height: 250px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <select id="cguStatus">
+                            <option value="true">Activé (Affiché au Login)</option>
+                            <option value="false">Désactivé</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn-primary btn-success" onclick="saveCGU()" style="width: 100%;">Enregistrer les Conditions</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+    
+    <!-- MODALES POUR ÉDITION ET TRANSFERT DE MESSAGES -->
+    <div id="modalOverlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; display:flex; align-items:center; justify-content:center;">
+        
+        <!-- MODAL DE MODIFICATION -->
+        <div id="editModal" class="hidden form-card" style="width: 400px; max-width: 90%; margin:0; position:relative;">
+            <h3 style="margin-bottom:15px; font-size: 18px; font-weight: 600; color:var(--primary);">Modifier le message</h3>
+            <textarea id="editMessageInput" style="width:100%; min-height:120px; padding:12px 15px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:15px; resize:vertical; font-family:inherit; font-size:14px; outline:none;"></textarea>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn-secondary" onclick="closeModals()">Annuler</button>
+                <button class="btn-primary" onclick="saveEditedMessage()">Enregistrer</button>
+            </div>
+        </div>
+
+        <!-- MODAL DE TRANSFERT -->
+        <div id="forwardModal" class="hidden form-card" style="width: 400px; max-width: 90%; margin:0; position:relative;">
+            <h3 style="margin-bottom:15px; font-size: 18px; font-weight: 600; color:var(--primary);">Transférer le message</h3>
+            <input type="text" id="forwardSearchInput" placeholder="Rechercher nom, e-mail, id..." style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:15px; font-size:14px; outline:none;" oninput="filterForwardUsers()">
+            <div id="forwardUserList" style="max-height: 250px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:15px; background:#fff;">
+                <!-- Liste injectée via JS -->
+            </div>
+            <div style="display:flex; justify-content:flex-end;">
+                <button class="btn-secondary" onclick="closeModals()">Fermer</button>
+            </div>
+        </div>
+        
+    </div>
+
+</div>
+
+<!-- Logique Firebase et Applicative -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, query, orderBy, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+// Configuration existante BrainyWallet
+const firebaseConfig = { 
+    apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", 
+    authDomain: "brainy-wallet.firebaseapp.com", 
+    projectId: "brainy-wallet", 
+    storageBucket: "brainy-wallet.firebasestorage.app", 
+    messagingSenderId: "554152129336", 
+    appId: "1:554152129336:web:997fe6b439d6ccac0707cd" 
+};
+const app = initializeApp(firebaseConfig); 
+const auth = getAuth(app); 
+const db = getFirestore(app);
+
+// Variables Globales
+let allUsers = [];
+let activeChatUid = null;
+let chatUnsubscribe = null;
+
+// --- SÉCURISATION HTML (XSS Protection) ---
+window.escapeHTML = (str) => {
+    if (!str) return "";
+    return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[tag] || tag));
+};
+
+// --- VÉRIFICATION AUTHENTIFICATION ADMIN ---
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if(snap.exists() && snap.data().isAdmin) {
+            document.getElementById("app").classList.remove("hidden");
+            initAdminHub();
+        } else {
+            window.location.href = "index.html"; 
+        }
+    } else {
+        window.location.href = "login.html"; 
+    }
+});
+
+window.logout = () => signOut(auth).then(()=> window.location.href="login.html");
+
+// --- NAVIGATION TABS ---
+window.switchTab = (tabId) => {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    event.currentTarget.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+};
+
+// --- INITIALISATION DU HUB ---
+function initAdminHub() {
+    loadChatUsers();
+    loadAnnouncements();
+    loadCGU();
+}
+
+/* ========================================================================= */
+/* --- 1. MODULE ASSISTANT --- */
+/* ========================================================================= */
+async function loadChatUsers() {
+    const q = query(collection(db, "users"));
+    onSnapshot(q, (snapshot) => {
+        allUsers = [];
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            if(!data.isAdmin) {
+                allUsers.push({ id: docSnap.id, data: data });
+            }
+        });
+        
+        allUsers.sort((a, b) => {
+            let tA = a.data.supportInfo?.lastDate ? new Date(a.data.supportInfo.lastDate).getTime() : 0;
+            let tB = b.data.supportInfo?.lastDate ? new Date(b.data.supportInfo.lastDate).getTime() : 0;
+            if(tB !== tA) return tB - tA;
+            return (a.data.fullName || "").localeCompare(b.data.fullName || "");
+        });
+        
+        window.filterChatUsers(); 
+    });
+}
+
+window.filterChatUsers = () => {
+    const term = document.getElementById("chatSearchInput").value.toLowerCase();
+    const listDiv = document.getElementById("chatUserList");
+    listDiv.innerHTML = "";
+    
+    const filtered = allUsers.filter(u => {
+        return (u.data.fullName || "").toLowerCase().includes(term) ||
+               (u.data.email || "").toLowerCase().includes(term) ||
+               (u.id || "").toLowerCase().includes(term);
+    });
+
+    if(filtered.length === 0) {
+        listDiv.innerHTML = `<div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">Aucun utilisateur trouvé.</div>`;
+        return;
+    }
+
+    filtered.forEach(u => {
+        const hasUnread = u.data.supportInfo?.hasUnreadAdmin === true;
+        const lastMsg = u.data.supportInfo?.lastMessage || "Nouvelle conversation possible...";
+        const avatarLetter = (u.data.fullName || "U").charAt(0).toUpperCase();
+        
+        const item = document.createElement("div");
+        item.className = `chat-user-item ${activeChatUid === u.id ? 'active' : ''}`;
+        item.onclick = () => openChat(u.id, u.data);
+        
+        // MODIFICATION ICI : Enveloppement de l'avatar et du badge en position relative
+        item.innerHTML = `
+            <div style="position: relative; flex-shrink: 0;">
+                <div class="chat-avatar">${window.escapeHTML(avatarLetter)}</div>
+                ${hasUnread ? `<div class="chat-unread-badge" id="badge-${u.id}" style="display: none;"></div>` : ''}
+            </div>
+            <div class="chat-user-info">
+                <div class="chat-user-name">${window.escapeHTML(u.data.fullName || 'Utilisateur')}</div>
+                <div class="chat-user-preview" style="${hasUnread ? 'font-weight: 600; color: var(--text-main);' : ''}">${window.escapeHTML(lastMsg)}</div>
+            </div>
+        `;
+        listDiv.appendChild(item);
+
+        // Fetch dynamique des messages non lus en temps réel sans écriture sur les vieux messages
+        if (hasUnread) {
+            getDocs(collection(db, "users", u.id, "support_messages")).then(snap => {
+                let count = 0;
+                snap.forEach(d => {
+                    let m = d.data();
+                    if (m.sender !== 'admin' && !m.readByAdmin) count++;
+                });
+                const badge = document.getElementById(`badge-${u.id}`);
+                if (badge) {
+                    if (count > 0) { 
+                        badge.textContent = count; 
+                        badge.style.display = 'flex'; // Affiche le cercle dynamiquement
+                    } else { 
+                        badge.style.display = 'none'; 
+                    }
+                }
+            });
+        }
+    });
+};
+
+window.openChat = async (uid, userData) => {
+    activeChatUid = uid;
+    document.getElementById("chatEmptyState").style.display = "none";
+    document.getElementById("chatMainArea").style.display = "flex";
+    
+    document.getElementById("chatActiveUserName").textContent = userData.fullName || "Utilisateur";
+    document.getElementById("chatActiveUserInfo").textContent = userData.email || uid;
+    
+    // Marquer globalement comme lu sur le document user
+    if(userData.supportInfo?.hasUnreadAdmin) {
+        await updateDoc(doc(db, "users", uid), { "supportInfo.hasUnreadAdmin": false });
+    }
+    
+    window.filterChatUsers();
+
+    if(chatUnsubscribe) chatUnsubscribe();
+    
+    const q = query(collection(db, "users", uid, "support_messages"), orderBy("date", "asc"));
+    const msgArea = document.getElementById("chatMessagesArea");
+    msgArea.innerHTML = `<div style="text-align: center; color: #94a3b8; font-size: 13px;">Chargement de l'historique...</div>`;
+
+    chatUnsubscribe = onSnapshot(q, (snapshot) => {
+        msgArea.innerHTML = "";
+        if(snapshot.empty) {
+            msgArea.innerHTML = `<div style="text-align: center; color: #94a3b8; font-size: 13px; margin-top: 20px;">Aucun message. Envoyez le premier message.</div>`;
+            return;
+        }
+
+        snapshot.forEach(docSnap => {
+            const msg = docSnap.data();
+            const isAdmin = msg.sender === 'admin';
+            const timeStr = new Date(msg.date).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', hour: '2-digit', minute: '2-digit' });
+            
+            // Logique rétrocompatible préservée : Marquer ce message spécifique comme lu par l'admin à l'ouverture
+            if (!isAdmin && !msg.readByAdmin) {
+                updateDoc(doc(db, "users", activeChatUid, "support_messages", docSnap.id), { readByAdmin: true });
+            }
+
+            const safeText = window.escapeHTML(msg.text);
+            const encodedText = encodeURIComponent(msg.text || ""); 
+
+            msgArea.innerHTML += `
+                <div class="msg-wrapper ${isAdmin ? 'admin' : 'user'}">
+                    <div class="msg-bubble">${safeText}</div>
+                    <div class="msg-actions">
+                        <span>${timeStr}</span>
+                        <span class="msg-action-btn" onclick="openForwardModal('${encodedText}')">Transférer</span>
+                        ${isAdmin ? `<span class="msg-action-btn" onclick="openEditModal('${docSnap.id}', '${encodedText}')">Modifier</span>` : ''}
+                        <span class="msg-action-btn delete" onclick="deleteMessage('${docSnap.id}')">Supprimer</span>
+                    </div>
+                </div>
+            `;
+        });
+        msgArea.scrollTop = msgArea.scrollHeight;
+    });
+};
+
+window.sendChatMessage = async () => {
+    const input = document.getElementById("chatMessageInput");
+    const text = input.value.trim();
+    if(!text || !activeChatUid) return;
+
+    input.value = ""; 
+    const dateIso = new Date().toISOString();
+
+    await addDoc(collection(db, "users", activeChatUid, "support_messages"), {
+        sender: 'admin',
+        text: text,
+        date: dateIso
+    });
+
+    await updateDoc(doc(db, "users", activeChatUid), {
+        "supportInfo.lastMessage": text,
+        "supportInfo.lastDate": dateIso,
+        "supportInfo.hasUnreadUser": true
+    });
+};
+
+window.handleChatEnter = (e) => {
+    if(e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+    }
+};
+
+/* --- FONCTIONS ACTIONS DES MESSAGES (Supprimer, Modifier, Transférer) --- */
+window.deleteMessage = async (msgId) => {
+    if (confirm("Voulez-vous vraiment supprimer ce message ?")) {
+        await deleteDoc(doc(db, "users", activeChatUid, "support_messages", msgId));
+    }
+};
+
+window.openEditModal = (msgId, encodedText) => {
+    window.currentEditMsgId = msgId;
+    document.getElementById('editMessageInput').value = decodeURIComponent(encodedText);
+    document.getElementById('modalOverlay').classList.remove('hidden');
+    document.getElementById('editModal').classList.remove('hidden');
+};
+
+window.saveEditedMessage = async () => {
+    const newText = document.getElementById('editMessageInput').value.trim();
+    if (!newText) return;
+    await updateDoc(doc(db, "users", activeChatUid, "support_messages", window.currentEditMsgId), {
+        text: newText
+    });
+    window.closeModals();
+};
+
+window.openForwardModal = (encodedText) => {
+    window.currentForwardText = decodeURIComponent(encodedText);
+    document.getElementById('forwardSearchInput').value = '';
+    document.getElementById('forwardUserList').innerHTML = '';
+    document.getElementById('modalOverlay').classList.remove('hidden');
+    document.getElementById('forwardModal').classList.remove('hidden');
+    window.filterForwardUsers();
+};
+
+window.filterForwardUsers = () => {
+    const term = document.getElementById("forwardSearchInput").value.toLowerCase();
+    const listDiv = document.getElementById("forwardUserList");
+    listDiv.innerHTML = "";
+    
+    const filtered = allUsers.filter(u => {
+        return (u.data.fullName || "").toLowerCase().includes(term) ||
+               (u.data.email || "").toLowerCase().includes(term) ||
+               (u.id || "").toLowerCase().includes(term);
+    });
+
+    if (filtered.length === 0) {
+        listDiv.innerHTML = `<div style="padding: 15px; text-align: center; color: #94a3b8; font-size: 13px;">Aucun utilisateur trouvé.</div>`;
+        return;
+    }
+
+    filtered.forEach(u => {
+        const avatarLetter = (u.data.fullName || "U").charAt(0).toUpperCase();
+        const item = document.createElement("div");
+        item.className = `chat-user-item`;
+        item.style.padding = "10px";
+        item.onclick = () => window.executeForward(u.id);
+        item.innerHTML = `
+            <div class="chat-avatar" style="width:30px; height:30px; font-size:12px;">${window.escapeHTML(avatarLetter)}</div>
+            <div class="chat-user-info">
+                <div class="chat-user-name">${window.escapeHTML(u.data.fullName || 'Utilisateur')}</div>
+                <div class="chat-user-preview">${window.escapeHTML(u.data.email || u.id)}</div>
+            </div>
+        `;
+        listDiv.appendChild(item);
+    });
+};
+
+window.executeForward = async (targetUid) => {
+    if (!confirm("Voulez-vous transférer ce message à cet utilisateur ?")) return;
+    const dateIso = new Date().toISOString();
+    
+    await addDoc(collection(db, "users", targetUid, "support_messages"), {
+        sender: 'admin',
+        text: window.currentForwardText,
+        date: dateIso
+    });
+
+    await updateDoc(doc(db, "users", targetUid), {
+        "supportInfo.lastMessage": window.currentForwardText,
+        "supportInfo.lastDate": dateIso,
+        "supportInfo.hasUnreadUser": true
+    });
+
+    alert("Message transféré avec succès !");
+    window.closeModals();
+};
+
+window.closeModals = () => {
+    document.getElementById('modalOverlay').classList.add('hidden');
+    document.getElementById('editModal').classList.add('hidden');
+    document.getElementById('forwardModal').classList.add('hidden');
+};
+
+
+/* ========================================================================= */
+/* --- 2. MODULE ANNONCES --- */
+/* ========================================================================= */
+function loadAnnouncements() {
+    const q = query(collection(db, "announcements"), orderBy("date", "desc"));
+    onSnapshot(q, (snapshot) => {
+        const grid = document.getElementById("announcementsList");
+        grid.innerHTML = "";
+        
+        snapshot.forEach(docSnap => {
+            const ann = docSnap.data();
+            const id = docSnap.id;
+            const isActive = ann.isActive !== false; 
+            const dateStr = new Date(ann.date).toLocaleDateString('fr-FR');
+            
+            grid.innerHTML += `
+                <div class="data-card">
+                    <div class="data-card-header">
+                        <div class="data-card-title">${window.escapeHTML(ann.title)}</div>
+                        <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+                            ${isActive ? 'Publié' : 'Désactivé'}
+                        </span>
+                    </div>
+                    <div class="data-card-body">${window.escapeHTML(ann.message)}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:10px;">Créé le ${dateStr}</div>
+                    <div class="data-card-footer">
+                        <button style="background: var(--accent-blue);" onclick="editAnnouncement('${id}', \`${ann.title.replace(/`/g, "'")}\`, \`${ann.message.replace(/`/g, "'")}\`, ${isActive})">Modifier</button>
+                        <button style="background: ${isActive ? '#f59e0b' : '#10b981'};" onclick="toggleAnnouncementState('${id}', ${!isActive})">
+                            ${isActive ? 'Désactiver' : 'Activer'}
+                        </button>
+                        <button style="background: var(--accent-red);" onclick="deleteAnnouncement('${id}')">Supprimer</button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
+window.saveAnnouncement = async () => {
+    const id = document.getElementById("annEditId").value;
+    const title = document.getElementById("annTitle").value.trim();
+    const message = document.getElementById("annMessage").value.trim();
+    const isActive = document.getElementById("annStatus").value === "true";
+
+    if(!title || !message) return alert("Veuillez remplir le titre et le message.");
+
+    const payload = {
+        title: title,
+        message: message,
+        isActive: isActive,
+        date: new Date().toISOString() 
+    };
+
+    if(id) {
+        await updateDoc(doc(db, "announcements", id), payload);
+        cancelEditAnn();
+    } else {
+        await addDoc(collection(db, "announcements"), payload);
+        document.getElementById("annTitle").value = "";
+        document.getElementById("annMessage").value = "";
+    }
+};
+
+window.editAnnouncement = (id, title, msg, isActive) => {
+    document.getElementById("annEditId").value = id;
+    document.getElementById("annTitle").value = title;
+    document.getElementById("annMessage").value = msg;
+    document.getElementById("annStatus").value = isActive ? "true" : "false";
+    
+    document.getElementById("btnSaveAnn").textContent = "Mettre à jour l'annonce";
+    document.getElementById("btnCancelAnn").classList.remove("hidden");
+    document.getElementById("annonces").scrollIntoView({behavior: 'smooth'});
+};
+
+window.cancelEditAnn = () => {
+    document.getElementById("annEditId").value = "";
+    document.getElementById("annTitle").value = "";
+    document.getElementById("annMessage").value = "";
+    document.getElementById("annStatus").value = "true";
+    document.getElementById("btnSaveAnn").textContent = "Publier l'annonce";
+    document.getElementById("btnCancelAnn").classList.add("hidden");
+};
+
+window.toggleAnnouncementState = async (id, newState) => {
+    await updateDoc(doc(db, "announcements", id), { isActive: newState });
+};
+
+window.deleteAnnouncement = async (id) => {
+    if(confirm("Êtes-vous sûr de vouloir supprimer définitivement cette annonce ?")) {
+        await deleteDoc(doc(db, "announcements", id));
+    }
+};
+
+/* ========================================================================= */
+/* --- 3. MODULE CGU --- */
+/* ========================================================================= */
+async function loadCGU() {
+    const snap = await getDoc(doc(db, "settings", "terms"));
+    if(snap.exists()) {
+        const data = snap.data();
+        document.getElementById("cguTitle").value = data.title || "";
+        document.getElementById("cguContent").value = data.content || "";
+        document.getElementById("cguStatus").value = data.isActive !== false ? "true" : "false";
+        
+        if(data.lastModified) {
+            document.getElementById("cguLastModif").textContent = new Date(data.lastModified).toLocaleString('fr-FR');
+        }
+    } else {
+        document.getElementById("cguLastModif").textContent = "Aucune version enregistrée.";
+    }
+}
+
+window.saveCGU = async () => {
+    const title = document.getElementById("cguTitle").value.trim();
+    const content = document.getElementById("cguContent").value.trim();
+    const isActive = document.getElementById("cguStatus").value === "true";
+
+    if(!title || !content) return alert("Le titre et le contenu sont obligatoires.");
+
+    const payload = {
+        title: title,
+        content: content,
+        isActive: isActive,
+        lastModified: new Date().toISOString()
+    };
+
+    await setDoc(doc(db, "settings", "terms"), payload);
+    
+    document.getElementById("cguLastModif").textContent = new Date(payload.lastModified).toLocaleString('fr-FR');
+    alert("Les Conditions d'utilisation ont été mises à jour avec succès !");
+};
+
+</script>
+</body>
+</html>

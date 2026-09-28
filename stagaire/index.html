@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brainy Hub - Navigation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #075e54; 
+            --secondary: #128c7e; 
+            --accent: #25d366;
+            --bg: #f0f2f5; 
+            --white: #ffffff; 
+        }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            height: 100vh; 
+            height: 100dvh; 
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; 
+            position: relative;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* ── CONTENEUR DES PAGES (IFRAMES) ADAPTÉ MOBILE ── */
+        .content-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: calc(50px + env(safe-area-inset-bottom));
+            width: 100%;
+            height: calc(100vh - 50px - env(safe-area-inset-bottom));
+            height: calc(100dvh - 50px - env(safe-area-inset-bottom));
+            overflow: hidden;
+            background: #fff;
+            z-index: 1;
+        }
+
+        .app-view {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            opacity: 0;
+            transform: scale(0.98);
+            transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .app-view.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+            animation: viewAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes viewAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(10px) scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ── BARRE DE NAVIGATION FIXE ET PERSISTANTE ── */
+        .bottom-nav { 
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: calc(50px + env(safe-area-inset-bottom)); 
+            background: var(--white); 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: flex-start;
+            border-top: 1px solid rgba(0, 0, 0, 0.08); 
+            z-index: 99999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(10px);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .nav-item { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            background: none; 
+            border: none; 
+            color: #888; 
+            font-size: 0.68rem; 
+            font-weight: 600;
+            cursor: pointer; 
+            flex: 1; 
+            height: 50px;
+            text-decoration: none; 
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(7, 94, 84, 0.15);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease-out, height 0.4s ease-out, opacity 0.4s ease-out;
+            opacity: 0;
+        }
+
+        .nav-item:active::after {
+            width: 120px;
+            height: 120px;
+            opacity: 1;
+            transition: 0s;
+        }
+        
+        .nav-item i { 
+            font-size: 1.15rem; 
+            margin-bottom: 2px; 
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
+        }
+
+        .nav-item span {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        
+        .nav-item.active { 
+            color: var(--primary); 
+        }
+
+        .nav-item.active i {
+            transform: translateY(-2px) scale(1.15);
+            color: var(--primary);
+            animation: iconPulse 1.5s infinite alternate;
+        }
+
+        @keyframes iconPulse {
+            0% {
+                filter: drop-shadow(0 0 0 rgba(7, 94, 84, 0));
+            }
+            100% {
+                filter: drop-shadow(0 2px 8px rgba(7, 94, 84, 0.3));
+            }
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 28px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 0 0 3px 3px;
+            animation: slideInBar 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideInBar {
+            0% {
+                width: 0px;
+                opacity: 0;
+            }
+            100% {
+                width: 28px;
+                opacity: 1;
+            }
+        }
+
+        /* ── BADGE DE NOTIFICATION (MESSAGES NON LUS) ── */
+        .badge-unread {
+            position: absolute;
+            top: 4px;
+            left: 50%;
+            transform: translateX(5px);
+            background-color: #ef4444; /* Étiquette rouge */
+            color: #ffffff; /* Texte en blanc */
+            font-size: 0.65rem;
+            font-weight: bold;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            z-index: 10;
+            border: 1px solid white;
+            pointer-events: none;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0) translateX(5px); }
+            100% { transform: scale(1) translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="content-container">
+        <iframe id="view-stagiaire" src="stagiaire.html" class="app-view active" title="Espace Stagiaire"></iframe>
+        <iframe id="view-formation" src="formation.html" class="app-view" title="Formations"></iframe>
+        <iframe id="view-clavier" src="clavier.html" class="app-view" title="Clavier"></iframe>
+        <iframe id="view-chat" src="chat.html" class="app-view" title="Chat Stagiaire"></iframe>
+    </main>
+
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="nav-item active" id="nav-home" onclick="switchView('home')">
+            <i class="fas fa-home"></i>
+            <span>Accueil</span>
+        </button>
+        <button class="nav-item" id="nav-formation" onclick="switchView('formation')">
+            <i class="fas fa-graduation-cap"></i>
+            <span>Formations</span>
+        </button>
+		
+		<button class="nav-item" id="nav-clavier" onclick="switchView('clavier')"> 
+            <i class="fas fa-keyboard"></i> 
+            <span>Clavier</span> 
+        </button>
+        <button class="nav-item" id="nav-chat" onclick="switchView('chat')">
+            <i class="fas fa-comments"></i>
+            <span>Messages</span>
+        </button>
+    </nav>
+
+    <script>
+        function switchView(viewName) {
+            document.querySelectorAll('.app-view').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.classList.remove('active');
+            });
+            
+            if (viewName === 'home') {
+                document.getElementById('view-stagiaire').classList.add('active');
+                document.getElementById('nav-home').classList.add('active');
+            } else if (viewName === 'formation') {
+                document.getElementById('view-formation').classList.add('active');
+                document.getElementById('nav-formation').classList.add('active');
+            } else if (viewName === 'chat') {
+                document.getElementById('view-chat').classList.add('active');
+                document.getElementById('nav-chat').classList.add('active');
+            } else if (viewName === 'clavier') {
+                document.getElementById('view-clavier').classList.add('active');
+                document.getElementById('nav-clavier').classList.add('active');
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRk9DTRauiYzF49pNly34vWPEChIBkMIo",
+            authDomain: "stagiaire-afc7b.firebaseapp.com",
+            projectId: "stagiaire-afc7b",
+            storageBucket: "stagiaire-afc7b.firebasestorage.app",
+            messagingSenderId: "211607769009",
+            appId: "1:211607769009:web:7676af127f0ae6927e3790"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else if (user.email === "admin@brainy.com") {
+                window.location.href = "admin.html";
+            } else {
+                // Initialise le compteur des messages non lus avec l'UID de l'utilisateur connecté
+                initUnreadCounter(user.uid);
+            }
+        });
+
+        // --- GESTION DES MESSAGES NON LUS (Synchronisé avec chat.html) ---
+        function getLocalReadTime(uid, chatId) {
+            try {
+                const data = JSON.parse(localStorage.getItem('brainy_read_' + uid)) || {};
+                return data[chatId] || 0;
+            } catch(e) { 
+                return 0; 
+            }
+        }
+
+        async function initUnreadCounter(uid) {
+            const unreadMap = new Map();
+            let allMessagesCache = new Map(); 
+
+            // Met à jour l'étiquette rouge sur le bouton "Messages"
+            function updateBadge() {
+                let total = 0;
+                unreadMap.forEach(count => total += count);
+                
+                const navChat = document.getElementById('nav-chat');
+                let badge = document.getElementById('chat-badge');
+                
+                if (total > 0) {
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.id = 'chat-badge';
+                        badge.className = 'badge-unread';
+                        navChat.appendChild(badge);
+                    }
+                    badge.textContent = total > 99 ? '99+' : total;
+                } else {
+                    if (badge) badge.remove();
+                }
+            }
+
+            // Recalcule les non-lus en vérifiant le localStorage
+            function recalcUnread() {
+                allMessagesCache.forEach((msgTimes, chatId) => {
+                    const lastRead = getLocalReadTime(uid, chatId);
+                    let count = 0;
+                    msgTimes.forEach(time => {
+                        if (time > lastRead) count++;
+                    });
+                    unreadMap.set(chatId, count);
+                });
+                updateBadge();
+            }
+
+            // Vérification périodique pour réagir si l'utilisateur lit un message dans l'iframe
+            setInterval(recalcUnread, 1500);
+
+            // 1. Écoute des messages du groupe
+            const qGroup = query(collection(db, "messages_groupe"), orderBy("date", "asc"));
+            onSnapshot(qGroup, (snapshot) => {
+                let times = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.senderUid !== uid) {
+                        times.push(data.date ? (data.date.toMillis ? data.date.toMillis() : new Date(data.date).getTime()) : Date.now());
+                    }
+                });
+                allMessagesCache.set('groupe', times);
+                recalcUnread();
+            });
+
+            // 2. Écoute des messages privés
+            try {
+                const qUsers = query(collection(db, "users"));
+                const usersSnap = await getDocs(qUsers);
+                usersSnap.forEach(docSnap => {
+                    const user = docSnap.data();
+                    if (user.uid !== uid && user.email !== "admin@brainy.com") {
+                        const chatId = uid < user.uid ? `${uid}_${user.uid}` : `${user.uid}_${uid}`;
+                        const qPriv = query(collection(db, "messages_prives"), where("chatId", "==", chatId));
+                        
+                        onSnapshot(qPriv, (snapshot) => {
+                            let times = [];
+                            snapshot.forEach(docSnap => {
+                                const data = docSnap.data();
+                                if (data.senderUid !== uid) {
+                                    times.push(data.date ? (data.date.toMillis ? data.date.toMillis() : new Date(data.date).getTime()) : Date.now());
+                                }
+                            });
+                            allMessagesCache.set(chatId, times);
+                            recalcUnread();
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error("Erreur lors du chargement des notifications de messages :", error);
+            }
+        }
+    </script>
+</body>
+</html>

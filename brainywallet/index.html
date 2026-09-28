@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://*.firebaseapp.com https://*.firebaseio.com https://www.gstatic.com; frame-src 'self'; connect-src 'self' https://*.firebaseapp.com https://*.firebaseio.com https://*.googleapis.com; img-src 'self' data: https:;">
+    
+    <title>Brainy Wallet - Application</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- RESET ET STRUCTURE DE BASE --- */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden; 
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f0f6ff;
+        }
+
+        /* --- ZONE DE CONTENU (IFRAME) --- */
+        #app-frame {
+            width: 100%;
+            height: calc(100% - 65px);
+            border: none;
+            display: block;
+            background-color: #f0f6ff;
+        }
+
+        /* --- BARRE DE NAVIGATION EN BAS --- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65px; 
+            background: #ffffff;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 9999;
+            padding-bottom: env(safe-area-inset-bottom); 
+        }
+
+        /* --- BOUTONS DE NAVIGATION --- */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #8a92b2;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            transition: all 0.3s ease;
+            user-select: none; 
+        }
+
+        .nav-item i {
+            font-size: 22px;
+            margin-bottom: 4px;
+            transition: transform 0.2s ease, color 0.3s ease;
+        }
+
+        .nav-item span {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* --- ÉTAT ACTIF (Page sélectionnée) --- */
+        .nav-item.active {
+            color: #007bff;
+        }
+
+        .nav-item.active i {
+            transform: translateY(-2px) scale(1.1); 
+            color: #007bff;
+        }
+
+        /* --- PAGE DE BLOCAGE DE BUREAU --- */
+        #device-blocked {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #f0f6ff;
+            z-index: 999999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .device-blocked-card {
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            max-width: 420px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .device-blocked-icon {
+            font-size: 54px;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+
+        .device-blocked-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 12px 0;
+        }
+
+        .device-blocked-message {
+            font-size: 15px;
+            color: #6c757d;
+            margin: 0 0 16px 0;
+            line-height: 1.5;
+        }
+
+        .device-blocked-subtext {
+            font-size: 13px;
+            color: #007bff;
+            background: #eef6ff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body>
+    <script>
+        (function() {
+            'use strict';
+            function _checkMobileAccess() {
+                var ua = navigator.userAgent || navigator.vendor || window.opera || '';
+                var uad = navigator.userAgentData;
+                
+                var isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|Silk|Kindle/i.test(ua);
+                var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+                
+                var isDesktopOS = /Windows NT|Macintosh|Mac OS X|Linux x86_64|CrOS/i.test(ua);
+                
+                var isExplicitDesktopUAD = false;
+                if (uad) {
+                    if (uad.mobile === false) {
+                        isExplicitDesktopUAD = true;
+                    }
+                }
+
+                var isIPadOS = (/Macintosh/i.test(ua) && isTouch && !/iPhone/i.test(ua));
+                
+                if (isIPadOS) {
+                    return true;
+                }
+                
+                if (isExplicitDesktopUAD && !isTouch) {
+                    return false;
+                }
+                
+                if (isDesktopOS && !isMobileUA && !isTouch) {
+                    return false;
+                }
+                
+                if (isMobileUA || isTouch) {
+                    return true;
+                }
+                
+                return false;
+            }
+
+            if (!_checkMobileAccess()) {
+                document.documentElement.classList.add('is-desktop-device');
+                window.addEventListener('DOMContentLoaded', function() {
+                    var iframeElem = document.getElementById('app-frame');
+                    var navElem = document.querySelector('.bottom-nav');
+                    if (iframeElem) iframeElem.style.display = 'none';
+                    if (navElem) navElem.style.display = 'none';
+                    var blockElem = document.getElementById('device-blocked');
+                    if (blockElem) blockElem.style.display = 'flex';
+                });
+            }
+        })();
+    </script>
+
+    <div id="device-blocked">
+        <div class="device-blocked-card">
+            <i class="fa-solid fa-laptop-code device-blocked-icon"></i>
+            <h1 class="device-blocked-title">Accès non autorisé</h1>
+            <p class="device-blocked-message">Vous n'êtes pas autorisé à utiliser cette plateforme sur ordinateur.</p>
+            <p class="device-blocked-subtext"><i class="fa-solid fa-mobile-screen-button" style="margin-right: 6px;"></i>Veuillez utiliser un téléphone ou une tablette pour accéder à la plateforme.</p>
+        </div>
+    </div>
+
+    <iframe id="app-frame"></iframe>
+
+    <nav class="bottom-nav">
+        
+        <div class="nav-item active" data-pid="k_h1x9">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </div>
+        
+        <div class="nav-item" data-pid="k_a2y8">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Deals</span>
+        </div>
+        
+		 <div class="nav-item" data-pid="k_s3z7">
+            <i class="fa-solid fa-store"></i>
+            <span>Store</span>
+        </div>
+		
+        <div class="nav-item" data-pid="k_t4w6">
+            <i class="fa-solid fa-chart-candlestick"></i>
+            <span>Trade </span>
+        </div>
+        
+        <div class="nav-item" data-pid="k_c5v5">
+            <i class="fa-solid fa-rocket"></i>
+            <span>Rush </span>
+        </div>
+        
+        <div class="nav-item" data-pid="k_j6u4">
+            <i class="fa-solid fa-gift"></i>
+            <span>Lobby</span>
+        </div>
+    </nav>
+
+    <script>
+       
+        (function() {
+            'use strict';
+
+            const _r = {
+                'k_h1x9': '6163637565696c2e68746d6c', 
+                'k_a2y8': '616374696f6e2e68746d6c', 
+                'k_s3z7': '626f7574697175652e68746d6c',
+                'k_t4w6': '74726164696e672e68746d6c',
+                'k_c5v5': '63726173682e68746d6c', 
+                'k_j6u4': '6a65752e68746d6c' 
+            };
+
+   
+            const _dH = (h) => {
+                let s = '';
+                for (let i = 0; i < h.length; i += 2) {
+                    s += String.fromCharCode(parseInt(h.substr(i, 2), 16));
+                }
+                return s;
+            };
+
+      
+            const _allowedList = Object.values(_r).map(h => _dH(h));
+
+     
+            const _nodeMap = new WeakMap();
+            let _suspiciousActivity = 0;
+
+            function initNav() {
+                const navItems = document.querySelectorAll('.nav-item');
+                const iframe = document.getElementById('app-frame');
+
+   
+                iframe.src = _dH(_r['k_h1x9']);
+
+                navItems.forEach(item => {
+                    const pid = item.getAttribute('data-pid');
+                    if (pid && _r[pid]) {
+           
+                        _nodeMap.set(item, pid);
+                        
+              
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            _processNav(this, iframe);
+                        });
+                    }
+                });
+            }
+
+            function _processNav(element, iframe) {
+                const currentPid = element.getAttribute('data-pid');
+                const originalPid = _nodeMap.get(element);
+
+            
+                if (!originalPid || currentPid !== originalPid) {
+                    _flag("Modification structurelle détectée");
+                    return;
+                }
+
+                const encodedDest = _r[originalPid];
+                if (!encodedDest) {
+                    _flag("Identifiant de route invalide");
+                    return;
+                }
+
+                const dest = _dH(encodedDest);
+
+           
+                if (!_isSafe(dest)) {
+                    _flag("Tentative de navigation hors liste blanche");
+                    return;
+                }
+
+           
+                iframe.src = dest;
+
+        
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                element.classList.add('active');
+            }
+
+            function _isSafe(dest) {
+            
+                if (!_allowedList.includes(dest)) return false;
+                
+           
+                const forbiddenProtocols = /^(http|https|javascript|data|vbscript|file):/i;
+                const pathTraversal = /(\.\.\/|\.\/)/;
+                
+                if (forbiddenProtocols.test(dest) || pathTraversal.test(dest)) return false;
+
+                return true;
+            }
+
+            function _flag(reason) {
+                _suspiciousActivity++;
+                console.warn("[Système Sécurisé] Action ignorée : " + reason);
+                
+                if (_suspiciousActivity >= 3) {
+                    alert("Alerte de sécurité : Activité anormale de navigation détectée. L'action a été bloquée.");
+                    _suspiciousActivity = 0; 
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initNav);
+            } else {
+                initNav();
+            }
+
+        })();
+    </script>
+
+</body>
+</html>

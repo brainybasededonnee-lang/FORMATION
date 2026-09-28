@@ -1,0 +1,622 @@
+<!DOCTYPE html>  
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW - Administration</title>
+<style>
+/* --- RESPONSIVE & TYPOGRAPHY --- */
+:root {
+  --primary: #007bff; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8; --purple: #6f42c1;
+}
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f6ff; margin: 0; padding-bottom: 50px; box-sizing: border-box; }
+.container { width: 95%; max-width: 1000px; margin: clamp(15px, 4vw, 30px) auto; background: white; padding: clamp(15px, 4vw, 25px); border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;}
+.hidden { display: none; } 
+h2 { text-align: center; color: var(--primary); font-size: clamp(20px, 5vw, 28px); margin-bottom: 25px; }
+
+/* Inputs & Buttons */
+input, select, textarea { width: 100%; padding: clamp(10px, 3vw, 12px); margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: clamp(13px, 3.5vw, 15px); font-family: inherit;}
+button { padding: clamp(10px, 3vw, 12px); border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: clamp(13px, 3.5vw, 15px); box-sizing: border-box; }
+button:active { transform: scale(0.98); }
+
+/* TOP BUTTONS GRID */
+.top-action-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.top-action-buttons button { color: white; width: 100%; margin: 0; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+
+/* MAIN STATS GRID */
+.admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 15px; }
+.stat-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 10px; padding: 15px 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+.stat-card .stat-label { font-size: clamp(11px, 3vw, 12px); color: #666; margin-bottom: 6px; line-height: 1.3; font-weight: bold;}
+.stat-card .stat-value { font-size: clamp(16px, 4.5vw, 20px); font-weight: bold; color: var(--primary); }
+.stat-card.green .stat-value { color: var(--success); } .stat-card.orange .stat-value { color: #fd7e14; } .stat-card.red .stat-value { color: var(--danger); } .stat-card.purple .stat-value { color: var(--purple); } .stat-card.teal .stat-value { color: var(--info); }
+
+/* NEW DETAILED STATS SECTION */
+.detailed-stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 30px 0; }
+.detailed-panel { background: white; border: 1px solid #ddd; border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.detailed-panel h3 { margin-top: 0; font-size: clamp(15px, 4vw, 17px); color: #333; border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+.detailed-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: clamp(13px, 3.5vw, 14px); color: #555;}
+.detailed-row strong.val { color: var(--primary); font-size: clamp(14px, 4vw, 16px); }
+.detailed-panel.profit-panel { border: 2px solid var(--purple); background: #faf5ff; }
+.detailed-panel.profit-panel h3 { color: var(--purple); border-bottom-color: var(--purple); }
+
+/* FILTER BAR */
+.admin-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 10px 0; }
+.filter-btn { padding: 8px 14px; border-radius: 20px; border: 2px solid var(--primary); background: white; color: var(--primary); font-weight: bold; font-size: clamp(11px, 3vw, 13px); width: auto; margin: 0; }
+.filter-btn.active, .filter-btn:hover { background: var(--primary); color: white; }
+.filter-btn.orange-btn { border-color: #fd7e14; color: #fd7e14; } .filter-btn.orange-btn.active, .filter-btn.orange-btn:hover { background: #fd7e14; color: white; }
+.filter-btn.red-btn { border-color: var(--danger); color: var(--danger); } .filter-btn.red-btn.active, .filter-btn.red-btn:hover { background: var(--danger); color: white; }
+
+/* TABLE RESPONSIVE */
+.table-responsive { overflow-x: auto; width: 100%; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.05); margin-bottom: 20px;}
+.admin-table { width: 100%; border-collapse: collapse; font-size: clamp(12px, 3.5vw, 14px); min-width: 700px; background: white;}
+.admin-table th, .admin-table td { border: 1px solid #dee2e6; padding: 10px; text-align: center; vertical-align: middle;}
+.admin-table th { background: var(--primary); color: white; position: sticky; top: 0;}
+.admin-action button { padding: 6px 10px; margin: 2px 0; font-size: 11px; width: 100%; }
+
+/* POPUPS */
+.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: flex-start; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; padding-top: clamp(20px, 5vh, 50px); box-sizing: border-box;}
+.popup-overlay.show { opacity: 1; visibility: visible; }
+.popup-content { background: white; border-radius: 12px; width: 92%; max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.3); transform: translateY(-20px); transition: transform 0.3s ease; }
+.popup-overlay.show .popup-content { transform: translateY(0); }
+.popup-header { color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+.popup-header button { background: rgba(0,0,0,0.2); border: none; color: white; font-size: 18px; width: 32px; height: 32px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.popup-body { overflow-y: auto; padding: 15px; flex: 1; background: #f8f9fa; font-size: clamp(12px, 3.5vw, 13px); text-align: left; }
+.hist-item { background: white; border: 1px solid #ddd; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+.hist-item-col { display: flex; flex-direction: column; gap: 3px; }
+
+/* ANNOUNCEMENTS */
+.ann-section { margin-top: 40px; border-top: 2px dashed #ccc; padding-top: 25px; }
+.ann-form { background: #f8fbff; padding: 15px; border-radius: 10px; border: 1px solid #cce5ff; margin-bottom: 15px; }
+.ann-item { background: white; border: 1px solid #eee; border-left: 4px solid var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+.ann-actions { display: flex; gap: 10px; margin-top: 10px; }
+.ann-actions button { width: auto; padding: 6px 15px; font-size: 12px; }
+
+@media (max-width: 600px) {
+    .detailed-stats-container { grid-template-columns: 1fr; }
+    .hist-item { flex-direction: column; align-items: flex-start; gap: 8px;}
+    .hist-item > div:last-child { align-self: flex-end; }
+}
+</style>
+</head>
+<body>
+
+<div id="genericHistoryPopup" class="popup-overlay">
+  <div class="popup-content">
+    <div class="popup-header" id="genericHistoryHeader" style="background:var(--primary);">
+      <strong style="font-size:16px;" id="genericHistoryTitle">Historique</strong>
+      <button onclick="closeGenericHistoryPopup()">✕</button>
+    </div>
+    <div class="popup-body" id="genericHistoryList">Chargement...</div>
+  </div>
+</div>
+
+<div class="container hidden" id="admin-section">
+  <h2>Dashboard Admin Global</h2>
+
+  <div class="top-action-buttons">
+    <button onclick="openHistoryPopup('actions')" style="background:var(--success);">📈 Historique Actions</button>
+    <button onclick="openHistoryPopup('trading')" style="background:var(--info);">📊 Historique Trading</button>
+    <button onclick="openHistoryPopup('crash')" style="background:var(--danger);">🚀 Historique Crash</button>
+    <button onclick="openHistoryPopup('tombola')" style="background:var(--purple);">🎰 Historique Tombola</button>
+
+  </div>
+<button onclick="window.location.href='gestion.html'" style="background:var(--purple);">⚙️ Gestion BW</button>
+<button onclick="window.location.href='analyse.html'" style="background:var(--purple);">⚙️ Analyse BW</button>
+<button onclick="window.location.href='assistant.html'" style="background:var(--purple);">Assistant BW</button>
+  <div class="admin-stats-grid">
+    <div class="stat-card"><div class="stat-label">👥 Total Clients</div><div class="stat-value" id="totalClients">0</div></div>
+    <div class="stat-card"><div class="stat-label">💰 Solde Total</div><div class="stat-value" id="totalBalance">0 FCFA</div></div>
+    <div class="stat-card red"><div class="stat-label">⏳ Retraits en Attente</div><div class="stat-value" id="pendingRequests">0</div></div>
+    <div class="stat-card orange"><div class="stat-label">💸 Montant Total Retiré</div><div class="stat-value" id="statTotalWithdrawn">0 FCFA</div></div>
+    <div class="stat-card orange"><div class="stat-label">📋 Actions en Attente</div><div class="stat-value" id="statActionsEnAttente">0</div></div>
+    <div class="stat-card teal"><div class="stat-label">⚙️ Actions en Cours</div><div class="stat-value" id="statActionsEnCours">0</div></div>
+    <div class="stat-card green"><div class="stat-label">✅ Actions Terminées</div><div class="stat-value" id="statActionsTerminees">0</div></div>
+    <div class="stat-card purple"><div class="stat-label">💳 Actions Payées</div><div class="stat-value" id="statActionsPaees">0</div></div>
+    <div class="stat-card"><div class="stat-label">🏦 Total Misé (Actions)</div><div class="stat-value" id="statTotalMise">0 FCFA</div></div>
+    <div class="stat-card green"><div class="stat-label">🏆 Gains Totaux Payés</div><div class="stat-value" id="statTotalGains">0 FCFA</div></div>
+  </div>
+
+  <div class="detailed-stats-container">
+    <div class="detailed-panel">
+      <h3>📥 Total des Mises</h3>
+      <div class="detailed-row"><span>Trading:</span> <strong class="val" id="stMiseTrading">0 FCFA</strong></div>
+      <div class="detailed-row"><span>Crash:</span> <strong class="val" id="stMiseCrash">0 FCFA</strong></div>
+      <div class="detailed-row"><span>Tombola:</span> <strong class="val" id="stMiseTombola">0 FCFA</strong></div>
+      <div class="detailed-row"><span>Actions:</span> <strong class="val" id="stMiseActions">0 FCFA</strong></div>
+      <div class="detailed-row" style="background:#e9f5ff; padding:10px; margin-top:8px; border-radius:5px;">
+        <span style="font-weight:bold;">Total Général:</span> <strong class="val" id="stMiseTotal" style="color:#0056b3; font-size:18px;">0 FCFA</strong>
+      </div>
+    </div>
+
+    <div class="detailed-panel">
+      <h3>💸 Total des Gains (Payé aux Utilisateurs)</h3>
+      <div class="detailed-row"><span>Trading:</span> <strong class="val" style="color:var(--success);" id="stGainTrading">0 FCFA</strong></div>
+      <div class="detailed-row"><span>Crash:</span> <strong class="val" style="color:var(--success);" id="stGainCrash">0 FCFA</strong></div>
+      <div class="detailed-row"><span>Tombola:</span> <strong class="val" style="color:var(--success);" id="stGainTombola">0 FCFA</strong></div>
+      <div class="detailed-row"><span>Actions:</span> <strong class="val" style="color:var(--success);" id="stGainActions">0 FCFA</strong></div>
+      <div class="detailed-row" style="background:#e9ffe9; padding:10px; margin-top:8px; border-radius:5px;">
+        <span style="font-weight:bold;">Total Général:</span> <strong class="val" style="color:#155724; font-size:18px;" id="stGainTotal">0 FCFA</strong>
+      </div>
+    </div>
+
+    <div class="detailed-panel profit-panel">
+      <h3>👑 Bénéfice de la Plateforme</h3>
+      <p style="font-size:12px; color:#666; margin-bottom: 20px; line-height: 1.4;">Calculé automatiquement en temps réel : <br><em>(Total Général des Mises) - (Total Général des Gains)</em></p>
+      <div style="font-size:clamp(28px, 6vw, 36px); font-weight:bold; color:var(--purple); text-align:center; margin-top:10px; padding:15px; background:rgba(111, 66, 193, 0.1); border-radius:10px;" id="stBenefice">
+        0 FCFA
+      </div>
+    </div>
+  </div>
+
+  <input type="text" id="searchUser" placeholder="🔍 Rechercher par nom ou email..." oninput="loadAdminTable()" style="margin-top:15px;">
+
+  <div class="admin-filter-bar">
+    <button class="filter-btn active" id="filterAll" onclick="setFilter('all')">Tous</button>
+    <button class="filter-btn orange-btn" id="filterPendingWithdraw" onclick="setFilter('pendingWithdraw')">⏳ Retrait en Attente</button>
+    <button class="filter-btn orange-btn" id="filterPendingAction" onclick="setFilter('pendingAction')">📋 Action en Attente</button>
+    <button class="filter-btn red-btn" id="filterUnpaidAction" onclick="setFilter('unpaidAction')">💳 Action Non Payée</button>
+  </div>
+
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Client & Contact</th><th>Email</th><th>Solde</th><th>Retraits</th><th>Actions Client</th><th>Menu</th>
+        </tr>
+      </thead>
+      <tbody id="adminTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="ann-section">
+    <h3 style="color:var(--primary); margin-top:0;">📢 Gestion des Annonces (Visibles par tous les utilisateurs)</h3>
+    <div class="ann-form">
+      <input type="hidden" id="editAnnId">
+      <input type="text" id="annTitle" placeholder="Titre de l'annonce (Ex: Maintenance, Nouveauté...)">
+      <textarea id="annMsg" placeholder="Contenu détaillé de l'annonce..."></textarea>
+      <div style="display:flex; gap:10px;">
+          <button id="btnPublishAnn" onclick="publishAnnouncement()" style="background:var(--success); flex:1;">Publier l'annonce</button>
+          <button id="btnCancelAnn" onclick="cancelEditAnn()" style="background:#6c757d; display:none; flex:0.3;">Annuler</button>
+      </div>
+    </div>
+    <div id="announcementsList" style="margin-top: 20px;">Chargement des annonces...</div>
+  </div>
+
+  <button onclick="logout()" style="margin-top:40px; background:var(--danger); font-size:16px;">Se déconnecter de l'administration</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, arrayUnion, query, where, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCVAmEneDsZ-f2HjpDx_OElvjDjPu1D2LI", authDomain: "brainy-wallet.firebaseapp.com", projectId: "brainy-wallet", storageBucket: "brainy-wallet.firebasestorage.app", messagingSenderId: "554152129336", appId: "1:554152129336:web:997fe6b439d6ccac0707cd" };
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+
+window._globalUsersData = []; // Stockage global pour les popups d'historique
+
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if(snap.exists() && snap.data().isAdmin) {
+            document.getElementById("admin-section").classList.remove("hidden");
+            window.loadAdminTable();
+            window.loadAnnouncements();
+        } else {
+            window.location.href = "index.html"; 
+        }
+    } else {
+        window.location.href = "login.html"; 
+    }
+});
+
+window.logout = () => signOut(auth).then(()=> window.location.href="login.html");
+
+let activeFilter = 'all';
+window.setFilter = (filter) => {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  const btnMap = { all: 'filterAll', pendingWithdraw: 'filterPendingWithdraw', pendingAction: 'filterPendingAction', unpaidAction: 'filterUnpaidAction' };
+  const targetBtn = document.getElementById(btnMap[filter]);
+  if (targetBtn) targetBtn.classList.add('active');
+  window.loadAdminTable();
+};
+
+window.loadAdminTable = async () => {
+  const tbody=document.getElementById("adminTableBody");
+  tbody.innerHTML="<tr><td colspan='6' style='color:#999; padding:20px;'>Chargement...</td></tr>";
+
+  const searchRaw = (document.getElementById("searchUser").value || "").trim().toLowerCase();
+  const querySnapshot = await getDocs(collection(db,"users"));
+
+  let allUsers = [];
+  querySnapshot.forEach(docSnap => allUsers.push({ id: docSnap.id, data: docSnap.data() }));
+  window._globalUsersData = allUsers; // Sauvegarde pour les popups
+
+  let totalC = 0, totalB = 0, pend = 0;
+  let statTotalWithdrawn = 0;
+  let statActionsEnAttente = 0, statActionsEnCours = 0, statActionsTerminees = 0, statActionsPaees = 0;
+  let statTotalMise = 0, statTotalGains = 0;
+
+  // Nouvelles variables pour statistiques détaillées
+  let totalMTrading = 0, totalGTrading = 0;
+  let totalMCrash = 0, totalGCrash = 0;
+  let totalMTombola = 0, totalGTombola = 0;
+  let totalGActions = 0;
+
+  const now = new Date();
+
+  allUsers.forEach(({ data: user }) => {
+    totalC++;
+    totalB += (user.balance || 0);
+    (user.withdrawRequests || []).forEach(r => {
+      if (r.status === "en attente") pend++;
+      if (r.status === "validé") statTotalWithdrawn += (r.amount || 0);
+    });
+    
+    (user.actions || []).forEach(a => {
+      if (a.status === "en attente") {
+        statActionsEnAttente++;
+      } else if (a.status === "validé") {
+        statTotalMise += (a.stake || 0);
+        if (a.isPaid) statActionsPaees++;
+        else if (a.expiryDate && now.getTime() >= new Date(a.expiryDate).getTime()) statActionsTerminees++;
+        else statActionsEnCours++;
+      }
+    });
+    statTotalGains += (user.totalGenerated || 0);
+
+    // Analyse détaillée de l'historique pour catégoriser les mises et gains
+    (user.history || []).forEach(h => {
+        let type = (h.type || "").toLowerCase();
+        let amt = h.amount || 0;
+        
+        if (type.includes('trading')) {
+            if (amt < 0) totalMTrading += Math.abs(amt); else totalGTrading += amt;
+        }
+        if (type.includes('crash')) {
+            if (amt < 0) totalMCrash += Math.abs(amt); else totalGCrash += amt;
+        }
+        if (type.includes('tombola')) {
+            if (amt < 0) totalMTombola += Math.abs(amt); else totalGTombola += amt;
+        }
+        if (type.includes('action') && type.includes('gain')) {
+            if (amt > 0) totalGActions += amt;
+        }
+    });
+  });
+
+  // Mise à jour interface Globale
+  document.getElementById("totalClients").textContent = totalC;
+  document.getElementById("totalBalance").textContent = totalB + " FCFA";
+  document.getElementById("pendingRequests").textContent = pend;
+  document.getElementById("statTotalWithdrawn").textContent = statTotalWithdrawn + " FCFA";
+  document.getElementById("statActionsEnAttente").textContent = statActionsEnAttente;
+  document.getElementById("statActionsEnCours").textContent = statActionsEnCours;
+  document.getElementById("statActionsTerminees").textContent = statActionsTerminees;
+  document.getElementById("statActionsPaees").textContent = statActionsPaees;
+  document.getElementById("statTotalMise").textContent = statTotalMise + " FCFA";
+  document.getElementById("statTotalGains").textContent = statTotalGains + " FCFA";
+
+  // Mise à jour Tableaux Détaillés
+  document.getElementById("stMiseTrading").textContent = totalMTrading + " FCFA";
+  document.getElementById("stMiseCrash").textContent = totalMCrash + " FCFA";
+  document.getElementById("stMiseTombola").textContent = totalMTombola + " FCFA";
+  document.getElementById("stMiseActions").textContent = statTotalMise + " FCFA";
+  
+  let globalMises = totalMTrading + totalMCrash + totalMTombola + statTotalMise;
+  document.getElementById("stMiseTotal").textContent = globalMises + " FCFA";
+
+  document.getElementById("stGainTrading").textContent = totalGTrading + " FCFA";
+  document.getElementById("stGainCrash").textContent = totalGCrash + " FCFA";
+  document.getElementById("stGainTombola").textContent = totalGTombola + " FCFA";
+  document.getElementById("stGainActions").textContent = totalGActions + " FCFA";
+  
+  let globalGains = totalGTrading + totalGCrash + totalGTombola + totalGActions;
+  document.getElementById("stGainTotal").textContent = globalGains + " FCFA";
+
+  let platformProfit = globalMises - globalGains;
+  let profitColor = platformProfit >= 0 ? "var(--purple)" : "var(--danger)";
+  document.getElementById("stBenefice").textContent = platformProfit + " FCFA";
+  document.getElementById("stBenefice").style.color = profitColor;
+
+  // Filtrage Table
+  let filteredUsers = allUsers;
+  if (searchRaw) {
+    filteredUsers = allUsers.filter(u => u.data.fullName?.toLowerCase().includes(searchRaw) || u.data.email?.toLowerCase().includes(searchRaw));
+  }
+
+  if (activeFilter === 'pendingWithdraw') { filteredUsers = filteredUsers.filter(({ data: user }) => (user.withdrawRequests || []).some(r => r.status === "en attente")); } 
+  else if (activeFilter === 'pendingAction') { filteredUsers = filteredUsers.filter(({ data: user }) => (user.actions || []).some(a => a.status === "en attente")); } 
+  else if (activeFilter === 'unpaidAction') { filteredUsers = filteredUsers.filter(({ data: user }) => (user.actions || []).some(a => a.status === "validé" && !a.isPaid)); }
+
+  tbody.innerHTML = "";
+  if (filteredUsers.length === 0) { tbody.innerHTML = "<tr><td colspan='6' style='color:#999; padding:20px;'>Aucun utilisateur trouvé.</td></tr>"; return; }
+
+  filteredUsers.forEach(({ id: docId, data: user }) => {
+    const tr = document.createElement("tr");
+    const actionsHTML=(user.actions || []).map((a,i)=>{
+      let titleColor = a.status === "validé" ? "green" : "orange"; let actionBtn = ""; let dateText = ""; let divBg = "transparent";
+      if (a.status === "en attente") {
+         actionBtn = `<div style="display:flex; gap:5px;"><button onclick='adminValidateAction("${docId}", ${i})' style="background:#28a745;">Valider</button><button onclick='adminRejectAction("${docId}", ${i})' style="background:#dc3545;">Rejeter</button></div>`;
+      } else if (a.status === "rejeté") {
+         divBg = "#f8d7da"; titleColor = "#721c24"; actionBtn = `<span style="font-size:11px; font-weight:bold; color:#dc3545;">Action Rejetée</span>`;
+      } else {
+         if (a.expiryDate) {
+             let ed = new Date(a.expiryDate);
+             dateText = `<br><span style="font-size:10px; color:#555;">Fin: ${ed.toLocaleDateString('fr-FR')} à ${ed.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span>`;
+             let nowCheck = new Date();
+             if (a.isPaid) { divBg = "#cce5ff"; titleColor = "#004085"; actionBtn = `<button disabled style="background:#007bff; color:white; border:none; width:100%;">Gain Payé</button>`; } 
+             else if (nowCheck.getTime() >= ed.getTime()) { divBg = "#f8d7da"; titleColor = "#721c24"; actionBtn = `<button onclick='adminPayGain("${docId}", ${i})' style="background:#dc3545; color:white; border:none; width:100%;">Payer Gain (Expiré)</button>`; } 
+             else { actionBtn = `<button onclick='adminPayGain("${docId}", ${i})' style="background:#ffc107; color:black; border:none; width:100%;">Payer Gain</button>`; }
+         } else { actionBtn = `<button onclick='adminPayGain("${docId}", ${i})' style="background:#ffc107; color:black;">Payer Gain</button>`; }
+      }
+      return `<div style="background:${divBg}; border-bottom:1px solid #ccc; padding:8px; margin-bottom:5px; border-radius:5px; text-align:left;"><span style="color:${titleColor}; font-weight:bold; font-size:13px;">${a.name} (${a.stake}F)</span>${dateText}<br><div style="margin-top:6px;">${actionBtn}</div></div>`;
+    }).join("");
+
+    const withdrawsHTML = (user.withdrawRequests || []).map((req, i) => {
+        if (req.status === "en attente") {
+            return `<div style="background:#fff3cd; border:1px solid #ffeeba; padding:8px; margin-bottom:5px; border-radius:5px; text-align:left; font-size:12px;"><div style="margin-bottom:5px;">Demande: <strong style="color:#856404; font-size:14px;">${req.amount} F</strong></div><div style="margin-bottom:8px;">Solde dispo: <strong>${user.balance} F</strong></div><div style="display:flex; gap:5px;"><button onclick='adminApproveWithdrawal("${docId}", ${i})' style="background:#28a745; color:white; border:none; flex:1;">Valider</button><button onclick='adminRejectWithdrawal("${docId}", ${i})' style="background:#dc3545; color:white; border:none; flex:1;">Rejeter</button></div></div>`;
+        } else {
+            return `<div style="font-size:12px; color:${req.status === "validé" ? "green" : "red"}; padding:4px 2px; text-align:left; border-bottom:1px solid #eee;">${req.amount} F - ${req.status}</div>`;
+        }
+    }).join("");
+
+    let floozNumber = user.paymentNumber ? user.paymentNumber : "Non renseigné";
+    tr.innerHTML=`<td><strong>${user.fullName}</strong><br><span style="font-size:11px; color:#555;">Paiement : <strong style="color:#007bff;">${floozNumber}</strong></span></td>
+      <td>${user.email}</td><td><strong style="color:#28a745; font-size:15px;">${user.balance} F</strong></td><td>${withdrawsHTML || '-'}</td><td>${actionsHTML || '-'}</td>
+      <td class="admin-action"><button onclick='addDepositPrompt("${docId}")' style="background:var(--primary); font-size:13px; padding:10px;">Ajouter Dépôt</button></td>`;
+    tbody.appendChild(tr);
+  });
+};
+
+// =====================================
+// FONCTIONS EXISTANTES NON MODIFIÉES
+// =====================================
+window.adminApproveWithdrawal = async (uid, idx) => {
+    const snap = await getDoc(doc(db,"users",uid)); let userData = snap.data(); let req = userData.withdrawRequests[idx];
+    if(userData.balance < req.amount) return alert("Impossible de valider : le solde actuel du client ("+userData.balance+"F) est inférieur au montant demandé ("+req.amount+"F).");
+    userData.balance -= req.amount; userData.totalWithdrawn = (userData.totalWithdrawn || 0) + req.amount; req.status = "validé";
+    userData.history.push({date: new Date().toISOString(), type:'Retrait Validé', amount: -req.amount, desc: `Demande approuvée par l'admin`});
+    userData.notifications.push({date: new Date().toISOString(), message: `Excellente nouvelle ! Votre demande de retrait de ${req.amount} FCFA a été validée.`, type:'success'});
+    await updateDoc(doc(db,"users",uid), { balance: userData.balance, totalWithdrawn: userData.totalWithdrawn, withdrawRequests: userData.withdrawRequests, history: userData.history, notifications: userData.notifications });
+    alert("Retrait validé avec succès !"); window.loadAdminTable();
+};
+
+window.adminRejectWithdrawal = async (uid, idx) => {
+    if(!confirm("Êtes-vous sûr de vouloir rejeter cette demande de retrait ?")) return;
+    const snap = await getDoc(doc(db,"users",uid)); let userData = snap.data(); userData.withdrawRequests[idx].status = "rejeté";
+    userData.notifications.push({date: new Date().toISOString(), message: `Désolé, votre demande de retrait de ${userData.withdrawRequests[idx].amount} FCFA a été rejetée.`, type:'error'});
+    await updateDoc(doc(db,"users",uid), { withdrawRequests: userData.withdrawRequests, notifications: userData.notifications });
+    alert("Retrait rejeté !"); window.loadAdminTable();
+};
+
+window.adminValidateAction = async (uid, idx) => {
+    const snap = await getDoc(doc(db,"users",uid)); 
+    let userData = snap.data(); 
+    let act = userData.actions[idx];
+    
+    if(userData.balance < act.stake) return alert("Solde client insuffisant");
+    
+    let expiry = new Date();
+    
+    // Alignement strict avec les options du menu déroulant client
+    if(act.time === "7 Jours") {
+        expiry.setDate(expiry.getDate() + 7);
+    } else if(act.time === "30 Jours") {
+        expiry.setDate(expiry.getDate() + 30);
+    } else if(act.time === "2 Mois") {
+        expiry.setMonth(expiry.getMonth() + 2);
+    } else if(act.time === "4 Mois") {
+        expiry.setMonth(expiry.getMonth() + 4);
+    } else if(act.time === "6 Mois") {
+        expiry.setMonth(expiry.getMonth() + 6);
+    } else if(act.time === "7 Mois") {
+        expiry.setMonth(expiry.getMonth() + 7);
+    } else if(act.time === "9 Mois") {
+        expiry.setMonth(expiry.getMonth() + 9);
+    } else {
+        // Sécurité par défaut : si aucune option ne matche, on applique 7 jours par défaut
+        expiry.setDate(expiry.getDate() + 7);
+    }
+    
+    userData.balance -= act.stake; 
+    act.status = "validé"; 
+    act.expiryDate = expiry.toISOString(); 
+    act.validationDate = new Date().toISOString(); 
+    act.isPaid = false; 
+    
+    userData.history.push({date: new Date().toISOString(), type:'Action Validée', amount: -act.stake, desc: `Action ${act.name} active`});
+    userData.notifications.push({date: new Date().toISOString(), message: `Action ${act.name} validée ! Le décompte a commencé.`, type:'success'});
+    
+    await updateDoc(doc(db,"users",uid), { balance: userData.balance, actions: userData.actions, history: userData.history, notifications: userData.notifications });
+    alert("Action validée ! Le décompte du temps a commencé."); 
+    window.loadAdminTable();
+};
+
+window.adminRejectAction = async (uid, idx) => {
+    if(!confirm("Êtes-vous sûr de vouloir rejeter cette action ?")) return;
+    const snap = await getDoc(doc(db,"users",uid)); let userData = snap.data(); let act = userData.actions[idx];
+    act.status = "rejeté"; 
+    userData.notifications.push({ date: new Date().toISOString(), message: `Désolé, votre action "${act.name}" a été rejetée.`, type:'error' });
+    await updateDoc(doc(db,"users",uid), { actions: userData.actions, notifications: userData.notifications });
+    alert("Action rejetée avec succès !"); window.loadAdminTable();
+};
+
+window.adminPayGain = async (uid, idx) => {
+    let gain = parseInt(prompt("Montant du gain à payer au client :")); if(isNaN(gain) || gain <= 0) return;
+    const snap = await getDoc(doc(db,"users",uid)); let userData = snap.data(); let act = userData.actions[idx];
+    userData.balance += gain; userData.totalGenerated = (userData.totalGenerated || 0) + gain; act.isPaid = true; 
+    userData.history.push({date: new Date().toISOString(), type:'Gain Action', amount: gain, desc: `Gain pour ${act.name}`});
+    userData.notifications.push({date: new Date().toISOString(), message: `Félicitations ! Vous avez reçu un gain de ${gain} FCFA sur votre action ${act.name}.`, type:'success'});
+    await updateDoc(doc(db,"users",uid), { balance: userData.balance, totalGenerated: userData.totalGenerated, actions: userData.actions, history: userData.history, notifications: userData.notifications });
+    alert("Gain payé avec succès !"); window.loadAdminTable();
+};
+
+window.addDepositPrompt=async(uid)=>{
+  let amount=parseInt(prompt("Montant du dépôt :")); if(isNaN(amount)||amount<=0) return;
+  const snap=await getDoc(doc(db,"users",uid)); let ud = snap.data();
+  let finalDepositAmount = amount; let historyDesc = 'Admin';
+  
+  if (!ud.hasMadeFirstDeposit && ud.referredBy) {
+      let q = query(collection(db, "users"), where("myAffiliateCode", "==", ud.referredBy));
+      let querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+          let sponsorDoc = querySnapshot.docs[0]; let sponsorData = sponsorDoc.data();
+          if ((sponsorData.balance || 0) >= 500) {
+              let bonus = Math.floor(amount * 0.03); finalDepositAmount = amount - bonus; historyDesc = `Admin (Retenue 3% parrainage: -${bonus}F)`;
+              await updateDoc(doc(db, "users", sponsorDoc.id), { balance: sponsorData.balance + bonus, totalAffiliateBonus: (sponsorData.totalAffiliateBonus || 0) + bonus, history: arrayUnion({date:new Date().toISOString(), type:'Bonus Parrainage', amount:bonus, desc:`3% du 1er dépôt de ${ud.fullName}`}), notifications: arrayUnion({date:new Date().toISOString(), message: `Félicitations ! Vous avez reçu ${bonus} FCFA (3%) suite au premier dépôt de votre affilié ${ud.fullName}.`, type:'success'}) });
+          }
+      }
+  }
+  await updateDoc(doc(db,"users",uid),{ balance: ud.balance + finalDepositAmount, hasMadeFirstDeposit: true, history: arrayUnion({date:new Date().toISOString(), type:'Dépôt', amount:finalDepositAmount, desc:historyDesc}) });
+  window.loadAdminTable();
+};
+
+// =====================================
+// NOUVEAUX POPUPS HISTORIQUES GÉNÉRIQUES
+// =====================================
+window.openHistoryPopup = (category) => {
+    document.getElementById("genericHistoryPopup").classList.add("show");
+    const list = document.getElementById("genericHistoryList");
+    const title = document.getElementById("genericHistoryTitle");
+    const header = document.getElementById("genericHistoryHeader");
+    list.innerHTML = "Chargement des parties...";
+
+    let historyData = [];
+
+    window._globalUsersData.forEach(({data: user}) => {
+        if(category === 'tombola' && user.history) {
+            header.style.background = "var(--purple)"; title.textContent = "🎰 Historique Tombola (Global)";
+            user.history.filter(h => h.type.toLowerCase().includes('tombola')).forEach(h => historyData.push({ user, date: h.date, desc: h.desc, amount: h.amount }));
+        }
+        else if(category === 'trading') {
+            header.style.background = "var(--info)"; title.textContent = "📊 Historique Trading (Global)";
+            if(user.trades) {
+                user.trades.forEach(t => {
+                    let desc = `Mise: ${t.stake}F | Cible: ${t.target} | Statut: ${t.status.toUpperCase()}`;
+                    let amt = t.status === 'gagné' ? Math.floor(t.stake*1.3) : (t.status === 'perdu' ? -t.stake : 0);
+                    historyData.push({ user, date: t.date, desc: desc, amount: amt });
+                });
+            } else if(user.history) { // Sécurité si données format ancien
+                user.history.filter(h => h.type.toLowerCase().includes('trading')).forEach(h => historyData.push({ user, date: h.date, desc: h.desc, amount: h.amount }));
+            }
+        }
+        else if(category === 'crash' && user.history) {
+            header.style.background = "var(--danger)"; title.textContent = "🚀 Historique Crash (Global)";
+            user.history.filter(h => h.type.toLowerCase().includes('crash')).forEach(h => historyData.push({ user, date: h.date, desc: h.desc, amount: h.amount }));
+        }
+        else if(category === 'actions' && user.actions) {
+            header.style.background = "var(--success)"; title.textContent = "📈 Historique Actions (Global)";
+            user.actions.forEach(a => {
+                let desc = `Action: ${a.name} | Temps: ${a.time} | Statut: ${a.status.toUpperCase()}`;
+                let amt = a.status === 'validé' ? -a.stake : 0;
+                historyData.push({ user, date: a.validationDate || a.date || new Date().toISOString(), desc: desc, amount: amt });
+            });
+        }
+    });
+
+    historyData.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    if(historyData.length === 0) { list.innerHTML = "<i style='color:#999; padding:10px; display:block;'>Aucune donnée disponible pour cette catégorie.</i>"; return; }
+    
+    list.innerHTML = historyData.map(h => {
+        let colorClass = h.amount > 0 ? "var(--success)" : (h.amount < 0 ? "var(--danger)" : "#555");
+        let sign = h.amount > 0 ? "+" : "";
+        let dateStr = new Date(h.date).toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'});
+        return `<div class="hist-item">
+            <div class="hist-item-col">
+                <strong>${h.user.fullName}</strong>
+                <span style="font-size:11px; color:#888;">${h.user.email}</span>
+                <span style="font-size:12px; color:#555; margin-top:4px;">📅 ${dateStr}</span>
+                <span style="font-size:13px; color:#333; margin-top:2px;">${h.desc}</span>
+            </div>
+            <div style="color:${colorClass}; font-weight:bold; font-size:15px; white-space:nowrap;">
+                ${sign}${h.amount} FCFA
+            </div>
+        </div>`;
+    }).join("");
+};
+
+window.closeGenericHistoryPopup = () => document.getElementById("genericHistoryPopup").classList.remove("show");
+
+// =====================================
+// SYSTÈME D'ANNONCES (CRUD)
+// =====================================
+window.loadAnnouncements = async () => {
+    const list = document.getElementById("announcementsList");
+    list.innerHTML = "<i>Chargement...</i>";
+    try {
+        const snap = await getDocs(collection(db, "announcements"));
+        let arr = [];
+        snap.forEach(d => arr.push({id: d.id, ...d.data()}));
+        arr.sort((a,b) => b.date - a.date);
+        
+        if(arr.length === 0) {
+            list.innerHTML = "<i style='color:#888;'>Aucune annonce pour le moment.</i>";
+            return;
+        }
+
+        list.innerHTML = arr.map(a => `
+            <div class="ann-item">
+                <div style="font-size:11px; color:#888; margin-bottom:5px;">${new Date(a.date).toLocaleString('fr-FR')}</div>
+                <strong style="font-size:16px; color:#333; display:block; margin-bottom:8px;">${a.title}</strong>
+                <p style="font-size:14px; color:#555; margin:0; line-height:1.5; white-space:pre-wrap;">${a.message}</p>
+                <div class="ann-actions">
+                    <button onclick="editAnnouncement('${a.id}', \`${a.title.replace(/`/g, "\\`")}\`, \`${a.message.replace(/`/g, "\\`")}\`)" style="background:var(--warning); color:black;">Modifier</button>
+                    <button onclick="deleteAnnouncement('${a.id}')" style="background:var(--danger); color:white;">Supprimer</button>
+                </div>
+            </div>
+        `).join("");
+    } catch(e) {
+        list.innerHTML = "<span style='color:red;'>Erreur de chargement des annonces.</span>";
+    }
+};
+
+window.publishAnnouncement = async () => {
+    const title = document.getElementById("annTitle").value.trim();
+    const msg = document.getElementById("annMsg").value.trim();
+    const editId = document.getElementById("editAnnId").value;
+
+    if(!title || !msg) return alert("Veuillez remplir le titre et le contenu de l'annonce.");
+
+    try {
+        if(editId) {
+            await updateDoc(doc(db, "announcements", editId), { title: title, message: msg });
+            alert("Annonce modifiée avec succès.");
+        } else {
+            await addDoc(collection(db, "announcements"), { title: title, message: msg, date: Date.now() });
+            alert("Annonce publiée avec succès.");
+        }
+        cancelEditAnn();
+        window.loadAnnouncements();
+    } catch(e) { alert("Erreur lors de la publication."); }
+};
+
+window.editAnnouncement = (id, title, msg) => {
+    document.getElementById("editAnnId").value = id;
+    document.getElementById("annTitle").value = title;
+    document.getElementById("annMsg").value = msg;
+    document.getElementById("btnPublishAnn").textContent = "Enregistrer la modification";
+    document.getElementById("btnCancelAnn").style.display = "block";
+    document.querySelector(".ann-form").scrollIntoView({behavior: "smooth"});
+};
+
+window.cancelEditAnn = () => {
+    document.getElementById("editAnnId").value = "";
+    document.getElementById("annTitle").value = "";
+    document.getElementById("annMsg").value = "";
+    document.getElementById("btnPublishAnn").textContent = "Publier l'annonce";
+    document.getElementById("btnCancelAnn").style.display = "none";
+};
+
+window.deleteAnnouncement = async (id) => {
+    if(!confirm("Êtes-vous sûr de vouloir supprimer définitivement cette annonce ?")) return;
+    try {
+        await deleteDoc(doc(db, "announcements", id));
+        window.loadAnnouncements();
+    } catch(e) { alert("Erreur lors de la suppression."); }
+};
+</script>
+</body>
+</html>
