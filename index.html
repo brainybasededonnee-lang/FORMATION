@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BRAINY AGENCY GESTIONS</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: #0f172a; /* Bleu très foncé, presque noir */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: white;
+      overflow: hidden; /* Empêche la barre de défilement liée aux cercles lumineux */
+      position: relative;
+    }
+
+    /* --- Formes lumineuses en arrière-plan pour sublimer l'effet vitré --- */
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: -1;
+    }
+
+    body::before {
+      width: 400px;
+      height: 400px;
+      background: #3b82f6; /* Bleu lumineux */
+      top: -100px;
+      left: -100px;
+      animation: float 8s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      width: 350px;
+      height: 350px;
+      background: #8b5cf6; /* Violet lumineux */
+      bottom: -100px;
+      right: -100px;
+      animation: float 10s ease-in-out infinite alternate-reverse;
+    }
+
+    /* --- Animations du fond --- */
+    @keyframes float {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(40px, 60px); }
+    }
+
+    /* --- Titre --- */
+    h1 {
+      margin-bottom: 50px;
+      font-size: 36px;
+      letter-spacing: 2px;
+      font-weight: 600;
+      text-align: center;
+      text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      animation: fadeInDown 1s ease forwards;
+      z-index: 1;
+    }
+
+    /* --- Conteneur --- */
+    .container {
+      display: grid;
+      grid-template-columns: repeat(2, 220px);
+      gap: 30px;
+      animation: fadeIn 1.5s ease forwards;
+      z-index: 1; /* Reste au-dessus de l'arrière-plan */
+    }
+
+    /* --- Boutons (Effet Glassmorphism) --- */
+    .btn {
+      width: 220px;
+      height: 160px;
+      
+      /* Propriétés de l'effet vitré */
+      background: rgba(255, 255, 255, 0.05); /* Blanc très transparent */
+      backdrop-filter: blur(16px); /* Le flou derrière la carte */
+      -webkit-backdrop-filter: blur(16px); /* Pour Safari */
+      border: 1px solid rgba(255, 255, 255, 0.15); /* Bordure blanche très fine */
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Ombre douce */
+      
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 20px;
+      text-decoration: none;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Animation fluide et rebondissante */
+    }
+
+    /* --- Interactions (Survol et Clic) --- */
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      transform: translateY(-10px) scale(1.05);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0) scale(0.95);
+    }
+
+    /* --- Animations d'apparition --- */
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    @keyframes fadeInDown {
+      from {opacity: 0; transform: translateY(-30px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    /* --- Mode Mobile --- */
+    @media (max-width: 600px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .btn {
+        width: 280px;
+        height: 100px;
+      }
+      h1 {
+        font-size: 26px;
+        padding: 0 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>BRAINY AGENCY GESTIONS</h1>
+
+  <div class="container">
+    <a class="btn" href="commandeadmin.html">Gestion des commandes</a>
+    <a class="btn" href="pagebrainystore.html">BRAINY STORE</a>
+	<a class="btn" href="brainywallet/adminbw.html">Gestion de BW</a>
+	<a class="btn" href="stagaire/index.html">Gestion des Stagiaires</a>
+	 <a class="btn" href="bw-secretaire.html">Gestion de BW (Sécrétaire)</a>
+  </div>
+
+</body>
+</html>
